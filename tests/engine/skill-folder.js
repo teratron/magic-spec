@@ -160,7 +160,7 @@ module.exports = () => {
         assert.match(text, /Pipeline: `spec` → `plan` → `task` → `run`/);
     });
 
-    test('the router has the goal row with the demand per step in its group, lets a bare goal reach its body, names the command in its description, and the handoff line prints the demand as the table has it (CS-1, GM-3, GM-9)', () => {
+    test('the router has the goal row with the demand per step in its group, an optional argument whose default a bare goal runs without asking, names the command in its description, and the handoff line prints the demand as the table has it (CS-1, CS-9, GM-3, GM-9)', () => {
         const hosts = require(path.join(scriptsDir, 'lib', 'hosts.js'));
         const text = fs.readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8');
         const help = fs.readFileSync(path.join(skillSrc, 'workflows', 'help.md'), 'utf8');
@@ -171,15 +171,22 @@ module.exports = () => {
             { group: row.group, demand: row.demand, file: row.file },
             { group: 'quality & automation', demand: 'per step', file: 'goal' },
         );
-        for (const form of ['a goal statement', '`phase-3`', '`5 tasks`']) {
+        for (const form of [
+            'a goal statement',
+            '`phase-3`',
+            '`phase-3..5`',
+            '`plan`',
+            '`5 tasks`',
+        ]) {
             assert.ok(row.argument.includes(form), `the argument cell names the form ${form}`);
         }
         assert.ok(
             row.missing.startsWith(
-                '**required** unless a goal is recorded — a recorded goal continues',
+                'optional — a recorded goal that is not finished continues; otherwise the active phase',
             ),
-            'the missing cell: required unless a goal is recorded',
+            'the missing cell: optional, a recorded unfinished goal continues, otherwise the active phase',
         );
+        assert.ok(!row.missing.includes('required'), 'the missing cell no longer says required');
         const order = rows.map((r) => r.name);
         assert.ok(
             order.indexOf('simulate') < order.indexOf('goal') &&
@@ -191,16 +198,20 @@ module.exports = () => {
             'the one parser reads the row',
         );
 
-        // A bare goal is not asked for: the body continues a recorded goal and asks only when none is recorded.
+        // A bare goal is an optional argument like any other: its default runs and nothing is asked, so the contract has no exception for it.
         assert.ok(
-            text.includes('**Exception — `goal`**'),
-            'the argument contract has the goal exception',
+            !text.includes('**Exception — `goal`**'),
+            'the argument contract has no goal exception',
+        );
+        assert.ok(!/required unless a goal is recorded/.test(text), 'goal is not required');
+        assert.ok(
+            !/only when none is recorded does the argument form ask/.test(text),
+            'no argument form is asked for a bare goal',
         );
         assert.match(
             text,
-            /With no argument the body looks for the recorded goal first and continues it/,
+            /\*\*Optional\*\* and absent → run the default the column states, and say in the first line which default ran/,
         );
-        assert.match(text, /only when none is recorded does the argument form ask/);
         assert.match(
             text,
             /`goal` has no demand of its own: each of its steps carries the demand of the command it runs/,
@@ -208,6 +219,16 @@ module.exports = () => {
         assert.ok(
             help.includes('`goal`: its *Entry*'),
             'help names where the goal argument comes from',
+        );
+        assert.ok(
+            help.includes(
+                '`goal`: its *Entry*, where the empty argument continues the recorded goal or runs the active phase',
+            ),
+            'help says the empty argument of goal runs a default and is not a form',
+        );
+        assert.ok(
+            !help.includes('where a recorded goal continues with no form'),
+            'help no longer calls the empty argument of goal an exception to the form',
         );
 
         // The description names the command, and the handoff line prints the demand the table gives.
@@ -417,8 +438,12 @@ module.exports = () => {
             .map((r) => r.name);
         assert.deepStrictEqual(
             required.sort(),
-            ['fix', 'goal', 'rule', 'spec'],
-            'the commands that cannot act without input are the ones that ask for it (goal asks only when no goal is recorded)',
+            [
+                'fix',
+                'rule',
+                'spec',
+            ],
+            'the commands that cannot act without input are the ones that ask for it (goal does not: its argument is optional and its default runs)',
         );
 
         const byName = Object.fromEntries(rows.map((r) => [r.name, r]));

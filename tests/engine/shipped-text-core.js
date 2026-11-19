@@ -744,6 +744,142 @@ module.exports = () => {
         );
         has('a phase and a count are names and run none', 'the Input Pass for names');
 
+        // The argument is optional, and a range, the whole plan and the empty argument join the forms (GM-9 items 3 to 6).
+        assert.ok(
+            !/The scope is required unless a goal is recorded/.test(body),
+            'no longer required',
+        );
+        assert.ok(
+            !/show the argument form|the argument form asks/.test(body),
+            'the form is not shown',
+        );
+        has('The scope is optional.', 'GM-9: the argument is optional');
+        has(
+            '*(empty)* — continue the recorded goal while one of its criteria is not met; otherwise run the active phase',
+            'the empty argument in Entry',
+        );
+        has('`phase-{A}..{B}` — those phases of the plan', 'the range in Entry');
+        has('`plan` — every phase the plan holds open', 'the whole plan in Entry');
+        has(
+            'a range and `plan` take the count the same way',
+            'a task count bounds a range and the plan',
+        );
+        has('The tokens `phase-{N}`, `phase-{A}..{B}`, `plan` and `{N} tasks`', 'the names');
+        has(
+            '| `phase-{A}..{B}` | The token matches `phase-`, a number, `..` and a number | **Range**:',
+            'the range row of the routing table',
+        );
+        has(
+            "A range that ends before it starts, or names a phase the plan does not hold, is answered like a missing phase: one line listing the plan's phases, and nothing runs",
+            'an inverted range',
+        );
+        has('| `plan` | The single word `plan`', 'the whole-plan row of the routing table');
+        has(
+            'A finished goal (every criterion `met`) that is still recorded is replaced without a line, by the default or by any new scope',
+            'a finished goal is replaced silently',
+        );
+        has(
+            'a phase and a count are names and run none, and so do a range, `plan` and the empty argument',
+            'no Input Pass for the new names',
+        );
+        has(
+            'looks at the others before any default applies',
+            'the other workspaces before the default (Core Invariant 1)',
+        );
+        has('*(empty)* with an unfinished goal recorded', 'Step 1: continue');
+        has(
+            '*(empty)* with no unfinished goal recorded → **the active phase**: take the active phase as a phase goal — the phase the ledger (`TASKS.md`) marks `In Progress`; otherwise the first phase of the plan, in order, that the ledger does not hold as `Done` or `Done (Archived)`',
+            'Step 1: the default and the active phase',
+        );
+        has(
+            'narrate `[DR] Taking phase {N} — the active phase; no unfinished goal is recorded.',
+            'Step 1: the one line of the default',
+        );
+        has(
+            'nothing runs: print one line with what `Next Action` records and the one command it names',
+            'Step 1: no phase to take',
+        );
+        has(
+            '`phase` and `phaseTo` from a range, or from `plan`',
+            'Step 1: the goal object of a range',
+        );
+        has(
+            'For a range or `plan` the goal object holds one criterion — `phases {A}..{B} are Done`',
+            'Step 3: the one criterion of a range',
+        );
+        has(
+            'it is `met` when every phase of the range is `Done` (or `Done (Archived)`)',
+            'Step 3: when it is met',
+        );
+        has('the set of phases is fixed when the goal is recorded', 'Step 3: the set is fixed');
+        has(
+            'For a range or `plan` the phase of these two rows is the first phase of the range that is not `Done`',
+            'Step 4: the phase of a range',
+        );
+        has(
+            'the empty argument took the recorded unfinished goal or the active phase',
+            'the checklist line of the scope',
+        );
+
+        // The first specification run of a statement takes the whole intent (GM-4).
+        has(
+            'the first run of a goal statement takes the intent statement with every such criterion as one run, a later run the single criterion a later check found uncovered',
+            'Step 4: the first spec run is one run',
+        );
+        // A premise only the requester can confirm is decided, recorded and reported, never asked (GM-11, GM-8).
+        has(
+            '**A premise only the requester can confirm is decided, never asked (GM-11)**',
+            'GM-11 as a guard',
+        );
+        assert.ok(
+            body.indexOf('**The mode does not stop itself (GM-10)**') <
+                body.indexOf(
+                    '**A premise only the requester can confirm is decided, never asked (GM-11)**',
+                ) &&
+                body.indexOf(
+                    '**A premise only the requester can confirm is decided, never asked (GM-11)**',
+                ) < body.indexOf('**Containment**'),
+            'GM-11 follows GM-10 as its own bullet and does not sit inside it',
+        );
+        has(
+            'after the intake only the consents queued under GM-5 are asked, and only when the mode stops',
+            'GM-11: only the queued consents are asked',
+        );
+        has(
+            'is decided by the Consequence Forecast (DA-10) and narrated as a `[DR]`',
+            'GM-11: the fork is decided',
+        );
+        has(
+            'The work does not wait for an answer: waiting is a stall',
+            'GM-11: the work does not wait',
+        );
+        has(
+            '**Premises**: each premise the iteration accepted',
+            'Step 5: the premises are recorded in the block',
+        );
+        has(
+            'the write is never refused for them (GM-11)',
+            'Step 5: the writer drops the oldest, never refuses',
+        );
+        has(
+            'Queued consents: {n}\nAssumptions: {n}\n  {premise} — Override: {command}\nNext: {one command}',
+            'the premises in the layout of the report, before the next step',
+        );
+        has(
+            'are printed only when the pursuit accepted a premise',
+            'the premises are printed only when there are any',
+        );
+        has('☐ Premises (GM-11)', 'the checklist line of the premises');
+        assert.ok(
+            !body.includes('or the argument form of a bare `goal` with none recorded (E7)'),
+            'the checklist no longer names an E7 form for a bare goal',
+        );
+        has('(the intake is done; the survey does not run again)', 'the survey is not asked again');
+        has(
+            'the first `spec` run took the whole intent with every uncovered criterion',
+            'the checklist line of the intake',
+        );
+
         // The invariants: one intake, the queue, no relaxed guard, the files, the body of the step.
         has('**One intake, then no questions (GM-1)**', 'GM-1');
         has('**Consent is queued, never assumed (GM-5)**', 'GM-5');
@@ -764,6 +900,7 @@ module.exports = () => {
         for (const field of [
             'statement',
             'phase',
+            'phaseTo',
             'taskLimit',
             'bound',
             'withoutProgress',
@@ -773,6 +910,8 @@ module.exports = () => {
             'started',
             'criteria',
             'consents',
+            'premises',
+            'premisesDropped',
         ]) {
             has(`\`${field}\``, 'a field of the block');
         }
@@ -789,7 +928,7 @@ module.exports = () => {
         );
         has('recorded as an `Assumption (forecast)`', 'the criterion with no check');
         has(
-            '| A criterion of a statement that no `Stable` specification states (the criterion of a phase or a count is not one) | `spec`',
+            '| A criterion of a statement that no `Stable` specification states (the criterion of a phase, a range or a count is not one) | `spec`',
             'the first row',
         );
         has('| An open finding', 'the fix row');

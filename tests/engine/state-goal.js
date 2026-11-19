@@ -26,6 +26,7 @@ module.exports = () => {
     const GOAL_FIXTURE = {
         statement: 'the import works end to end for all three formats',
         phase: 3,
+        phaseTo: 5,
         taskLimit: 5,
         bound: 'give up after 5 rounds without progress',
         withoutProgress: 1,
@@ -43,6 +44,12 @@ module.exports = () => {
             },
         ],
         consents: [{ action: 'delete the old importer', reason: 'a destructive action' }],
+        premises: [
+            {
+                premise: 'JSON numbers are read as decimals',
+                override: '/magicspec spec amend l1-import.md "read as floats"',
+            },
+        ],
     };
 
     const goalSectionOf = (state) => {
@@ -82,7 +89,7 @@ module.exports = () => {
             assert.ok(section, 'the goal section is written');
             for (const line of [
                 '- **Goal:** the import works end to end for all three formats',
-                '- **Target phase:** 3',
+                '- **Target phase:** 3..5',
                 '- **Task limit:** 5',
                 '- **Bound:** give up after 5 rounds without progress',
                 '- **Without progress:** 1',
@@ -94,6 +101,7 @@ module.exports = () => {
                 '- [open] JSON import round-trips — scenario S-2 passes',
                 '- [blocked] XML import - namespaces — a decision on the parser',
                 '- [consent] delete the old importer — a destructive action',
+                '- [premise] JSON numbers are read as decimals — /magicspec spec amend l1-import.md "read as floats"',
             ]) {
                 assert.ok(
                     section.includes(`${line}\n`) || section.endsWith(line),
@@ -263,6 +271,221 @@ module.exports = () => {
                 null,
             );
             assert.strictEqual(parseGoalSection('# State\n'), null);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a goal names a range of phases, records the premises the pursuit accepted, gives way to the criteria and never to a refusal when the block is full, and reads a block that predates both (GM-3, GM-9, GM-11)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { normalizeGoal, renderGoalSection, parseGoalSection, describeScope, GoalError } =
+                requireFromFixture(tempDir, 'lib', 'goal-block.js');
+            const refusedFor = (goal, label) =>
+                assert.throws(
+                    () => normalizeGoal(goal),
+                    (error) =>
+                        error instanceof GoalError &&
+                        /phaseTo/.test(/** @type {Error} */ (error).message),
+                    label,
+                );
+
+            // A range names itself the way the commands spell it, and reads back to the same goal.
+            const range = normalizeGoal({
+                phase: 3,
+                phaseTo: 5,
+                taskLimit: 5,
+            });
+            assert.ok(renderGoalSection(range).includes('- **Target phase:** 3..5\n'));
+            assert.deepStrictEqual(parseGoalSection(renderGoalSection(range)), range);
+            assert.strictEqual(describeScope(range), 'phase-3..5 5 tasks');
+            assert.strictEqual(
+                describeScope(
+                    normalizeGoal({
+                        phase: 3,
+                        phaseTo: 5,
+                    }),
+                ),
+                'phase-3..5',
+            );
+            refusedFor(
+                {
+                    statement: 'g',
+                    phaseTo: 5,
+                },
+                'a range with no first phase',
+            );
+            refusedFor(
+                {
+                    phase: 5,
+                    phaseTo: 3,
+                },
+                'a range that ends before it starts',
+            );
+            refusedFor(
+                {
+                    phase: 3,
+                    phaseTo: 4.5,
+                },
+                'a last phase that is not whole',
+            );
+            refusedFor(
+                {
+                    phase: 3,
+                    phaseTo: 0,
+                },
+                'a last phase below one',
+            );
+            const single = normalizeGoal({
+                phase: 3,
+                phaseTo: 3,
+            });
+            assert.strictEqual(single.phaseTo, null, 'a range of one phase is no range');
+            assert.ok(renderGoalSection(single).includes('- **Target phase:** 3\n'));
+
+            // A premise is two texts, rendered after the consents, oldest first, with the same separator rule.
+            const premised = normalizeGoal({
+                statement: 'g',
+                consents: [
+                    {
+                        action: 'a',
+                        reason: 'r',
+                    },
+                ],
+                premises: [
+                    {
+                        premise: 'one — two',
+                        override: 'a — b',
+                    },
+                    {
+                        premise: 'second',
+                        override: 'c',
+                    },
+                ],
+            });
+            assert.deepStrictEqual(premised.premises[0], {
+                premise: 'one - two',
+                override: 'a - b',
+            });
+            const text = renderGoalSection(premised);
+            assert.ok(text.includes('- [premise] one - two — a - b\n'));
+            assert.ok(
+                text.indexOf('- [consent]') < text.indexOf('- [premise] one - two') &&
+                    text.indexOf('- [premise] one - two') < text.indexOf('- [premise] second'),
+                'the premises follow the consents, the oldest first',
+            );
+            assert.deepStrictEqual(parseGoalSection(text), premised);
+            assert.throws(
+                () =>
+                    normalizeGoal({
+                        statement: 'g',
+                        premises: [
+                            {
+                                premise: 'only one text',
+                            },
+                        ],
+                    }),
+                GoalError,
+            );
+
+            // A full block drops the oldest premises and counts them; it is refused only for what is not a premise.
+            const open = (count) =>
+                Array.from(
+                    {
+                        length: count,
+                    },
+                    (_, i) => ({
+                        state: 'open',
+                        text: `criterion ${i}`,
+                        check: 'c',
+                    }),
+                );
+            const ten = Array.from(
+                {
+                    length: 10,
+                },
+                (_, i) => ({
+                    premise: `premise ${i}`,
+                    override: `o${i}`,
+                }),
+            );
+            const linesOf = (goal) => renderGoalSection(normalizeGoal(goal)).trimEnd().split('\n');
+            const crowded = linesOf({
+                statement: 'g',
+                criteria: open(12),
+                premises: ten,
+                premisesDropped: 3,
+            });
+            assert.strictEqual(crowded.length, 28, 'the block fills its bound and no more');
+            assert.deepStrictEqual(
+                crowded.filter((line) => line.startsWith('- [premise]')),
+                [
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                ].map((i) => `- [premise] premise ${i} — o${i}`),
+                'the oldest four gave way, the newest six stay',
+            );
+            assert.ok(
+                crowded.includes('- **Premises dropped:** 7'),
+                'the count adds to the one already recorded',
+            );
+            const oneLeft = linesOf({
+                statement: 'g',
+                criteria: open(18),
+                premises: [
+                    ten[0],
+                    ten[1],
+                ],
+            });
+            assert.deepStrictEqual(
+                oneLeft.slice(-1),
+                [
+                    '- **Premises dropped:** 2',
+                ],
+                'with one line left the count takes it and no premise is kept',
+            );
+            const none = linesOf({
+                statement: 'g',
+                criteria: open(19),
+                premises: ten,
+            });
+            assert.strictEqual(none.length, 28);
+            assert.ok(
+                !none.some((line) => /premise/i.test(line)),
+                'with no line left no premise and no count is written, and the write is not refused',
+            );
+            assert.throws(
+                () =>
+                    renderGoalSection(
+                        normalizeGoal({
+                            statement: 'g',
+                            criteria: open(30),
+                        }),
+                    ),
+                GoalError,
+                'criteria over the bound are still refused',
+            );
+
+            // A block written before this change reads with the new fields empty.
+            const old = parseGoalSection(
+                '# State\n\n## Goal\n\n- **Goal:** g\n- **Target phase:** 3\n- **Without progress:** 1\n- [open] a — b\n',
+            );
+            assert.strictEqual(old.phase, 3);
+            assert.strictEqual(old.withoutProgress, 1);
+            assert.deepStrictEqual(old.criteria, [
+                {
+                    state: 'open',
+                    text: 'a',
+                    check: 'b',
+                },
+            ]);
+            assert.strictEqual(old.phaseTo, null);
+            assert.deepStrictEqual(old.premises, []);
+            assert.strictEqual(old.premisesDropped, 0);
         } finally {
             cleanup(tempDir);
         }

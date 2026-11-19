@@ -5,9 +5,10 @@
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The goal `/magicspec goal` pursues lives in one section of STATE.md, `## Goal`:
-// the statement, a phase or a task limit, an optional stated bound, the two counters the
-// stop conditions read, each criterion with its state and the consents queued
-// until the mode stops. One module renders it, parses it and checks it, so the
+// the statement, a phase (or a range of phases) or a task limit, an optional stated bound,
+// the two counters the stop conditions read, each criterion with its state, the consents
+// queued until the mode stops and the premises the pursuit accepted, each with its
+// override. One module renders it, parses it and checks it, so the
 // writer (`update-state.js`) and the reader (`resume-state.js`) cannot come to
 // disagree about its layout. The section is wholly engine-owned: it is rebuilt from a
 // validated object on every write and is never patched line by line.
@@ -28,6 +29,7 @@ const CRITERION_STATES = Object.freeze(['open', 'met', 'blocked']);
 const GOAL_KEYS = Object.freeze([
     'statement',
     'phase',
+    'phaseTo',
     'taskLimit',
     'bound',
     'withoutProgress',
@@ -37,6 +39,8 @@ const GOAL_KEYS = Object.freeze([
     'started',
     'criteria',
     'consents',
+    'premises',
+    'premisesDropped',
 ]);
 
 const SECTION_COMMENT =
@@ -93,6 +97,22 @@ function wholeNumber(value, label, min, fallback) {
 }
 
 /**
+ * Reads the last phase of a range of phases. A range of one phase is no range.
+ *
+ * @param {unknown} value - The field, or `undefined` for none.
+ * @param {number|null} phase - The first phase of the goal, or `null` when it names none.
+ * @returns {number|null} The last phase, or `null` when the goal is one phase or none.
+ * @throws {GoalError} When the field is not a whole number, names no first phase or lies below it.
+ */
+function readPhaseTo(value, phase) {
+    const last = wholeNumber(value, 'phaseTo', 1, null);
+    if (last === null) return null;
+    if (phase === null) throw new GoalError('phaseTo needs a phase: a range starts at one.');
+    if (last < phase) throw new GoalError(`phaseTo (${last}) must not be below phase (${phase}).`);
+    return last === phase ? null : last;
+}
+
+/**
  * Reads the moment the goal was started, which a bound of elapsed time is measured from.
  *
  * @param {unknown} value - A date or a date and time, or `undefined` for none.
@@ -134,11 +154,12 @@ function readList(list, label, read) {
  * what the goal is.
  *
  * @param {unknown} input - The parsed JSON the caller passed.
- * @returns {{statement: string|null, phase: number|null, taskLimit: number|null,
- *   bound: string|null, withoutProgress: number, tasksDone: number, iterations: number,
- *   phasesDone: number, started: string|null,
+ * @returns {{statement: string|null, phase: number|null, phaseTo: number|null,
+ *   taskLimit: number|null, bound: string|null, withoutProgress: number, tasksDone: number,
+ *   iterations: number, phasesDone: number, started: string|null,
  *   criteria: {state: string, text: string, check: string}[],
- *   consents: {action: string, reason: string}[]}}
+ *   consents: {action: string, reason: string}[],
+ *   premises: {premise: string, override: string}[], premisesDropped: number}}
  * @throws {GoalError} For any shape the section cannot hold.
  */
 function normalizeGoal(input) {
@@ -153,6 +174,7 @@ function normalizeGoal(input) {
             ? null
             : oneLine(input.statement, 'statement') || null;
     const phase = wholeNumber(input.phase, 'phase', 1, null);
+    const phaseTo = readPhaseTo(input.phaseTo, phase);
     const taskLimit = wholeNumber(input.taskLimit, 'taskLimit', 1, null);
     if (statement === null && phase === null && taskLimit === null) {
         throw new GoalError('A goal needs a statement, a phase or a task limit.');
@@ -179,10 +201,22 @@ function normalizeGoal(input) {
         }
         return { action, reason };
     });
+    const premises = readList(input.premises, 'premises', (item, at) => {
+        const premise = oneLine(item.premise, `${at}.premise`);
+        const override = oneLine(item.override, `${at}.override`);
+        if (premise === '' || override === '') {
+            throw new GoalError(`${at} needs a premise and an override.`);
+        }
+        return {
+            premise,
+            override,
+        };
+    });
 
     return {
         statement,
         phase,
+        phaseTo,
         taskLimit,
         bound,
         withoutProgress: wholeNumber(input.withoutProgress, 'withoutProgress', 0, 0),
@@ -192,6 +226,8 @@ function normalizeGoal(input) {
         started: readStarted(input.started),
         criteria,
         consents,
+        premises,
+        premisesDropped: wholeNumber(input.premisesDropped, 'premisesDropped', 0, 0),
     };
 }
 
@@ -212,7 +248,10 @@ function normalizeGoal(input) {
 function renderGoalSection(goal) {
     const lines = [GOAL_HEADING, '', SECTION_COMMENT, ''];
     if (goal.statement !== null) lines.push(`- **Goal:** ${goal.statement}`);
-    if (goal.phase !== null) lines.push(`- **Target phase:** ${goal.phase}`);
+    if (goal.phase !== null) {
+        const range = goal.phaseTo === null ? '' : `..${goal.phaseTo}`;
+        lines.push(`- **Target phase:** ${goal.phase}${range}`);
+    }
     if (goal.taskLimit !== null) lines.push(`- **Task limit:** ${goal.taskLimit}`);
     if (goal.bound !== null) lines.push(`- **Bound:** ${goal.bound}`);
     lines.push(`- **Without progress:** ${goal.withoutProgress}`);
@@ -229,7 +268,39 @@ function renderGoalSection(goal) {
             `The goal section would be ${lines.length} lines; the bound is ${MAX_GOAL_LINES}.`,
         );
     }
+    const { kept, dropped } = fitPremises(
+        goal.premises,
+        goal.premisesDropped,
+        MAX_GOAL_LINES - lines.length,
+    );
+    for (const { premise, override } of kept) lines.push(`- [premise] ${premise} — ${override}`);
+    if (dropped > 0) lines.push(`- **Premises dropped:** ${dropped}`);
     return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Fits the premises into the room the rest of the block leaves. The oldest give way first and
+ * are counted, so a premise never makes the write refuse: the criteria and the consents are the
+ * block, and only the premises are bounded by what is left. When no premise is left and the count
+ * itself has no line, the count gives way too.
+ *
+ * @param {{premise: string, override: string}[]} premises - The premises, oldest first.
+ * @param {number} dropped - The premises already dropped by an earlier write.
+ * @param {number} room - The lines left in the block.
+ * @returns {{kept: {premise: string, override: string}[], dropped: number}}
+ */
+function fitPremises(premises, dropped, room) {
+    let kept = premises;
+    let count = dropped;
+    const lineCount = () => kept.length + (count > 0 ? 1 : 0);
+    while (lineCount() > room && kept.length > 0) {
+        kept = kept.slice(1);
+        count += 1;
+    }
+    return {
+        kept,
+        dropped: lineCount() > room ? 0 : count,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -245,6 +316,114 @@ function renderGoalSection(goal) {
 function splitAtSeparator(rest) {
     const at = rest.indexOf(' — ');
     return at === -1 ? [rest.trim(), ''] : [rest.slice(0, at).trim(), rest.slice(at + 3).trim()];
+}
+
+/**
+ * Reads the value of the `Target phase` line — `3` or a range `3..5` — into the goal. A value it
+ * does not know leaves the goal as it was, as every line of this reader does.
+ *
+ * @param {{phase: number|null, phaseTo: number|null}} goal - The goal being read.
+ * @param {string} value - The text after the label.
+ */
+function readTargetPhase(goal, value) {
+    const range = /^(\d+)(?:\.\.(\d+))?$/.exec(value.trim());
+    if (!range) return;
+    goal.phase = Number(range[1]) || null;
+    const last = range[2] === undefined ? 0 : Number(range[2]);
+    goal.phaseTo = goal.phase !== null && last > goal.phase ? last : null;
+}
+
+/** The labelled fields that hold a text, and the goal key each fills. */
+const TEXT_FIELDS = new Map([
+    [
+        'Goal',
+        'statement',
+    ],
+    [
+        'Bound',
+        'bound',
+    ],
+    [
+        'Started',
+        'started',
+    ],
+]);
+
+/** The labelled fields that hold a count, and the goal key each fills. */
+const COUNT_FIELDS = new Map([
+    [
+        'Without progress',
+        'withoutProgress',
+    ],
+    [
+        'Tasks done',
+        'tasksDone',
+    ],
+    [
+        'Iterations',
+        'iterations',
+    ],
+    [
+        'Phases done',
+        'phasesDone',
+    ],
+    [
+        'Premises dropped',
+        'premisesDropped',
+    ],
+]);
+
+/**
+ * Reads a whole number a line holds.
+ *
+ * @param {string} text - The text after a label.
+ * @returns {number} The number, or zero for anything else.
+ */
+function countOf(text) {
+    return /^\d+$/.test(text) ? Number(text) : 0;
+}
+
+/**
+ * Reads one labelled field into the goal. A label it does not know is skipped.
+ *
+ * @param {Record<string, any>} goal - The goal being read.
+ * @param {string} label - The label of the line.
+ * @param {string} value - The text after the label.
+ */
+function readField(goal, label, value) {
+    const textKey = TEXT_FIELDS.get(label);
+    const countKey = COUNT_FIELDS.get(label);
+    if (label === 'Target phase') readTargetPhase(goal, value);
+    else if (label === 'Task limit') goal.taskLimit = countOf(value) || null;
+    else if (textKey !== undefined) goal[textKey] = value.trim() || null;
+    else if (countKey !== undefined) goal[countKey] = countOf(value);
+}
+
+/**
+ * Reads one bracketed line — a criterion, a queued consent or a premise — into the goal.
+ *
+ * @param {Record<string, any>} goal - The goal being read.
+ * @param {string} state - What the brackets hold.
+ * @param {string} rest - The text after the brackets.
+ */
+function readItem(goal, state, rest) {
+    const [text, after] = splitAtSeparator(rest);
+    if (state === 'consent')
+        goal.consents.push({
+            action: text,
+            reason: after,
+        });
+    else if (state === 'premise')
+        goal.premises.push({
+            premise: text,
+            override: after,
+        });
+    else
+        goal.criteria.push({
+            state,
+            text,
+            check: after,
+        });
 }
 
 /**
@@ -264,6 +443,7 @@ function parseGoalSection(stateText) {
     const goal = {
         statement: null,
         phase: null,
+        phaseTo: null,
         taskLimit: null,
         bound: null,
         withoutProgress: 0,
@@ -273,30 +453,19 @@ function parseGoalSection(stateText) {
         started: null,
         criteria: [],
         consents: [],
+        premises: [],
+        premisesDropped: 0,
     };
-    const count = (text) => (/^\d+$/.test(text) ? Number(text) : 0);
     const field = /^- \*\*([^*:]+):\*\* ?(.*)$/;
-    const item = /^- \[(open|met|blocked|consent)\] (.*)$/;
+    const item = /^- \[(open|met|blocked|consent|premise)\] (.*)$/;
     for (const raw of section.split(/\r?\n/)) {
         const asField = field.exec(raw);
         if (asField) {
-            const [, label, value] = asField;
-            if (label === 'Goal') goal.statement = value.trim() || null;
-            else if (label === 'Target phase') goal.phase = count(value) || null;
-            else if (label === 'Task limit') goal.taskLimit = count(value) || null;
-            else if (label === 'Bound') goal.bound = value.trim() || null;
-            else if (label === 'Without progress') goal.withoutProgress = count(value);
-            else if (label === 'Tasks done') goal.tasksDone = count(value);
-            else if (label === 'Iterations') goal.iterations = count(value);
-            else if (label === 'Phases done') goal.phasesDone = count(value);
-            else if (label === 'Started') goal.started = value.trim() || null;
+            readField(goal, asField[1], asField[2]);
             continue;
         }
         const asItem = item.exec(raw);
-        if (!asItem) continue;
-        const [text, after] = splitAtSeparator(asItem[2]);
-        if (asItem[1] === 'consent') goal.consents.push({ action: text, reason: after });
-        else goal.criteria.push({ state: asItem[1], text, check: after });
+        if (asItem) readItem(goal, asItem[1], asItem[2]);
     }
     const names = goal.statement !== null || goal.phase !== null || goal.taskLimit !== null;
     return names ? goal : null;
@@ -320,7 +489,7 @@ function countCriteria(goal) {
 
 /**
  * Names the scope of a goal in the words the commands use: the statement, `phase-N`,
- * `N tasks`, or the statement or phase with its task limit.
+ * `phase-N..M`, `N tasks`, or the statement or phases with their task limit.
  *
  * @param {ReturnType<typeof normalizeGoal>} goal - A goal.
  * @returns {string}
@@ -328,7 +497,9 @@ function countCriteria(goal) {
 function describeScope(goal) {
     const parts = [];
     if (goal.statement !== null) parts.push(`"${goal.statement}"`);
-    if (goal.phase !== null) parts.push(`phase-${goal.phase}`);
+    if (goal.phase !== null) {
+        parts.push(`phase-${goal.phase}${goal.phaseTo === null ? '' : `..${goal.phaseTo}`}`);
+    }
     if (goal.taskLimit !== null) parts.push(`${goal.taskLimit} tasks`);
     return parts.join(' ');
 }

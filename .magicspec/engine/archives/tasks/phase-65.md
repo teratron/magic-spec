@@ -60,23 +60,23 @@ duration_minutes: ~
 
 <!-- A line is `- [ ]` (open) or `- [x]` (done). A Blocked task keeps `- [ ]`: it is blocked by its `Status` in Detailed Tracking, and the `[!]` the workflows write after "Blocked" spells that status — it is not a checkbox state. -->
 
-**Track G — goal mode (GM-10)**
+**Track G** — goal mode (GM-10)
 
 - [x] [T-65G01] The goal body states that the mode does not stop itself, with the four ends it never takes
 - [x] [T-65GT01] Validation: the scenario of a goal gains the step in which a finalization ends on its handoff line and the turn continues
 
-**Track P — the Input Pass (IP-3)**
+**Track P** — the Input Pass (IP-3)
 
 - [x] [T-65P01] The prompt-engineer card and its mirror state the host's marking and the boundary of the person's own words
 - [x] [T-65P02] The three bodies and the contributor page that restate the Input Pass sentence carry the same boundary
 - [x] [T-65PT01] Validation: a scenario for a pasted report whose last line asks for something the person's words do not reach
 
-**Track U — interface design (UI-2, UI-5)**
+**Track U** — interface design (UI-2, UI-5)
 
 - [x] [T-65U01] The design-system template, the ui-ux-designer card and its mirror name the patterns the product does not use and compare a draft with the design context
 - [x] [T-65UT01] Validation: the template, the card and the mirror agree with UI-2, UI-5 and §6 item 5, and their cases guard the new lines
 
-**Track S — suite, specifications as built, final checks**
+**Track S** — suite, specifications as built, final checks
 
 - [x] [T-65S01] The cognitive-suite cases T365 and T366 and the suite index
 - [x] [T-65S02] The three L1 specifications and the two mirror specifications brought to as built, the registry bumped

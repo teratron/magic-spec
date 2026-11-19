@@ -290,6 +290,7 @@ function goalJson(goal) {
         scope: describeScope(goal),
         statement: goal.statement,
         phase: goal.phase,
+        phase_to: goal.phaseTo,
         task_limit: goal.taskLimit,
         bound: goal.bound,
         criteria: countCriteria(goal),

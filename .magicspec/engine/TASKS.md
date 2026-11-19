@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.74.0
+**Version:** 1.75.0
 **Generated:** 2026-11-19
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.79.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.82.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 67](archives/tasks/phase-67.md) | Goal Mode: A Bare `goal` Runs the Active Phase, a Brief Is Specified Once, Premises Are Reported — `goal` with no argument continues the recorded goal while it is unfinished and otherwise runs the active phase, a finished goal is replaced without a line, the argument gains the range of phases and the whole plan; the first `spec` run of a statement takes the whole brief; the premises the forecast accepts are recorded in the goal block and listed in the report, and nothing is asked after the intake but the queued consents; the router row, `help`, the documentation and the cases say the same; 14 tasks in four tracks (B, G, R, S) | `Done (Archived)` |
 | [Phase 65](archives/tasks/phase-65.md) | Prompting Guidance: Goal Mode Does Not Stop Itself, Material the Person's Words Reach, Patterns Not Used — three amendments built in three independent tracks: goal mode names the four ends of a turn it never takes (GM-10), the Input Pass lets the person's own words reach an instruction inside pasted material (IP-3), and a design system names the patterns its product does not use (UI-2, UI-5); a fourth track writes the cognitive-suite cases and brings the three specifications to as-built; 10 tasks in four tracks (G, P, U, S) | `Done (Archived)` |
 | [Phase 66](archives/tasks/phase-66.md) | Maintenance: The Analysis the Specification Workflow Delegates Is Governed by analyze.md Alone — the `Project Analysis Delegation` section of `workflows/spec.md` states that `analyze.md` governs the delegated analysis under its own write rules, with no guard, approval wait or effort plea of its own; the read-only guard names Explore Mode only | `Done (Archived)` |
 | [Phase 64](archives/tasks/phase-64.md) | Maintenance: A Finished Ledger Is Not Re-Synced After a Plan — after `/magicspec plan` the next step names the task command only while a phase of the ledger is open (PL-5); with every phase terminal the plan state decides | `Done (Archived)` |
@@ -95,5 +96,5 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 ## Meta Information
 
-- **Last Updated**: 2026-11-18
+- **Last Updated**: 2026-11-19
 - **Maintainer**: Core Team

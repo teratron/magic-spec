@@ -18,7 +18,7 @@
 
 <!-- Present only while `/magicspec goal` has a goal recorded; written by update-state (--goal-file), never by hand, at most 28 lines. Layout:
   - **Goal:** {statement}
-  - **Target phase:** {N}
+  - **Target phase:** {N} or a range {N}..{M}
   - **Task limit:** {N}
   - **Bound:** {a bound the goal states}
   - **Without progress:** {iterations in a row}
@@ -28,6 +28,8 @@
   - **Started:** {date and time}
   - [open | met | blocked] {criterion} — {the check that verifies it}
   - [consent] {action} — {why it waits for consent}
+  - [premise] {a premise the pursuit accepted} — {its override}
+  - **Premises dropped:** {n, the oldest premises that no longer fit}
 -->
 
 ## Progress

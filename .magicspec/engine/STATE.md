@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-19 07:27
-**Phase:** 65 — Prompting Guidance: Goal Mode Does Not Stop Itself, Material the Person's Words Reach, Patterns Not Used
+**Updated:** 2026-11-19 08:50
+**Phase:** 67 — Goal Mode: A Bare `goal` Runs the Active Phase, a Brief Is Specified Once, Premises Are Reported
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-65ST01 Validation: the full harness, the static checks, the integrity check and the changelog
-- **Spec:** l1-artifact-memory.md AM-1 to AM-8 · l2-artifact-memory-store.md
+- **Task:** T-67ST01 Validation: the full harness, the static checks, the integrity check and the changelog
+- **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
 - **Next Action:** Plan complete — nothing pending
 
 ## Progress
 
 ```
-Overall: [66/66] ████████ 100%
+Overall: [67/67] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-19 **Decision:** Phase 67 complete. Provides: goal's optional argument (the empty one continues an unfinished goal, else runs the active phase; phase-3..5 and plan), the first spec run takes the whole brief, premises decided, recorded in the goal block and reported under Assumptions with nothing asked after the intake; router row optional with the Dispatch exception removed; T367-T371, S-14; engine 3.0.160, harness 462, registry 1.94.0
 - 2026-11-19 **Decision:** Phase 65 complete. Provides: GM-10 in the goal body (the four ends of a turn the mode never takes, the host-ended turn told apart, a finalization handoff line as the input of the next iteration); IP-3 in the prompt-engineer card, its mirror and four texts (the host marking only adds to material, the person's own words adopt an instruction through every gate); the design-system Patterns Not Used section with the ui-ux-designer steps and mirror; suite T365 and T366, scenario S-13; engine 3.0.154, harness 461, registry 1.92.0
 - 2026-11-18 **Decision:** Phase 64 complete (maintenance). Provides: finalize names the task command after a plan only while a phase of the ledger is open; a finished ledger leaves the step to the plan state; l2-engine-finalization 3.10.0 (PL-5 restored), l2-test-suite 1.48.4; engine 3.0.149, harness 457, registry 1.90.0
 - 2026-11-18 **Decision:** Phase 62 complete (maintenance). Provides: the maintenance fix takes a failed step of the engine's own scenarios (inputs, open findings, a section on reproducing, repairing and closing it), the router, guide and contributor page name the one route; the C28 item 2 amendment declined by admission, RULES.md stays 1.24.0; finalize names plan before task for an undecomposed phase on a stale plan (n5); engine 3.0.148, harness 457, registry 1.89.0
 - 2026-11-18 **Decision:** Phase 61 complete (maintenance). Provides: finalize names the planning funnel after a plan on a complete plan with an open design item (no task re-sync the Plan Gate refuses); the 17 area files of the cognitive suite carry a Cases heading (markdownlint MD001 cleared) with the layout case asserting it; four specifications patched as built; engine 3.0.145, harness 454, registry 1.85.0
-- 2026-11-18 **Decision:** Phase 60 complete. Provides: five scenario files for the engine in .magicspec/engine/simulations/ (twelve scenarios, forty steps, each step tagged printed or composed, disposable-project preconditions, Last run never), one bullet in docs/dev-test.md on the division with the cognitive suite, l1-product-simulation 1.1.1 with one open finding (SM-7 against FX-10); harness 453, suite 1.9.108, registry 1.83.0, no engine file changed
 
 ## Blockers
 

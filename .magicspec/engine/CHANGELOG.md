@@ -1,5 +1,13 @@
 # Engine Workspace Changelog
 
+## Phase 67 — 2026-11-19 (Goal Mode: A Bare `goal` Runs the Active Phase, a Brief Is Specified Once, Premises Are Reported)
+
+- **A bare `goal` runs the active phase (GM-9).** The argument is optional: the empty one continues a recorded goal while a criterion is not met and otherwise takes the active phase — the phase the ledger marks `In Progress`, else the first phase of the plan the ledger does not hold as `Done` — with one `[DR]` line; a finished goal is replaced without a line, and with no phase to take (the plan complete, stale or absent, or the phase `Blocked`) nothing runs and one line names the state. The argument gains `phase-3..5` and `plan`, each one criterion over the phases open when the goal is recorded.
+- **A brief is specified once (GM-4).** The first `spec` run of a goal statement takes the intent with every uncovered criterion as one run; a later run takes the single criterion a later check finds.
+- **Premises are decided, recorded and reported, never asked (GM-11, GM-8, GM-3).** A fork the evidence does not settle is decided by the forecast and narrated as a `[DR]`; the goal block records a range (`phaseTo`) and the premises (`premises`, `premisesDropped`: the oldest dropped and counted, the write never refused), the report lists them under `Assumptions` with their overrides, and nothing but the queued consents is asked after the intake.
+- **The router, `help`, the README and the page say the optional argument.** The Dispatch exception for `goal` is gone; the commands that ask are `spec`, `fix` and `rule`.
+- **Records:** suite cases T367 to T371 (suite 1.9.110), scenario S-14 and a step of S-12 (fourteen scenarios, forty-seven steps). **Specifications:** `l1-goal-mode` 1.4.1, `l1-command-surface` 2.3.1, `l1-product-simulation` 1.1.4, `l2-test-suite` 1.48.5 (all as built), registry 1.94.0. Engine 3.0.160. Harness 462 of 462; 54 mutation entries caught.
+
 ## Phase 65 — 2026-11-19 (Prompting Guidance: Goal Mode Does Not Stop Itself, Material the Person's Words Reach, Patterns Not Used)
 
 - **Goal mode names the ends of a turn it never takes (GM-10).** A summary that announces the next step, an offer to continue, a list of decisions that block nothing and a pause because the turn has been long are never taken; a turn the host ends (a limit, an error) is told apart from one the mode would end; a finalization's handoff line is the input of the next iteration, with the re-check in the same turn. The six stop conditions are unchanged.

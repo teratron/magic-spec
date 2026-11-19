@@ -550,6 +550,29 @@ module.exports = () => {
                 runResumeState(tempDir, ['--workspace=engine']).stdout,
                 '▶ Resume [engine]: goal phase-3 5 tasks — 0 met, 1 open, 0 blocked. Next: /magicspec goal\n',
             );
+
+            // A range of phases names itself the way the command accepts it.
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                    goal: {
+                        phase: 3,
+                        phaseTo: 5,
+                        criteria: [
+                            {
+                                state: 'open',
+                                text: 'phases 3..5 are Done',
+                            },
+                        ],
+                    },
+                },
+            });
+            assert.strictEqual(
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]).stdout,
+                '▶ Resume [engine]: goal phase-3..5 — 0 met, 1 open, 0 blocked. Next: /magicspec goal\n',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -591,6 +614,7 @@ module.exports = () => {
                 scope: '"the import works"',
                 statement: 'the import works',
                 phase: null,
+                phase_to: null,
                 task_limit: null,
                 bound: null,
                 criteria: { met: 1, open: 2, blocked: 1 },
@@ -598,6 +622,36 @@ module.exports = () => {
                 without_progress: 0,
                 tasks_done: 0,
             });
+
+            // A range carries both of its phases.
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                    goal: {
+                        phase: 3,
+                        phaseTo: 5,
+                        criteria: [],
+                    },
+                },
+            });
+            const ranged = JSON.parse(
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                    '--json',
+                ]).stdout,
+            ).workspaces[0].goal;
+            assert.deepStrictEqual(
+                {
+                    scope: ranged.scope,
+                    phase: ranged.phase,
+                    phase_to: ranged.phase_to,
+                },
+                {
+                    scope: 'phase-3..5',
+                    phase: 3,
+                    phase_to: 5,
+                },
+            );
 
             // With no goal the entry keeps the shape it always had.
             writeResumeFixture(tempDir, {
