@@ -33,6 +33,7 @@ describe('Magic Engine Scripts', () => {
     require('./engine/migrate')();
     require('./engine/release-archive')();
     require('./engine/command-line-contract')();
+    require('./engine/document-set')();
     require('./engine/workspace-routing')();
     require('./engine/registered-folders-and-caches')();
     require('./engine/community-files')();

@@ -1,6 +1,6 @@
 # SDD Document Set — Engine Realization (4.0)
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-sdd-document-set.md
@@ -87,8 +87,8 @@ Not applicable; see the concept's invariants I1 to I13.
 
 New executor subcommands, in `scripts/`:
 
-- `check-docs [--workspace]` — the checker of concept §5.9; one finding per line and a summary line; exit 1 on findings.
-- `pack {task} [--workspace] [--include {file}]` — the pack of concept §5.6, written to `.magicspec/.cache/packs/{task}.md`; prints its size against the budget.
+- `check-docs [--workspace] [--budget N]` — the checker of concept §5.9; one finding per line on stdout and a summary line on stderr; exit 1 on findings. On a workspace that is not in the 4.0 format it prints one line and exits 0 (a 3.x workspace is not an error).
+- `pack {task} [--workspace] [--include {file}]` — the pack of concept §5.6, written to `.magicspec/.cache/packs/{workspace}/{task}.md` (one folder per workspace, so two workspaces that use the same task address do not collide), a rebuildable cache that `clean-cache` removes; prints its size against the budget and says so when the computed units exceed it, because the checker, not the pack, is the gate. **Done before this task** is read from the project: the files named in the `Creates` of the tasks the task is After, directly or not, and, for a task of a milestone that revises or extends the component it builds, that component's interface files from its row of `memory/map.md`; `--include` adds a file as built, and a file that is not inside the project is refused. On a workspace that is not in the 4.0 format it prints one line and exits 0.
 - `mark-built {milestone} [--workspace]` — records a done milestone: map entries from Creates, revisions in Provides, changes to `built`, `Was` lines removed.
 - `check-log` — the order of change statuses in the history of `changes.md` (open before placed before built).
 
@@ -96,7 +96,7 @@ Existing subcommands adapt: `check-prerequisites` on a 4.0 workspace reports the
 
 ### 5.3 Templates
 
-New templates `product.md`, `rules.md`, `plan.md` (milestone block), `spec.md` (component behaviour), `profile.md`, `stack-rules.md`, `deps.md`, `bind.md`, `tasks.md` (milestone tasks), `state.md`, `decisions.md`, `map.md`, `changes.md`; each holds the field lines of the concept verbatim and no example content. The 3.x templates stay for 3.x workspaces until the line ends.
+New templates in `skills/magicspec/templates/set/` (the 3.x templates stay in `templates/`, and five of the names are theirs): `product.md`, `rules.md`, `plan.md` (milestone block), `spec.md` (component behaviour), `profile.md`, `stack-rules.md`, `deps.md`, `bind.md`, `tasks.md` (milestone tasks), `state.md`, `decisions.md`, `map.md`, `changes.md`; each holds the field lines of the concept verbatim and no example content. The 3.x templates stay for 3.x workspaces until the line ends.
 
 ### 5.4 Workflows
 
@@ -149,5 +149,6 @@ The roles keep their cards; `spec-critic` reviews units and changes, `planner` m
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.2 | 2026-11-24 | Agent | As built in Phase 68, Stable retained, no requirement changed: `check-docs` takes `--budget` and ends a non-4.0 workspace with one line; `pack` writes under `.cache/packs/{workspace}/`, reads Done before this task from the files the earlier tasks create and from the component's map row, and reports a pack over the budget; the thirteen templates are in `templates/set/`. |
 | 1.0.0 | 2026-11-24 | Agent | Initial realization plan of the 4.0 document set |
 | 1.0.1 | 2026-11-24 | Agent | Stabilized with its concept: the forward gate runs on the format and its scripts, before the workflows are rewritten (plan check); a migration that cannot close a finding leaves the workspace on 3.x; `check-prerequisites` and the goal arguments on a 4.0 workspace |

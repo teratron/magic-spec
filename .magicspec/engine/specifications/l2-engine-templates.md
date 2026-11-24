@@ -1,6 +1,6 @@
 # Engine Templates
 
-**Version:** 1.3.4
+**Version:** 1.3.5
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -29,7 +29,7 @@ The cells show why they grew. Each is an inventory of the specification's mechan
 
 - Templates must not contain project-specific content — only structural placeholders.
 - Placeholder syntax: `{placeholder_name}` for substitution points.
-- All templates reside in `skills/magicspec/templates/` (flat directory, no nesting).
+- The templates of the 3.x layout reside in `skills/magicspec/templates/` (flat directory, no nesting). The thirteen templates of the 4.0 document set reside in `skills/magicspec/templates/set/`, the one sub-folder, because five of their names (`plan.md`, `rules.md`, `spec.md`, `state.md`, `tasks.md`) are those of 3.x templates with another meaning, which stay for 3.x workspaces until that line ends.
 - The §5.3 contract is guidance, not a gate. The engine does not write these texts, so no script refuses and no workflow halts on them; the wrapper generator can refuse a description because it is the writer of the wrapper.
 - §5.3 fixes a form and specifies no size signal. The signal belongs with the bloat advisory ([l2-engine-automation.md](l2-engine-automation.md), Bloat Advisory Configuration) and is sequenced after the contract is deployed, so its thresholds are calibrated on registries that follow the form, not on the ones that motivated it. The one anchor measured is the whole-file read limit of a host (256 KB).
 - **Assumption (forecast):** the task-ledger overview describes the ledger and does not track the plan; the state lives in the phase table. Runner-up: an overview that states the plan's present state, replaced by whoever changes it (the reading of version 1.2.0 of this specification). Override: `/magicspec spec amend l2-engine-templates "current-state overview"`. Evidence: of a consumer project's two workspaces, one overview grew to 20.8 KB of per-phase narrative and the other is a 0.1 KB description of the file; the second needs no writer to keep it true.
@@ -60,6 +60,7 @@ skills/magicspec/templates/
   retrospective.md   — Phase retrospective
   workspace-index.md — Workspace registry
   global-index.md    — Global registry (one row per workspace)
+  set/               — The thirteen templates of the 4.0 document set (l2-sdd-document-set-engine.md §5.3): product, rules, plan, spec, profile, stack-rules, deps, bind, tasks, state, decisions, map, changes
 ```
 
 ### 5.2 Template Contracts
@@ -115,6 +116,7 @@ Rewriting the rows and the overview that already exist in a workspace is a task 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.5 | 2026-11-24 | As built in Phase 68, Stable retained: the inventory gains `set/`, the thirteen templates of the 4.0 document set, and the flat-directory constraint names it as the one sub-folder. |
 | 1.3.4 | 2026-11-12 | As built in Phase 52, Stable retained: the inventory lists `simulation.md` (the scenario file) and `design-system.md` (the product's one design-system specification), and `spec.md` gains the optional `## Interface` section. |
 | 1.3.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.3.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

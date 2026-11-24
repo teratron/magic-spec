@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 68 — 2026-11-24 (The 4.0 Document Set: Format, Checker and Pack)
+
+- **`check-docs` checks a 4.0 document set without a model.** The documentation lab's checker, ported onto the engine's resolvers with its findings verbatim (unresolved and duplicate addresses, stack words and units in the neutral layer, priorities against dependencies, unjustified Needs, components and assets without an owner, names used before they are produced, packs over the budget, changes without kind, status, evidence or building milestone, stale units no task builds, open questions in a ready task's pack). It acts only on a workspace whose entry in `workspace.json` carries `"format": "4"`; on any other it prints one line and exits 0. It equals the lab checker on the four fixtures, on all 32 lab document sets and on 600 one-edit mutants of them.
+- **`pack {task}` computes a task's context.** The units in the order of the concept, written to `.cache/packs/{workspace}/{task}.md`, with Done before this task read from the project (the files the earlier tasks create; the component's interface files for a revising or extending milestone) and `--include` for a file the task changes. It prints its size against the 10,000-token budget and says so when a pack is over it. `clean-cache` removes the packs.
+- **The thirteen templates of the set** are in `templates/set/`; the 3.x templates of the same names are untouched.
+- **Records:** the `document-set` harness module (17 cases) over the lab's four fixture sets; harness 479; engine 3.0.164. **Specifications:** `l2-sdd-document-set-engine` 1.0.2, `l2-engine-automation` 1.33.0, `l2-engine-templates` 1.3.5, `l2-test-suite` 1.48.6, registry 1.97.0.
+
 ## Phase 67 — 2026-11-19 (Goal Mode: A Bare `goal` Runs the Active Phase, a Brief Is Specified Once, Premises Are Reported)
 
 - **A bare `goal` runs the active phase (GM-9).** The argument is optional: the empty one continues a recorded goal while a criterion is not met and otherwise takes the active phase — the phase the ledger marks `In Progress`, else the first phase of the plan the ledger does not hold as `Done` — with one `[DR]` line; a finished goal is replaced without a line, and with no phase to take (the plan complete, stale or absent, or the phase `Blocked`) nothing runs and one line names the state. The argument gains `phase-3..5` and `plan`, each one criterion over the phases open when the goal is recorded.

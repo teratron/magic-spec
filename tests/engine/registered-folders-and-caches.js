@@ -36,9 +36,25 @@ module.exports = () => {
             const before = treeDigest(dir);
             const executor = path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js');
             const attempts = [
-                { args: ['--workspace=ghost'], env: {} },
-                { args: ['--workspace', 'ghost'], env: {} },
-                { args: [], env: { MAGIC_WORKSPACE: 'ghost' } },
+                {
+                    args: [
+                        '--workspace=ghost',
+                    ],
+                    env: {},
+                },
+                {
+                    args: [
+                        '--workspace',
+                        'ghost',
+                    ],
+                    env: {},
+                },
+                {
+                    args: [],
+                    env: {
+                        MAGIC_WORKSPACE: 'ghost',
+                    },
+                },
             ];
             for (const command of [
                 'update-state',
@@ -47,11 +63,21 @@ module.exports = () => {
                 'finalize',
                 'resume-state',
             ]) {
-                const extra = command === 'finalize' ? ['--workflow=run'] : [];
+                const extra =
+                    command === 'finalize'
+                        ? [
+                              '--workflow=run',
+                          ]
+                        : [];
                 for (const { args, env } of attempts) {
                     const result = spawnSync(
                         process.execPath,
-                        [executor, command, ...extra, ...args],
+                        [
+                            executor,
+                            command,
+                            ...extra,
+                            ...args,
+                        ],
                         {
                             cwd: dir,
                             encoding: 'utf8',
@@ -69,13 +95,25 @@ module.exports = () => {
                 }
             }
             // A default the registry does not hold is the same mistake, made in the file.
-            writeRoutingFixture(dir, routingRegistry({ default: 'ghost' }));
+            writeRoutingFixture(
+                dir,
+                routingRegistry({
+                    default: 'ghost',
+                }),
+            );
             const registryBefore = treeDigest(dir);
-            const defaulted = spawnSync(process.execPath, [executor, 'generate-context'], {
-                cwd: dir,
-                encoding: 'utf8',
-                env: routingEnv(),
-            });
+            const defaulted = spawnSync(
+                process.execPath,
+                [
+                    executor,
+                    'generate-context',
+                ],
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                    env: routingEnv(),
+                },
+            );
             assert.strictEqual(defaulted.status, 1);
             assert.strictEqual(defaulted.stderr.trim(), `HALT: ${unknownGhost}`);
             assert.deepStrictEqual(treeDigest(dir), registryBefore);
@@ -87,9 +125,15 @@ module.exports = () => {
     // A workspace folder with one finished phase, so that every writer below has something to write.
     const seedWorkspaceFolder = (dir, name) => {
         const wsDir = path.join(dir, '.magicspec', name);
-        fs.mkdirSync(path.join(wsDir, 'specifications'), { recursive: true });
-        fs.mkdirSync(path.join(wsDir, 'tasks'), { recursive: true });
-        fs.mkdirSync(path.join(wsDir, 'archives', 'tasks'), { recursive: true });
+        fs.mkdirSync(path.join(wsDir, 'specifications'), {
+            recursive: true,
+        });
+        fs.mkdirSync(path.join(wsDir, 'tasks'), {
+            recursive: true,
+        });
+        fs.mkdirSync(path.join(wsDir, 'archives', 'tasks'), {
+            recursive: true,
+        });
         fs.writeFileSync(
             path.join(wsDir, 'tasks', 'phase-1.md'),
             [
@@ -111,13 +155,33 @@ module.exports = () => {
 
     test('every script that writes into a workspace folder writes into a registered one and refuses an unregistered one, whether or not the folder exists (WI-14)', () => {
         const writers = [
-            { script: 'update-state', args: ['--decision', 'noted'] },
-            { script: 'generate-context', args: [] },
-            { script: 'archive-phases', args: [] },
-            { script: 'finalize', args: ['--workflow=run'] },
+            {
+                script: 'update-state',
+                args: [
+                    '--decision',
+                    'noted',
+                ],
+            },
+            {
+                script: 'generate-context',
+                args: [],
+            },
+            {
+                script: 'archive-phases',
+                args: [],
+            },
+            {
+                script: 'finalize',
+                args: [
+                    '--workflow=run',
+                ],
+            },
         ];
         for (const { script, args } of writers) {
-            for (const folder of ['absent', 'present']) {
+            for (const folder of [
+                'absent',
+                'present',
+            ]) {
                 const dir = createTempWorkspace();
                 try {
                     copyStateTemplate(dir);
@@ -133,7 +197,9 @@ module.exports = () => {
                             {
                                 cwd: dir,
                                 encoding: 'utf8',
-                                env: routingEnv({ MAGIC_DESIGN_DIR: `.magicspec/${workspace}` }),
+                                env: routingEnv({
+                                    MAGIC_DESIGN_DIR: `.magicspec/${workspace}`,
+                                }),
                             },
                         );
                     const where = `${script} (unregistered folder ${folder})`;
@@ -176,7 +242,11 @@ module.exports = () => {
                     '--workspace=.magicspec/ghost',
                     '--decision=x',
                 ],
-                { cwd: dir, encoding: 'utf8', env: routingEnv() },
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                    env: routingEnv(),
+                },
             );
             assert.strictEqual(result.status, 1);
             assert.strictEqual(result.stderr.trim(), `[update-state] HALT: ${unknownGhost}`);
@@ -187,10 +257,16 @@ module.exports = () => {
                 () =>
                     updateState(
                         path.join(dir, '.magicspec', 'ghost'),
-                        { decision: 'x' },
-                        { addDecision: true },
+                        {
+                            decision: 'x',
+                        },
+                        {
+                            addDecision: true,
+                        },
                     ),
-                { message: unknownGhost },
+                {
+                    message: unknownGhost,
+                },
             );
         } finally {
             cleanup(dir);
@@ -228,13 +304,23 @@ module.exports = () => {
             // An entry that is not an object registers nothing; a registry without workspaces judges nothing.
             fs.writeFileSync(
                 path.join(designDir, 'workspace.json'),
-                JSON.stringify({ workspaces: { web: { scope: [] }, broken: null, text: 'x' } }),
+                JSON.stringify({
+                    workspaces: {
+                        web: {
+                            scope: [],
+                        },
+                        broken: null,
+                        text: 'x',
+                    },
+                }),
             );
             assert.deepStrictEqual(
                 registeredWorkspaceNames(
                     JSON.parse(fs.readFileSync(path.join(designDir, 'workspace.json'), 'utf8')),
                 ),
-                ['web'],
+                [
+                    'web',
+                ],
             );
             assert.match(
                 unregisteredWorkspaceMessage(path.join(designDir, 'broken')),
@@ -242,7 +328,9 @@ module.exports = () => {
             );
             fs.writeFileSync(
                 path.join(designDir, 'workspace.json'),
-                JSON.stringify({ default: 'web' }),
+                JSON.stringify({
+                    default: 'web',
+                }),
             );
             assert.strictEqual(unregisteredWorkspaceMessage(path.join(designDir, 'ghost')), null);
             fs.writeFileSync(path.join(designDir, 'workspace.json'), '{ not json');
@@ -260,12 +348,16 @@ module.exports = () => {
             'update-state.js',
         ];
         // init creates the workspace it is given; the executor provisions only a registered folder.
-        const creators = ['init.js', 'executor.js'];
+        const creators = [
+            'init.js',
+            'executor.js',
+        ];
         // These read the folder, or name it in a comment, and write only at the state folder's level.
         const readers = [
             'analyze-coverage.js',
             'build-spec-graph.js',
             'check-bloat.js',
+            'check-docs.js',
             'check-prerequisites.js',
             'export-wiki.js',
             'extract-rationale.js',
@@ -275,10 +367,16 @@ module.exports = () => {
             'utils.js',
             path.join('lib', 'diagnostics.js'),
         ];
-        const classified = new Set([...writers, ...creators, ...readers]);
+        const classified = new Set([
+            ...writers,
+            ...creators,
+            ...readers,
+        ]);
         const found = [];
         const walk = (folder, prefix) => {
-            for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+            for (const entry of fs.readdirSync(folder, {
+                withFileTypes: true,
+            })) {
                 if (entry.isDirectory())
                     walk(path.join(folder, entry.name), path.join(prefix, entry.name));
                 else if (entry.name.endsWith('.js')) {
@@ -295,7 +393,9 @@ module.exports = () => {
             [],
             `classify the script(s) that read MAGIC_DESIGN_DIR: ${unclassified.join(', ')}`,
         );
-        const vanished = [...classified].filter((file) => !found.includes(file));
+        const vanished = [
+            ...classified,
+        ].filter((file) => !found.includes(file));
         assert.deepStrictEqual(
             vanished,
             [],
@@ -318,7 +418,14 @@ module.exports = () => {
         const routing =
             /^ {2}☐ Workspace Routing: .*`\[Workspace\] \{name\} — \{signal\}\. \(Override: \/magicspec \{command\} \{other\} …\)`/gm;
         // Analysis has one checklist per mode; every other body has one.
-        const checklists = { spec: 1, task: 1, run: 1, rule: 1, analyze: 3, status: 1 };
+        const checklists = {
+            spec: 1,
+            task: 1,
+            run: 1,
+            rule: 1,
+            analyze: 3,
+            status: 1,
+        };
         for (const [command, count] of Object.entries(checklists)) {
             const text = read(command);
             assert.ok(
@@ -332,7 +439,11 @@ module.exports = () => {
             );
         }
         // The commands that do not act on one workspace say nothing of routing.
-        for (const command of ['graph', 'help', 'migrate']) {
+        for (const command of [
+            'graph',
+            'help',
+            'migrate',
+        ]) {
             assert.ok(
                 !read(command).includes('resolve-workspace --command'),
                 `${command}.md does not route`,
@@ -345,7 +456,9 @@ module.exports = () => {
                 (file) =>
                     file.endsWith('.md') && read(file.slice(0, -3)).includes('create-workspace'),
             );
-        assert.deepStrictEqual(creators, ['spec.md']);
+        assert.deepStrictEqual(creators, [
+            'spec.md',
+        ]);
 
         const context = fs.readFileSync(
             path.join(engineFolder, 'references', 'context.md'),
@@ -368,7 +481,9 @@ module.exports = () => {
         });
         assert.deepStrictEqual(
             order,
-            [...order].sort((a, b) => a - b),
+            [
+                ...order,
+            ].sort((a, b) => a - b),
             'the chain is stated in the specified order',
         );
         assert.ok(
@@ -394,7 +509,10 @@ module.exports = () => {
     const findOwnWorkspaceExamples = (text) =>
         text
             .split(/\r?\n/)
-            .map((line, index) => ({ line, number: index + 1 }))
+            .map((line, index) => ({
+                line,
+                number: index + 1,
+            }))
             .filter(
                 ({ line }) =>
                     !ownWorkspaceExempt.test(line) &&
@@ -416,12 +534,19 @@ module.exports = () => {
                 }
                 return;
             }
-            for (const entry of fs.readdirSync(absolute, { withFileTypes: true })) {
+            for (const entry of fs.readdirSync(absolute, {
+                withFileTypes: true,
+            })) {
                 if (entry.name === 'node_modules') continue;
                 walk(`${relative}/${entry.name}`);
             }
         };
-        for (const target of ['skills/magicspec', 'docs', 'README.md', 'CONTRIBUTING.md'])
+        for (const target of [
+            'skills/magicspec',
+            'docs',
+            'README.md',
+            'CONTRIBUTING.md',
+        ])
             walk(target);
         assert.deepStrictEqual(found, [], `use {workspace} in examples:\n${found.join('\n')}`);
 
@@ -470,12 +595,28 @@ module.exports = () => {
     // One workspace of three specifications, so that a build leaves three extraction entries.
     const writeCacheFixture = () => {
         const dir = createTempWorkspace();
-        writeRoutingFixture(dir, { default: 'main', workspaces: { main: { scope: ['src'] } } });
+        writeRoutingFixture(dir, {
+            default: 'main',
+            workspaces: {
+                main: {
+                    scope: [
+                        'src',
+                    ],
+                },
+            },
+        });
         const specs = path.join(dir, '.magicspec', 'main', 'specifications');
-        for (const name of ['l1-a', 'l1-b', 'l1-c']) {
+        for (const name of [
+            'l1-a',
+            'l1-b',
+            'l1-c',
+        ]) {
             fs.writeFileSync(path.join(specs, `${name}.md`), cacheSpecText(name));
         }
-        return { dir, specs };
+        return {
+            dir,
+            specs,
+        };
     };
 
     const buildGraph = (dir, args = []) =>
@@ -486,7 +627,11 @@ module.exports = () => {
                 'build-spec-graph',
                 ...args,
             ],
-            { cwd: dir, encoding: 'utf8', env: routingEnv() },
+            {
+                cwd: dir,
+                encoding: 'utf8',
+                env: routingEnv(),
+            },
         );
 
     const extractionFolder = (dir) => path.join(dir, '.magicspec', 'graph', '.cache');
@@ -509,7 +654,10 @@ module.exports = () => {
             fs.rmSync(path.join(specs, 'l1-b.md'));
             const second = buildGraph(dir);
             assert.strictEqual(second.status, 0, second.stderr);
-            const expected = ['l1-a', 'l1-c']
+            const expected = [
+                'l1-a',
+                'l1-c',
+            ]
                 .map((name) => extractionEntryOf(dir, path.join(specs, `${name}.md`)))
                 .sort();
             assert.deepStrictEqual(extractionEntries(dir), expected);
@@ -521,7 +669,9 @@ module.exports = () => {
 
             // The machine-readable output stays one document: the line about the cache is for people.
             fs.writeFileSync(path.join(specs, 'l1-c.md'), cacheSpecText('l1-c', '\nChanged.\n'));
-            const machine = buildGraph(dir, ['--json']);
+            const machine = buildGraph(dir, [
+                '--json',
+            ]);
             assert.strictEqual(machine.status, 0, machine.stderr);
             assert.doesNotThrow(() => JSON.parse(machine.stdout));
             assert.strictEqual(extractionEntries(dir).length, 2);
@@ -572,7 +722,9 @@ module.exports = () => {
             }
 
             // Bypassing the cache reads and writes no entry, so it must not look at the folder either.
-            const bypassed = buildGraph(dir, ['--no-cache']);
+            const bypassed = buildGraph(dir, [
+                '--no-cache',
+            ]);
             assert.strictEqual(bypassed.status, 0, bypassed.stderr);
             assert.deepStrictEqual(extractionEntries(dir), afterFailure);
 
@@ -617,7 +769,11 @@ module.exports = () => {
         try {
             const cache = requireFromFixture(dir, 'graph-cache.js');
             const designAbs = path.join(dir, '.magicspec');
-            const empty = { refs: [], parent: null, conventions: [] };
+            const empty = {
+                refs: [],
+                parent: null,
+                conventions: [],
+            };
             const written = path.join(specs, 'l1-a.md');
             const read = path.join(specs, 'l1-b.md');
 
@@ -634,7 +790,10 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 extractionEntries(dir),
-                [extractionEntryOf(dir, written), extractionEntryOf(dir, read)].sort(),
+                [
+                    extractionEntryOf(dir, written),
+                    extractionEntryOf(dir, read),
+                ].sort(),
             );
             // Nothing was used since the last prune: both entries are stale in the next round.
             assert.strictEqual(cache.pruneUnused(designAbs), 2);
@@ -647,7 +806,12 @@ module.exports = () => {
     // The caches the engine writes, with who owns each and whether it can be rebuilt. A script that
     // introduces a cache adds its row here and in the specification's inventory in the same change.
     const cacheInventory = [
-        { cache: 'graph/.cache/', owner: 'graph-cache.js', mark: 'inUse', rebuildable: true },
+        {
+            cache: 'graph/.cache/',
+            owner: 'graph-cache.js',
+            mark: 'inUse',
+            rebuildable: true,
+        },
         {
             cache: 'graph/query.json',
             owner: 'build-spec-graph.js',
@@ -660,7 +824,12 @@ module.exports = () => {
             mark: 'DEFAULT_HTML_PATH',
             rebuildable: true,
         },
-        { cache: 'graph/wiki/', owner: 'export-wiki.js', mark: 'pruneWiki', rebuildable: true },
+        {
+            cache: 'graph/wiki/',
+            owner: 'export-wiki.js',
+            mark: 'pruneWiki',
+            rebuildable: true,
+        },
         {
             cache: '.cache/finalize-state.json',
             owner: 'finalize.js',
@@ -709,6 +878,12 @@ module.exports = () => {
             mark: 'memory.lock',
             rebuildable: true,
         },
+        {
+            cache: '.cache/packs/',
+            owner: 'pack.js',
+            mark: 'packs',
+            rebuildable: true,
+        },
     ];
 
     test('every script that writes a cache is in the inventory, and every row still has its writer', () => {
@@ -723,7 +898,9 @@ module.exports = () => {
         ]);
         const mentions = [];
         const scan = (folder, prefix) => {
-            for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+            for (const entry of fs.readdirSync(folder, {
+                withFileTypes: true,
+            })) {
                 const relative = path.join(prefix, entry.name);
                 if (entry.isDirectory()) scan(path.join(folder, entry.name), relative);
                 else if (entry.name.endsWith('.js')) {
@@ -764,13 +941,21 @@ module.exports = () => {
                         path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js'),
                         'export-wiki',
                     ],
-                    { cwd: dir, encoding: 'utf8', env: routingEnv() },
+                    {
+                        cwd: dir,
+                        encoding: 'utf8',
+                        env: routingEnv(),
+                    },
                 );
             const wiki = path.join(dir, '.magicspec', 'graph', 'wiki');
             assert.strictEqual(exportWiki().status, 0);
             const first = fs.readdirSync(wiki).sort();
             assert.ok(first.includes('index.md'));
-            for (const name of ['l1-a', 'l1-b', 'l1-c']) {
+            for (const name of [
+                'l1-a',
+                'l1-b',
+                'l1-c',
+            ]) {
                 assert.ok(
                     first.some((file) => file.includes(`__${name}.md`)),
                     `a page for ${name}`,
@@ -799,21 +984,49 @@ module.exports = () => {
                 JSON.parse(fs.readFileSync(path.join(graphFolder, 'query.json'), 'utf8')).nodes.map(
                     (node) => node.id,
                 );
-            assert.strictEqual(buildGraph(dir, ['--json', '--out']).status, 0);
+            assert.strictEqual(
+                buildGraph(dir, [
+                    '--json',
+                    '--out',
+                ]).status,
+                0,
+            );
             assert.ok(nodeIds().includes('spec:main/l1-b'));
-            assert.deepStrictEqual(fs.readdirSync(graphFolder).sort(), ['.cache', 'query.json']);
+            assert.deepStrictEqual(fs.readdirSync(graphFolder).sort(), [
+                '.cache',
+                'query.json',
+            ]);
 
             fs.rmSync(path.join(specs, 'l1-b.md'));
             fs.writeFileSync(path.join(specs, 'l1-d.md'), cacheSpecText('l1-d'));
-            assert.strictEqual(buildGraph(dir, ['--json', '--out']).status, 0);
+            assert.strictEqual(
+                buildGraph(dir, [
+                    '--json',
+                    '--out',
+                ]).status,
+                0,
+            );
             assert.ok(
                 nodeIds().includes('spec:main/l1-d') && !nodeIds().includes('spec:main/l1-b'),
             );
-            assert.deepStrictEqual(fs.readdirSync(graphFolder).sort(), ['.cache', 'query.json']);
+            assert.deepStrictEqual(fs.readdirSync(graphFolder).sort(), [
+                '.cache',
+                'query.json',
+            ]);
 
-            assert.strictEqual(buildGraph(dir, ['--html']).status, 0);
+            assert.strictEqual(
+                buildGraph(dir, [
+                    '--html',
+                ]).status,
+                0,
+            );
             fs.rmSync(path.join(specs, 'l1-c.md'));
-            assert.strictEqual(buildGraph(dir, ['--html']).status, 0);
+            assert.strictEqual(
+                buildGraph(dir, [
+                    '--html',
+                ]).status,
+                0,
+            );
             assert.deepStrictEqual(fs.readdirSync(graphFolder).sort(), [
                 '.cache',
                 'graph.html',
@@ -843,7 +1056,11 @@ module.exports = () => {
                         'finalize',
                         '--workflow=run',
                     ],
-                    { cwd: dir, encoding: 'utf8', env: routingEnv() },
+                    {
+                        cwd: dir,
+                        encoding: 'utf8',
+                        env: routingEnv(),
+                    },
                 );
             fs.writeFileSync(planFile, '# Plan\n\nOne.\n');
             assert.strictEqual(finalize().status, 0);
@@ -886,7 +1103,11 @@ module.exports = () => {
                         '--decision',
                         'noted',
                     ],
-                    { cwd: dir, encoding: 'utf8', env: routingEnv() },
+                    {
+                        cwd: dir,
+                        encoding: 'utf8',
+                        env: routingEnv(),
+                    },
                 );
             const locks = () =>
                 fs.existsSync(cacheFolder)
@@ -920,7 +1141,11 @@ module.exports = () => {
                 'clean-cache',
                 ...args,
             ],
-            { cwd: dir, encoding: 'utf8', env: routingEnv() },
+            {
+                cwd: dir,
+                encoding: 'utf8',
+                env: routingEnv(),
+            },
         );
 
     // A project in which every cache exists, beside what must survive: recorded findings, a feedback
@@ -929,15 +1154,35 @@ module.exports = () => {
         const { dir, specs } = writeCacheFixture();
         copyStateTemplate(dir);
         const design = path.join(dir, '.magicspec');
-        assert.strictEqual(buildGraph(dir, ['--json', '--out']).status, 0);
-        assert.strictEqual(buildGraph(dir, ['--html']).status, 0);
+        assert.strictEqual(
+            buildGraph(dir, [
+                '--json',
+                '--out',
+            ]).status,
+            0,
+        );
+        assert.strictEqual(
+            buildGraph(dir, [
+                '--html',
+            ]).status,
+            0,
+        );
         const exportWiki = spawnSync(
             process.execPath,
-            [path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js'), 'export-wiki'],
-            { cwd: dir, encoding: 'utf8', env: routingEnv() },
+            [
+                path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js'),
+                'export-wiki',
+            ],
+            {
+                cwd: dir,
+                encoding: 'utf8',
+                env: routingEnv(),
+            },
         );
         assert.strictEqual(exportWiki.status, 0);
-        fs.mkdirSync(path.join(design, '.cache'), { recursive: true });
+        fs.mkdirSync(path.join(design, '.cache'), {
+            recursive: true,
+        });
         fs.writeFileSync(
             path.join(design, '.cache', 'finalize-state.json'),
             '{"lastWorkflow":"magic.run"}',
@@ -957,7 +1202,12 @@ module.exports = () => {
         const backup = path.join(dir, 'magicspec-migration-backup-2026-01-02');
         fs.mkdirSync(backup);
         fs.writeFileSync(path.join(backup, 'old.txt'), 'the safety copy');
-        return { dir, specs, design, backup };
+        return {
+            dir,
+            specs,
+            design,
+            backup,
+        };
     };
 
     // What the command must leave exactly as it was.
@@ -973,19 +1223,45 @@ module.exports = () => {
         const { dir, backup } = writeCachedProject();
         try {
             const before = treeDigest(dir);
-            const listed = runCleanCache(dir, ['--dry-run']);
+            const listed = runCleanCache(dir, [
+                '--dry-run',
+            ]);
             assert.strictEqual(listed.status, 0, listed.stderr);
             assert.deepStrictEqual(treeDigest(dir), before, 'nothing was removed');
             assert.match(listed.stdout, /^Would remove \(dry run\):$/m);
             for (const [shown, kind] of [
-                ['.magicspec/graph/.cache/', /3 files/],
-                ['.magicspec/graph/query.json', /1 file,/],
-                ['.magicspec/graph/graph.html', /1 file,/],
-                ['.magicspec/graph/wiki/', /files/],
-                ['.magicspec/.cache/finalize-state.json', /1 file,/],
-                ['.magicspec/.cache/memory.json', /1 file,/],
-                ['.magicspec/.cache/memory.sqlite', /1 file,/],
-                ['.magicspec/.cache/docs-state.json', /1 file,/],
+                [
+                    '.magicspec/graph/.cache/',
+                    /3 files/,
+                ],
+                [
+                    '.magicspec/graph/query.json',
+                    /1 file,/,
+                ],
+                [
+                    '.magicspec/graph/graph.html',
+                    /1 file,/,
+                ],
+                [
+                    '.magicspec/graph/wiki/',
+                    /files/,
+                ],
+                [
+                    '.magicspec/.cache/finalize-state.json',
+                    /1 file,/,
+                ],
+                [
+                    '.magicspec/.cache/memory.json',
+                    /1 file,/,
+                ],
+                [
+                    '.magicspec/.cache/memory.sqlite',
+                    /1 file,/,
+                ],
+                [
+                    '.magicspec/.cache/docs-state.json',
+                    /1 file,/,
+                ],
             ]) {
                 const line = listed.stdout.split('\n').find((row) => row.trim().startsWith(shown));
                 assert.ok(line, `${shown} is listed`);
@@ -1016,19 +1292,46 @@ module.exports = () => {
     test('clean-cache removes exactly the rebuildable caches, asks nothing, and a second run finds nothing to remove', () => {
         const { dir, design, backup } = writeCachedProject();
         try {
-            const kept = keptFiles(design, backup).map((file) => [file, fs.readFileSync(file)]);
+            const kept = keptFiles(design, backup).map((file) => [
+                file,
+                fs.readFileSync(file),
+            ]);
             const removed = runCleanCache(dir);
             assert.strictEqual(removed.status, 0, removed.stderr);
             assert.match(removed.stdout, /^Removed:$/m);
             for (const gone of [
-                ['graph', '.cache'],
-                ['graph', 'query.json'],
-                ['graph', 'graph.html'],
-                ['graph', 'wiki'],
-                ['.cache', 'finalize-state.json'],
-                ['.cache', 'memory.json'],
-                ['.cache', 'memory.sqlite'],
-                ['.cache', 'docs-state.json'],
+                [
+                    'graph',
+                    '.cache',
+                ],
+                [
+                    'graph',
+                    'query.json',
+                ],
+                [
+                    'graph',
+                    'graph.html',
+                ],
+                [
+                    'graph',
+                    'wiki',
+                ],
+                [
+                    '.cache',
+                    'finalize-state.json',
+                ],
+                [
+                    '.cache',
+                    'memory.json',
+                ],
+                [
+                    '.cache',
+                    'memory.sqlite',
+                ],
+                [
+                    '.cache',
+                    'docs-state.json',
+                ],
             ]) {
                 assert.ok(
                     !fs.existsSync(path.join(design, ...gone)),
@@ -1047,7 +1350,13 @@ module.exports = () => {
             assert.doesNotMatch(again.stdout, /^Removed:/m);
 
             // What was removed comes back from the commands that own it: nothing was lost.
-            assert.strictEqual(buildGraph(dir, ['--json', '--out']).status, 0);
+            assert.strictEqual(
+                buildGraph(dir, [
+                    '--json',
+                    '--out',
+                ]).status,
+                0,
+            );
             assert.ok(fs.existsSync(path.join(design, 'graph', 'query.json')));
         } finally {
             cleanup(dir);
@@ -1060,7 +1369,10 @@ module.exports = () => {
         try {
             fs.writeFileSync(path.join(outside, 'precious.md'), 'not a cache');
             const wiki = path.join(design, 'graph', 'wiki');
-            fs.rmSync(wiki, { recursive: true, force: true });
+            fs.rmSync(wiki, {
+                recursive: true,
+                force: true,
+            });
             fs.symlinkSync(outside, wiki, 'junction');
             const run = runCleanCache(dir);
             assert.strictEqual(run.status, 0, run.stderr);
@@ -1071,7 +1383,10 @@ module.exports = () => {
             );
         } finally {
             try {
-                fs.rmSync(path.join(design, 'graph', 'wiki'), { recursive: false, force: true });
+                fs.rmSync(path.join(design, 'graph', 'wiki'), {
+                    recursive: false,
+                    force: true,
+                });
             } catch {
                 /* the link goes with the folder */
             }
@@ -1094,12 +1409,16 @@ module.exports = () => {
     test('the command table lists clean-cache, --help prints its usage, an unknown option is refused, and the documentation names it', () => {
         const dir = createTempWorkspace();
         try {
-            const help = runCleanCache(dir, ['--help']);
+            const help = runCleanCache(dir, [
+                '--help',
+            ]);
             assert.strictEqual(help.status, 0);
             assert.match(help.stdout, /^clean-cache — /);
             assert.ok(help.stdout.includes('--dry-run'));
             assert.match(executorListing(dir), /^ {2}clean-cache /m);
-            const refused = runCleanCache(dir, ['--everything']);
+            const refused = runCleanCache(dir, [
+                '--everything',
+            ]);
             assert.strictEqual(refused.status, 1);
             assert.match(refused.stderr, /Unknown option '--everything'/);
             const graphPage = fs.readFileSync(
@@ -1119,7 +1438,9 @@ module.exports = () => {
     test("the documentation sync keeps its state in the state folder's cache, reads the state the earlier location left, and retires it", () => {
         const dir = createTempWorkspace(true);
         try {
-            fs.mkdirSync(path.join(dir, 'scripts', 'templates'), { recursive: true });
+            fs.mkdirSync(path.join(dir, 'scripts', 'templates'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(dir, 'scripts', 'templates', 'contributing.md'),
                 '# Contributing <!-- generated:version --><!-- /generated:version -->\n\n## Registry\n\n<!-- generated:workspaces -->\n<!-- /generated:workspaces -->\n',
@@ -1134,7 +1455,9 @@ module.exports = () => {
                 '## Workspaces\n| test | desc |\n## Meta\n',
             );
             fs.mkdirSync(path.join(dir, 'docs'));
-            fs.mkdirSync(path.join(dir, 'skills', 'magicspec', 'workflows'), { recursive: true });
+            fs.mkdirSync(path.join(dir, 'skills', 'magicspec', 'workflows'), {
+                recursive: true,
+            });
             const doc = path.join(dir, 'docs', 'test-wf.md');
             fs.writeFileSync(
                 doc,
@@ -1146,11 +1469,20 @@ module.exports = () => {
             );
             const script = path.join(dir, 'scripts', 'sync-docs.js');
             const run = (env = {}) =>
-                execFileSync(process.execPath, [script], {
-                    cwd: dir,
-                    stdio: 'pipe',
-                    env: { ...process.env, ...env },
-                });
+                execFileSync(
+                    process.execPath,
+                    [
+                        script,
+                    ],
+                    {
+                        cwd: dir,
+                        stdio: 'pipe',
+                        env: {
+                            ...process.env,
+                            ...env,
+                        },
+                    },
+                );
             const stateFile = path.join(dir, '.magicspec', '.cache', 'docs-state.json');
             const legacyDir = path.join(dir, '.cache');
             const legacyFile = path.join(legacyDir, '.docs-state.json');
@@ -1188,7 +1520,9 @@ module.exports = () => {
             // A preview retires nothing.
             fs.mkdirSync(legacyDir);
             fs.renameSync(stateFile, legacyFile);
-            run({ MAGIC_DRY_RUN: '1' });
+            run({
+                MAGIC_DRY_RUN: '1',
+            });
             assert.ok(fs.existsSync(legacyFile), 'a dry run leaves the earlier state where it is');
         } finally {
             cleanup(dir);

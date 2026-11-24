@@ -71,6 +71,16 @@ const COMMANDS = {
         summary: 'Advisory: flag oversized specifications, phase files and working documents.',
         options: { '--json': { kind: 'bool', help: 'Print machine-readable JSON' } },
     },
+    'check-docs': {
+        summary:
+            'Check the document set of a 4.0 workspace; one finding per line, exit 1 on findings (a workspace not in the 4.0 format prints one line and exits 0).',
+        options: {
+            '--budget': {
+                kind: 'value',
+                help: 'Pack budget in tokens for the computed units of a task (default: 10000)',
+            },
+        },
+    },
     'check-prerequisites': {
         summary: 'Pre-flight: engine integrity, projections, registry and plan consistency.',
         options: {
@@ -257,6 +267,17 @@ const COMMANDS = {
             '--host': {
                 kind: 'value',
                 help: 'Comma-separated hosts to project for (default: the hosts found)',
+            },
+        },
+    },
+    pack: {
+        summary:
+            'Compute the context pack of one task of a 4.0 workspace and write it under .cache/packs/; print its size against the budget.',
+        positional: ['<task>'],
+        options: {
+            '--include': {
+                kind: 'value',
+                help: 'A file the task changes but did not write, added as built (repeatable)',
             },
         },
     },
@@ -571,7 +592,7 @@ function listText(prefix = 'node scripts/executor.js') {
  * loaded by another module (a test, a library caller), so it never meets the host's own argv.
  *
  * @param {string} name - The command, as in the table.
- * @param {NodeModule} scriptModule - The calling script's `module`.
+ * @param {{exports: unknown}} scriptModule - The calling script's `module` (any CommonJS module object, so a type-checked script passes its own).
  * @returns {void}
  */
 function guardArgv(name, scriptModule) {

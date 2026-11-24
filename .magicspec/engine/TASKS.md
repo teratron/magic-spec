@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.76.0
+**Version:** 1.78.0
 **Generated:** 2026-11-24
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.83.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.84.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,7 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 68](tasks/phase-68.md) | The 4.0 Document Set: Format, Checker and Pack (4.0 Step 1) — `check-docs` and `pack` ported from the documentation lab onto the engine's resolvers and registered in the executor, behind `"format": "4"`, with the token counter as a library module, the pack cache owned by `clean-cache`, the thirteen templates of the set in `templates/set/`, the lab's four fixture sets and one harness module, and the specifications as built; nothing a 3.x workspace reads or writes changes; 11 tasks in five tracks (C, P, F, H, S/T) | `Todo` |
+| [Phase 69](tasks/phase-69.md) | The Forward Gate (4.0 Step 2) — one forward run from an idea alone, measured in the documentation lab's run folder: clean-context agents write a document set stage by stage (spec, cross-stack review, stack, plan, tasks) until `check-docs` reports nothing, clean-context builders build every task of its first milestone from `pack` output alone, the milestone is observed on what they built, every loss is traced to the format or to the content, and the verdict (pass criteria fixed before the run) decides whether Phases 70 and 71 may start; the record goes to `simulations/forward-gate.md`; 13 tasks in six tracks (A, D, B, O, R, S/T) | `Todo` |
+| [Phase 68](archives/tasks/phase-68.md) | The 4.0 Document Set: Format, Checker and Pack (4.0 Step 1) — `check-docs` and `pack` ported from the documentation lab onto the engine's resolvers and registered in the executor, behind `"format": "4"`, with the token counter as a library module, the pack cache owned by `clean-cache`, the thirteen templates of the set in `templates/set/`, the lab's four fixture sets and one harness module, and the specifications as built; nothing a 3.x workspace reads or writes changes; 11 tasks in five tracks (C, P, F, H, S/T) | `Done (Archived)` |
 | [Phase 67](archives/tasks/phase-67.md) | Goal Mode: A Bare `goal` Runs the Active Phase, a Brief Is Specified Once, Premises Are Reported — `goal` with no argument continues the recorded goal while it is unfinished and otherwise runs the active phase, a finished goal is replaced without a line, the argument gains the range of phases and the whole plan; the first `spec` run of a statement takes the whole brief; the premises the forecast accepts are recorded in the goal block and listed in the report, and nothing is asked after the intake but the queued consents; the router row, `help`, the documentation and the cases say the same; 14 tasks in four tracks (B, G, R, S) | `Done (Archived)` |
 | [Phase 65](archives/tasks/phase-65.md) | Prompting Guidance: Goal Mode Does Not Stop Itself, Material the Person's Words Reach, Patterns Not Used — three amendments built in three independent tracks: goal mode names the four ends of a turn it never takes (GM-10), the Input Pass lets the person's own words reach an instruction inside pasted material (IP-3), and a design system names the patterns its product does not use (UI-2, UI-5); a fourth track writes the cognitive-suite cases and brings the three specifications to as-built; 10 tasks in four tracks (G, P, U, S) | `Done (Archived)` |
 | [Phase 66](archives/tasks/phase-66.md) | Maintenance: The Analysis the Specification Workflow Delegates Is Governed by analyze.md Alone — the `Project Analysis Delegation` section of `workflows/spec.md` states that `analyze.md` governs the delegated analysis under its own write rules, with no guard, approval wait or effort plea of its own; the read-only guard names Explore Mode only | `Done (Archived)` |

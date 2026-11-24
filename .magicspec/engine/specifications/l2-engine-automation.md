@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.32.2
+**Version:** 1.33.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -25,6 +25,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **lib/simulation-findings.js**: The failed and inconclusive steps the last runs of a workspace's scenarios recorded, read from the scenario files for the next-step computation of `finalize` and the argument form of `fix` — it keeps no store, ignores a layout shown in a comment or a code block and fails open ([l1-product-simulation.md](l1-product-simulation.md) SM-7).
 - **feedback.js** with **lib/feedback.js**, **lib/feedback-draft.js** and **lib/feedback-submit.js**: The engine feedback channel — `note`, `list`, `draft`, `submit`, `keep` and `discard` (the record and its limits are in [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11). Always exits 0; submission goes through the person's own `gh` client only.
 - **clean-cache.js**: Removes the rebuildable caches of the project; `--dry-run` lists them (§Cache Retention).
+- **check-docs.js** and **pack.js** with **lib/count-tokens.js**: the checker and the pack builder of the 4.0 document set ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.2). Both read the workspace the executor resolved and act only when its entry in `workspace.json` carries `"format": "4"`; on any other workspace they print one line and exit 0. `check-docs` reads and reports only; `pack` writes the cache of the task packs (§Cache Retention). Neither requires anything outside the skill folder, and the token measure (characters divided by four, rounded up) lives once, in `lib/count-tokens.js`.
 - **check-prerequisites.js**: Validates engine integrity and project state.
 - **generate-checksums.js**: Maintains `skills/magicspec/.checksums`. Honors `.gitignore` during the file walk (Invariant 7 parity).
 - **generate-context.js**: Regenerates `CONTEXT.md` from current project state.
@@ -327,6 +328,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 | Documentation-sync state (engine repository only) | `.cache/docs-state.json` | `scripts/sync-docs.js` | the next documentation sync | one file; the earlier `.docs-state.json` in a `.cache/` at the project root is read once, then retired, and its folder goes only when empty |
 | State lock | `.cache/state-{workspace}.lock` | `lib/file-lock.js`, taken by `update-state` | not kept | removed after use; a lock left by a killed process is taken over after 30 seconds |
 | Memory index | `.cache/memory.sqlite` or `.cache/memory.json` (and `.cache/memory.lock` while a command writes it) | `memory-index` ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)) | `memory-index --rebuild` | one file; rebuilt on a schema change |
+| Task packs of the document set | `.cache/packs/{workspace}/{task}.md` | `pack.js` | `pack {task}` | one file per task, overwritten by the next run |
 | Diagnostics sink | `.cache/diagnostics.jsonl` | `lib/diagnostics.js` | not rebuildable — recorded findings | drained by finalize, retention bound of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) |
 | Feedback notes | `.cache/feedback.json` | `lib/feedback.js` ([l1-agent-feedback.md](l1-agent-feedback.md)) | not rebuildable — recorded notes | the limits of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11 (EF-5) |
 | Migration backups | `magicspec-migration-backup-{date}/` (project root) | `migrate` | not rebuildable — the person's safety copy | never removed by the engine |
@@ -334,7 +336,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 **Rules.**
 
 1. **Writers prune their own.** Each rebuildable cache is pruned by its owner after a successful write — the periodic cleaning happens where the cache is written, with no separate schedule. A failed write prunes nothing.
-2. **`clean-cache`.** An executor subcommand removes the rebuildable caches of the project (every row up to and including the memory index, except the lock, which is not kept) and prints each path with its size; `--dry-run` lists without removing. It never touches the diagnostics sink, the feedback notes or the migration backups; it lists the backups with their age and the command that deletes one by hand. Removing a rebuildable cache destroys no work, so the command asks nothing.
+2. **`clean-cache`.** An executor subcommand removes the rebuildable caches of the project (every row up to and including the task packs, except the lock, which is not kept) and prints each path with its size; `--dry-run` lists without removing. It never touches the diagnostics sink, the feedback notes or the migration backups; it lists the backups with their age and the command that deletes one by hand. Removing a rebuildable cache destroys no work, so the command asks nothing.
 3. **Nothing outside the state folder** is removed by either rule, except that the listing names the backups in the project root.
 
 **As built (Phase 48).** The extraction cache is pruned by `graph-cache.js`: it records the hash of every entry the process reads or writes and removes the others, and the `*.json.tmp` leftovers of interrupted writes, only after the build that asked for them returned — a build that throws prunes nothing, and `--no-cache` never prunes. Measured on this repository during the phase: 226 entries for 53 specification files before (none matched a current file), 53 after the first build, 53 after a second that hit 53 of 53. `clean-cache` never follows a link (it says `is a link: left alone`), keeps the graph baselines a person saves (`graph/snapshot.json`, `graph/before.json`), lists the migration backups with their age and the command that deletes one, exits 0 with one line in a project with no state folder, and a second run says `Nothing to remove`. A harness case holds the inventory as a table and fails when a script outside it mentions a cache folder or a row's writer stops writing it.
@@ -394,6 +396,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.33.0 | 2026-11-24 | Agent | As built in Phase 68, Stable retained, no requirement changed: the Components list gains `check-docs.js`, `pack.js` and `lib/count-tokens.js` (the checker and the pack builder of the 4.0 document set, acting on a workspace only when it is in the 4.0 format), and the cache inventory gains the task packs (`.cache/packs/{workspace}/{task}.md`, owned by `pack.js`, removed by `clean-cache`). |
 | 1.32.2 | 2026-11-18 | Agent | Clarification patch, Stable retained (a repair of Phase 63, feedback note n3): the DESIGN_DEBT_PENDING predicate as built also requires a current plan — no registry or constitution gap — so a plan a specification pass moved past is revalidated before its Backlog can halt it; the requirement is `l1-session-continuity.md` 2.6.0 §Stale-Plan Precedence. |
 | 1.32.1 | 2026-11-13 | Agent | Clarification patch, Stable retained (a repair of Phase 57, feedback note n2): the executor section states that a child Node process is started with the running runtime's own path and not by the name `node`, which on Windows without a shell found another Node than the one that started the executor. The maintenance executor wrapper and the maintenance pipeline follow the same rule. |
 | 1.32.0 | 2026-11-12 | Agent | As built in Phase 55, Stable retained: the Components list gains `sync.js` and its nine libraries; the command table gains `sync` (`[area \| workspace]`,`--dry-run`; no`provisions`, no`usesSqlite`); the folder-write table gains its row; the graph extraction cache honors`MAGIC_DRY_RUN`; and the maintenance script`update-project-meta.js`is retired — its entry leaves the command-guard list, the cache inventory (`.cache/project-meta-state.json` was its alone, and `clean-cache` no longer lists it) and the script inventory, and the sentence that kept its history rule says that registry versions and history are authored with the specifications. |

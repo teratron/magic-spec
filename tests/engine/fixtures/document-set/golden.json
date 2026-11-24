@@ -1,0 +1,40 @@
+{
+  "bad": [
+    "duplicate address R1 in rules.md, rules.md",
+    "tasks/M2.md: M2.T1 Context names hello.9, which is not defined"
+  ],
+  "bad3": [
+    "stack/rust/bind/hello.md: hello.b3 Defines greet, already defined by hello.b1",
+    "M2.T2: Creates names no tests",
+    "M2.T1 produces hello.b1, which uses greet_twice of hello.b2, produced only by M2.T2 after it",
+    "M3.T1 produces extra.b1, which uses greet of hello.b1, but does not consume it",
+    "product.md: log has scope priority could but is required by must work",
+    "plan.md: integration hello+extra (M2 with M3) has no owner",
+    "rules.md: R2 applies from M1, but its checker extra is closed by M3",
+    "rules.md: R3 is checked by ci (closed by M1) over hello — M2 must list Extends: ci",
+    "plan.md: M2 Extends extra, closed by M3, which it does not need",
+    "product.md: P5 (should) is observed by no milestone of its priority — name one with \"observed in M{n}\""
+  ],
+  "bad4": [
+    "spec/hello.md: hello.4 carries C1, which does not list it under Affects",
+    "changes.md: C1 is a revision with no Evidence line",
+    "changes.md: C1 is in no Context of the tasks of M3",
+    "changes.md: C2 is open, but hello.2 already carry it — it is placed",
+    "changes.md: C3 lists hello.1 under Affects, but hello.1 carries no revision of it",
+    "changes.md: C3 is a stack change but affects the neutral unit hello.1",
+    "changes.md: C3 is in no Context of the tasks of M3",
+    "changes.md: C4 Kind is growth",
+    "changes.md: C4 affects core, but no milestone under Built by closes, extends or revises it",
+    "changes.md: C4 is built, but M3 is not done",
+    "changes.md: C4 is in no Context of the tasks of M3",
+    "changes.md: C5 is satisfied with no Evidence line",
+    "changes.md: C5 is satisfied, but names M3 under Built by",
+    "changes.md: C6 names the asset README.md, but no task of M3 creates it",
+    "changes.md: C6 is in no Context of the tasks of M3",
+    "spec/hello.md: hello.3 mentions hello.2, withdrawn by C2",
+    "hello.1 is at rev 2 but the map has rev 1, and it keeps no Was line of the built revision",
+    "hello.2 is stale (rev 1, withdrawn; the map has rev 1) and no task still to do builds it",
+    "hello.4 is stale (rev 2; the map has nothing) and no task still to do builds it",
+    "M3.T1: its pack holds hello.3, which has an open question"
+  ]
+}

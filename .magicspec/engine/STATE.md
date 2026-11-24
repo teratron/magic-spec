@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-24 17:07
-**Phase:** 68 — The 4.0 Document Set: Format, Checker and Pack
+**Updated:** 2026-11-24 18:51
+**Phase:** 69 — The Forward Gate
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-67ST01 Validation: the full harness, the static checks, the integrity check and the changelog
+- **Task:** T-68T01 Validation: static checks, full harness, C14
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Execute T-68C01 Port the token counter to `scripts/lib/count-tokens.js` via /magicspec run engine
+- **Next Action:** Execute T-69A01 Fix the idea, the stack and the pass criteria before anything is run via /magicspec run engine
 
 ## Progress
 
 ```
-Phase 68: [0/11] ░░░░░░░░ 0%
-Overall: [67/68] ████████ 99%
+Phase 69: [0/13] ░░░░░░░░ 0%
+Overall: [68/69] ████████ 99%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-24 **Decision:** Phase 68 complete. Provides: check-docs and pack of the 4.0 document set (behind format 4), lib/count-tokens.js, the pack cache owned by clean-cache, templates/set/ (13), document-set harness module (17 cases, harness 479), engine 3.0.164, registry 1.97.0
 - 2026-11-19 **Decision:** Phase 67 complete. Provides: goal's optional argument (the empty one continues an unfinished goal, else runs the active phase; phase-3..5 and plan), the first spec run takes the whole brief, premises decided, recorded in the goal block and reported under Assumptions with nothing asked after the intake; router row optional with the Dispatch exception removed; T367-T371, S-14; engine 3.0.160, harness 462, registry 1.94.0
 - 2026-11-19 **Decision:** Phase 65 complete. Provides: GM-10 in the goal body (the four ends of a turn the mode never takes, the host-ended turn told apart, a finalization handoff line as the input of the next iteration); IP-3 in the prompt-engineer card, its mirror and four texts (the host marking only adds to material, the person's own words adopt an instruction through every gate); the design-system Patterns Not Used section with the ui-ux-designer steps and mirror; suite T365 and T366, scenario S-13; engine 3.0.154, harness 461, registry 1.92.0
 - 2026-11-18 **Decision:** Phase 64 complete (maintenance). Provides: finalize names the task command after a plan only while a phase of the ledger is open; a finished ledger leaves the step to the plan state; l2-engine-finalization 3.10.0 (PL-5 restored), l2-test-suite 1.48.4; engine 3.0.149, harness 457, registry 1.90.0
 - 2026-11-18 **Decision:** Phase 62 complete (maintenance). Provides: the maintenance fix takes a failed step of the engine's own scenarios (inputs, open findings, a section on reproducing, repairing and closing it), the router, guide and contributor page name the one route; the C28 item 2 amendment declined by admission, RULES.md stays 1.24.0; finalize names plan before task for an undecomposed phase on a stale plan (n5); engine 3.0.148, harness 457, registry 1.89.0
-- 2026-11-18 **Decision:** Phase 61 complete (maintenance). Provides: finalize names the planning funnel after a plan on a complete plan with an open design item (no task re-sync the Plan Gate refuses); the 17 area files of the cognitive suite carry a Cases heading (markdownlint MD001 cleared) with the layout case asserting it; four specifications patched as built; engine 3.0.145, harness 454, registry 1.85.0
 
 ## Blockers
 
