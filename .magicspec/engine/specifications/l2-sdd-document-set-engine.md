@@ -1,6 +1,6 @@
 # SDD Document Set — Engine Realization (4.0)
 
-**Version:** 1.0.2
+**Version:** 1.0.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-sdd-document-set.md
@@ -122,7 +122,7 @@ The roles keep their cards; `spec-critic` reviews units and changes, `planner` m
 ### 5.6 Order of delivery
 
 1. **The format and the checker** (`check-docs`, `pack`, the templates, the fixtures in `tests/`), behind `"format": "4"`.
-2. **The forward gate** (concept C-3): a run, recorded under `.magicspec/engine/simulations/`, in which a clean-context agent with only a product idea writes a set by the concept's rules and the templates of step 1 until `check-docs` reports nothing, clean-context builders build every task of the first milestone from `pack` output alone, and the milestone's `Observed by` holds on what they built. The run uses the format and its scripts, not the workflows, which are rewritten only in step 3: what it measures is the format on the forward path. A failure revises the concept and step 1 before anything else is built.
+2. **The forward gate** (concept C-3): a run, recorded under `.magicspec/engine/simulations/`, in which a clean-context agent with only a product idea writes a set by the concept's rules and the templates of step 1 until `check-docs` reports nothing, clean-context builders build every task of the first milestone from `pack` output alone, and the milestone's `Observed by` holds on what they built. The run uses the format and its scripts, not the workflows, which are rewritten only in step 3: what it measures is the format on the forward path. A failure revises the concept and step 1 before anything else is built. **Run 1 (2026-11-24) failed** (record `.magicspec/engine/simulations/forward-gate.md`: a rule's `From` before the plan, a stack-only convention and the pack, the neutral writing table's rows for text); the amendments are made through `/magicspec spec amend` and the run is repeated before steps 3 and 4 begin.
 3. **The pipeline:** `spec`, `plan`, `task`, `run` on 4.0 workspaces, with `mark-built`.
 4. **The rest of the commands, the migration and the release 4.0.0;** then one consumer project migrates, then this engine's own workspace.
 
@@ -149,6 +149,7 @@ The roles keep their cards; `spec-critic` reviews units and changes, `planner` m
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.3 | 2026-11-24 | Agent | Recorded the first forward run (Phase 69), Stable retained, no requirement changed: step 2 of the order of delivery states that run 1 failed, names the record, and that the amendments and a second run come before steps 3 and 4. |
 | 1.0.2 | 2026-11-24 | Agent | As built in Phase 68, Stable retained, no requirement changed: `check-docs` takes `--budget` and ends a non-4.0 workspace with one line; `pack` writes under `.cache/packs/{workspace}/`, reads Done before this task from the files the earlier tasks create and from the component's map row, and reports a pack over the budget; the thirteen templates are in `templates/set/`. |
 | 1.0.0 | 2026-11-24 | Agent | Initial realization plan of the 4.0 document set |
 | 1.0.1 | 2026-11-24 | Agent | Stabilized with its concept: the forward gate runs on the format and its scripts, before the workflows are rewritten (plan check); a migration that cannot close a finding leaves the workspace on 3.x; `check-prerequisites` and the goal arguments on a 4.0 workspace |

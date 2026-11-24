@@ -1,6 +1,6 @@
 # SDD Document Set (4.0)
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -28,13 +28,13 @@ The architecture specified here was built the other way round. Finished projects
 - **Another stack.** A builder on a second stack, given the neutral layer only, covered the behaviours with few concept leaks once the neutral writing rules (§5.3) were in place.
 - **The auditors.** A second audit of three samples found every difference above minor that the first had found; only the counting of minor items differed.
 
-What was not measured is the forward path: a documenter that has only an idea writes the first documents, and builders build from them. The release of 4.0 is gated on that run (C-3).
+What was not measured is the forward path: a documenter that has only an idea writes the first documents, and builders build from them. The release of 4.0 is gated on that run (C-3). It was measured once, on 2026-11-24: the first milestone of an unseen product was built from packs and observed (218 tests pass), and the run failed three of its pre-registered criteria for gaps of the format that only a forward run exposes.
 
 ## 2. Constraints & Assumptions
 
 - **C-1 One set per workspace.** A workspace holds one document set; a repository with several products or stacks holds several workspaces, as in 3.x.
 - **C-2 Plain text.** Every document is Markdown with the fixed field lines of §5; a checker reads them without a model.
-- **C-3 Forward gate.** The format is not released for projects before one forward run passes: an agent given only a product idea writes the set, builders build every task of the first milestone from computed packs, and the milestone's checks hold on what they built.
+- **C-3 Forward gate.** The format is not released for projects before one forward run passes: an agent given only a product idea writes the set, builders build every task of the first milestone from computed packs, and the milestone's checks hold on what they built. **Run 1 (2026-11-24) did not pass** (its criteria 1, 5 and 6; record `.magicspec/engine/simulations/forward-gate.md`): the gate stays closed until the amendments the record names are made (§5.3 a rule's `From` is written by the plan stage; a stack-only rule and the pack; the rows of the neutral writing table for text) and the run is repeated on the same idea.
 - **C-4 The lab stays outside.** The documentation lab is the source of the design and its evidence; this engine ports the format and its checks and does not depend on the lab at run time.
 - **Assumption (forecast):** projects keep a 3.x workspace until they migrate, and the engine reads both layouts during the 4.x line. Runner-up: 4.0 reads only the new layout and every 3.x project migrates on upgrade. Override: /magicspec spec amend l1-sdd-document-set.md "4.0 reads only the new layout".
 - **Assumption (forecast):** the per-specification status lifecycle (Draft, RFC, Stable, Deprecated) does not survive into the new set: readiness is expressed by open questions in units and by the status of changes (§5.8). Runner-up: units keep a status field beside their revision. Override: /magicspec spec amend l1-sdd-document-set.md "units keep a status field".
@@ -152,7 +152,7 @@ A checker reads a set and reports, without a model: unresolved and duplicate add
 ## 7. Drawbacks & Alternatives
 
 - **More files.** A set has more, smaller files than a 3.x workspace; the pack, not the reader, picks among them. The alternative of keeping per-topic specifications and adding addresses inside them was rejected: a pack cannot take one requirement out of a long file without the rest, and the measured unused share of a pack fell from 39 % to between 3 % and 19 % only once units were addressed and pulled on their own.
-- **The forward path is unmeasured** (§1); the gate C-3 bounds the cost of being wrong to one milestone of the realization.
+- **The forward path failed its first gate** (§1, C-3): three gaps of the format, found by writing forward; the gate bounds the cost of being wrong to one milestone of the realization, and it is run again after the amendments.
 - **Model-free checking has limits.** The checker cannot see a change placed on the wrong operation, or an exception kept against a governing rule; those rules live in the format and in the workflow, and were measured with documenter agents.
 - **Status lifecycle.** Dropping Draft/RFC/Stable removes a familiar signal; open questions and change statuses carry the same information per unit rather than per file (assumption in §2).
 
@@ -171,4 +171,5 @@ The three paths are outside this repository, in the documentation lab beside it;
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
 | 1.0.0 | 2026-11-24 | Agent | Initial specification of the 4.0 document set, from the lab's skeleton v7.3 |
+| 1.0.2 | 2026-11-24 | Agent | Recorded the first forward run (Phase 69), Stable retained, no requirement changed: the run built and observed the first milestone of an unseen product and did not pass its criteria (a rule's `From` before the plan, a stack-only convention that reaches no pack, the rows of the neutral writing table for text); C-3, §1 and §7 state the result and that the gate stays closed until the amendments are made and the run is repeated. |
 | 1.0.1 | 2026-11-24 | Agent | Stabilized on the owner's signal: the supersession of §6 extended to the goal arguments, the fix trace, the scenario list, the sync command's registry cells and the constitution's lifecycle rule (coherence check); the canonical references say where they live |

@@ -1,5 +1,11 @@
 # Engine Workspace Changelog
 
+## Phase 69 — 2026-11-24 (The Forward Gate)
+
+- **The one path the lab never measured was run: a document set written forward, from an idea alone.** Eleven fresh agents wrote a set of 82 addresses for a command-line tool the lab had never documented (stages spec, cross-stack review, stack, plan, tasks) and four builders built the first milestone from `pack` output alone: 218 tests pass, every task's own check exits 0 with no repair, and the milestone's nine observations hold.
+- **Verdict: FAIL.** Criteria 1, 5 and 6 of seven do not hold. Three format findings: a rule cannot be written before the plan (its `From` must resolve to a milestone that the plan stage writes later); a convention only the stack has has no place that reaches a pack; the neutral writing table has no rows for text semantics. Five minor guidance gaps in the templates. Phases 70 and 71 do not start: the concept is amended and the gate is run again on the same idea.
+- **Records:** `simulations/forward-gate.md`; the lab's `runs/run-25-state/` (inputs, prompts, every agent's report, the built code). **Specifications:** `l1-sdd-document-set` 1.0.2 and `l2-sdd-document-set-engine` 1.0.3 state the verdict, no requirement changed; registry 1.98.0. No engine file changed.
+
 ## Phase 68 — 2026-11-24 (The 4.0 Document Set: Format, Checker and Pack)
 
 - **`check-docs` checks a 4.0 document set without a model.** The documentation lab's checker, ported onto the engine's resolvers with its findings verbatim (unresolved and duplicate addresses, stack words and units in the neutral layer, priorities against dependencies, unjustified Needs, components and assets without an owner, names used before they are produced, packs over the budget, changes without kind, status, evidence or building milestone, stale units no task builds, open questions in a ready task's pack). It acts only on a workspace whose entry in `workspace.json` carries `"format": "4"`; on any other it prints one line and exits 0. It equals the lab checker on the four fixtures, on all 32 lab document sets and on 600 one-edit mutants of them.

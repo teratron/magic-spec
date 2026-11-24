@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.84.0
+**Version:** 1.85.0
 **Generated:** 2026-11-24
-**Based on:** .magicspec/engine/INDEX.md v1.97.0
+**Based on:** .magicspec/engine/INDEX.md v1.98.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Status:** Active
 
@@ -741,10 +741,13 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 69 — The Forward Gate (4.0 Step 2)
 
-- [ ] **One forward run from an idea** ([l1-sdd-document-set.md](specifications/l1-sdd-document-set.md) 1.0.1 C-3; [l2-sdd-document-set-engine.md](specifications/l2-sdd-document-set-engine.md) 1.0.1 §5.6 step 2) [L2] — a clean-context agent given only a product idea, the concept and the templates of Phase 68 writes a set until `check-docs` reports nothing; clean-context builders build every task of the first milestone from `pack` output alone; the milestone's `Observed by` is run on what they built. The orchestrator never writes the set or the code. The record goes to `.magicspec/engine/simulations/`; working copies stay in the documentation lab's own repository, never in this one.
-  - Outlined; its workbook is written when Phase 68 is Done. The idea is one the lab never documented, chosen at the start of the phase, and the record names it.
+- [x] **One forward run from an idea** ([l1-sdd-document-set.md](specifications/l1-sdd-document-set.md) 1.0.1 C-3; [l2-sdd-document-set-engine.md](specifications/l2-sdd-document-set-engine.md) 1.0.1 §5.6 step 2) [L2] — a clean-context agent given only a product idea, the concept and the templates of Phase 68 writes a set until `check-docs` reports nothing; clean-context builders build every task of the first milestone from `pack` output alone; the milestone's `Observed by` is run on what they built. The orchestrator never writes the set or the code. The record goes to `.magicspec/engine/simulations/`; working copies stay in the documentation lab's own repository, never in this one.
+  - Decomposed 2026-11-24 into thirteen tasks in six tracks (A, D, B, O, R, S/T). The idea is one the lab never documented, chosen at the start of the phase, and the record names it.
   - Requires Phase 68. **Gates Phases 70 and 71**: a failure is traced to the format or to the run, and a format gap goes to `/magicspec spec amend l1-sdd-document-set.md` and back into Phase 68 before anything else is built.
   - Scenarios: none — the run measures the format, not a command.
+  - **Execution outcome**: all thirteen tasks Done, none Blocked (tracks A, D, B, O, R and S/T run by one orchestrator with eleven fresh subagents: seven that wrote or read documents, four builders); no engine file changed (no C14 run), harness untouched (479); registry 1.97.0 → 1.98.0 (`l1-sdd-document-set` 1.0.2, `l2-sdd-document-set-engine` 1.0.3). **Verdict: FAIL.** The forward path works end to end — a set of 82 addresses written from an idea alone, four tasks built from packs, 218 tests pass, the nine observations of the first milestone hold — and it failed three of the seven pre-registered criteria: criterion 1 (three stages end with the same three findings: a rule must name the milestone it applies from, and the plan that defines it comes later), 5 (a second reader of Go listed the line-ending leak again), 6 (three format findings and two tasks over the content bound). The format findings: a rule cannot be written before the plan, a stack-only convention has no place that reaches a pack, the neutral writing table has no rows for text semantics, and five minor guidance gaps. The record is `simulations/forward-gate.md`; the detail is in the documentation lab, `runs/run-25-state/summary.md`. **Phases 70 and 71 do not start**: the concept needs three amendments (a rule's `From` is written by the plan stage; stack-only rules and the pack; the text rows of the neutral writing table, which must also ship with the engine) and the gate is run again on the same idea. The run recorded a replan directive in the ledger.
+  - **Revalidated 2026-11-24 against registry 1.98.0** (the specification sync of the phase's own last task: [l1-sdd-document-set.md](specifications/l1-sdd-document-set.md) 1.0.2 and [l2-sdd-document-set-engine.md](specifications/l2-sdd-document-set-engine.md) 1.0.3, each patched with the verdict and no requirement changed). The plan does not yet reflect the verdict: Phases 70 and 71 are written as if the gate passed.
+  - Tasks: [archives/tasks/phase-69.md](archives/tasks/phase-69.md)
 
 ### Phase 70 — The Pipeline on a 4.0 Workspace (4.0 Step 3)
 
