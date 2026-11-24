@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-19 08:50
-**Phase:** 67 — Goal Mode: A Bare `goal` Runs the Active Phase, a Brief Is Specified Once, Premises Are Reported
+**Updated:** 2026-11-24 17:07
+**Phase:** 68 — The 4.0 Document Set: Format, Checker and Pack
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-67ST01 Validation: the full harness, the static checks, the integrity check and the changelog
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Plan complete — nothing pending
+- **Next Action:** Execute T-68C01 Port the token counter to `scripts/lib/count-tokens.js` via /magicspec run engine
 
 ## Progress
 
 ```
-Overall: [67/67] ████████ 100%
+Phase 68: [0/11] ░░░░░░░░ 0%
+Overall: [67/68] ████████ 99%
 ```
 
 ## Recent Decisions
