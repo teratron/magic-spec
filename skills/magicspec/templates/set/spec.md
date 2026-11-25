@@ -1,6 +1,6 @@
 # {key} — {name}
 
-<!-- The behaviour of one component, in neutral terms: the words of the glossary and of the domain, never those of a stack. It states needs, not mechanisms. -->
+<!-- The behaviour of one component, in neutral terms: the words of the glossary and of the domain, never those of a stack. It states needs, not mechanisms. A mark (Assumption or Open) is a list line of a unit's field list, written after its last field. -->
 
 Depends on: {keys, or —}
 

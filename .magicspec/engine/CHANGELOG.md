@@ -1,5 +1,11 @@
 # Engine Workspace Changelog
 
+## Phase 75 — 2026-11-25 (The Format Brought to the Amendments of Run 2)
+
+- **Every pack keeps the documents out of the product.** `pack` opens each pack with one fixed line saying that no address or path of the documents is written into anything the task creates; it counts toward no budget.
+- **Seven templates of the set state the amended forms**: a file a later task extends of any kind, which rules a task lists, a neutral `Observed by`, empty lists as `- none`, bare names in `Defines`, the optional-integration mark, where a mark sits; `neutral-writing.md` carries the repeated review.
+- **Records:** harness 486; engine 3.0.172. **Specifications:** `l2-sdd-document-set-engine` 1.2.1, `l2-engine-templates` 1.3.7, `l2-test-suite` 1.48.9; registry 1.101.1. Phase 76, run 3 of the forward gate, is next.
+
 ## Phase 74 — 2026-11-25 (The Forward Gate, Run 2)
 
 - **The gate was run again with the amended format.** Ten fresh agents wrote a set of 76 addresses from the same idea, reviewed it across stacks, planned it, wrote three tasks and built them from packs: 103 tests pass and the milestone is observed; the checker found nothing at the first check of any stage.

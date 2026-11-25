@@ -1,10 +1,10 @@
 # Stack: {name}
 
-<!-- The profile is not pulled into a pack, so it holds no convention a builder must follow: such a convention is a stack rule, listed in the Context of the tasks it governs. -->
+<!-- The profile is not pulled into a pack, so it holds no convention a builder must follow: such a convention is a stack rule, listed in the Context of the tasks it governs. Tools names the runtime and its own test runner with their versions; what is installed beside them is pinned in deps.md. -->
 
 ## Tools
 
-{Languages, toolchain and versions.}
+{Languages; the runtime and its own test runner, with their versions.}
 
 ## Notions
 
@@ -15,11 +15,11 @@
 | manifest | {the manifest file} |
 | optional integration | {how an optional integration is switched} |
 | test | {where a test lives} |
-| observe | {the commands that run builds, tests and examples} |
+| observe | {the commands that run builds, tests and examples, and how a milestone's Observed by is run here} |
 
 ## Components
 
-<!-- Components only this stack has. Required by: the neutral components that depend on it, `?` when optionally. -->
+<!-- Components only this stack has. Required by: the neutral components that depend on it, `?` when optionally. A stack with no component of its own writes `- none` in place of the table. -->
 
 | Key | Responsibility | Depends on | Required by | Milestone | Observed by |
 | --- | --- | --- | --- | --- | --- |

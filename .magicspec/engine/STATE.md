@@ -4,31 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-25 07:49
-**Phase:** 70 — The Pipeline on a 4.0 Workspace (waits on the forward gate)
+**Updated:** 2026-11-25 12:19
+**Phase:** 76 — The Forward Gate, Run 3
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-74T01 Validation
+- **Task:** T-75T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine "Run 2 of the forward gate (Phase 74) failed criteria 5 and 6 (record `.magicspec/engine/simulations/forward-gate.md`, section Run 2; evaluation in the documentation lab, `runs/run-26-state/summary.md`). Before Phases 70 and 71: a specification pass amends l1-sdd-document-set.md for six points — containment of document addresses reaches the builder through the pack or a rule every task lists (§5.6, §5.3); the extension mark covers every file a later task extends, with one written form, and Done before this task follows After directly or not (§5.3, §5.6); whether a task lists a neutral rule beside the stack rule that realizes it (§5.3); how a milestone's Observed by refers to the stack's observation without a stack command (§5.3); where a mark sits, the empty forms of a library list and of stack-only components, bare names in Defines, the scope of the pinned-tool sentence and a neutral wording of the optional-dependency comment (§5.8 and the templates); and the review's rewrite repeated until a second reading lists none of the earlier leaks (§5.3). Then the templates and checker follow, and the gate is run a third time on the same idea. For the owner of the gate, before run 3: criterion 6 admits no format item of any size; whether it weighs items by their effect on the product is the owner's decision, made before a run."
+- **Next Action:** Execute T-76A01 Carry the idea, the stack and the criteria into run 3, unchanged via /magicspec run engine
 
 ## Progress
 
 ```
-Overall: [72/72] ████████ 100%
+Phase 76: [0/13] ░░░░░░░░ 0%
+Overall: [73/74] ████████ 99%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-25 **Decision:** Phase 75 complete. Provides: the containment line in every pack, the guidance of concept 1.2.0 in seven templates, the repeated review in neutral-writing.md, harness 486, engine 3.0.172; run 3 of the forward gate (Phase 76) is next
 - 2026-11-25 **Decision:** Phase 74 complete. Verdict FAIL (run 2 of the forward gate): criteria 5 and 6; run 1's findings closed, twelve smaller format items; M1 built (103 tests) and observed; Phases 70 and 71 stay closed; replan directive in the ledger
 - 2026-11-25 **Decision:** Phase 73 complete. Provides: neutral-writing.md shipped with the five templates' guidance, check-docs From finding once a milestone exists, harness 484, engine 3.0.168; run 2 of the forward gate (Phase 74) is next
 - 2026-11-25 **Decision:** Phase 72 complete: /magicspec-dev reverse (experimental refinement of any engine mechanic), constitution 1.25.0, harness 480
 - 2026-11-24 **Decision:** Phase 69 complete. Verdict FAIL: the forward gate built and observed the first milestone of an unseen product (218 tests, 9 of 9 observations) and failed criteria 1, 5 and 6; three format findings (rule From before the plan, stack-only convention and the pack, the neutral writing table's text rows); Phases 70 and 71 wait for the concept's amendments and a second run
-- 2026-11-24 **Decision:** Phase 68 complete. Provides: check-docs and pack of the 4.0 document set (behind format 4), lib/count-tokens.js, the pack cache owned by clean-cache, templates/set/ (13), document-set harness module (17 cases, harness 479), engine 3.0.164, registry 1.97.0
 
 ## Blockers
 

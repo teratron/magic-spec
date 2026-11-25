@@ -6,7 +6,7 @@
 
 - Priority: {must | should | could}
 - Works after it: {the observable increment}
-- Observed by: {how it is observed, naming every component it closes; another milestone's component written as `key`, in backticks, is checked to be closed by a milestone this one needs or is observed after}
+- Observed by: {how it is observed, in neutral words — which components' checks are run, or which use of the product and its outcome, the stack profile's observe row saying how it runs on a stack — naming every component it closes; another milestone's component written as `key`, in backticks, is checked to be closed by a milestone this one needs or is observed after}
 - Needs: {milestones whose work the build of this one uses, or — for none}
 - Observed after: {milestones whose work only the observation uses, or omitted}
 - Integrates: {key+dep, … — optional integrations this milestone wires, or omitted}

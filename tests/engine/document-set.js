@@ -27,6 +27,9 @@ const {
 const FIXTURES = path.join(TESTS_DIR, 'engine', 'fixtures', 'document-set');
 const GOLDEN = JSON.parse(fs.readFileSync(path.join(FIXTURES, 'golden.json'), 'utf8'));
 const NOT_A_SET = '[check-docs] docs is not a 4.0 workspace (no "format": "4" in workspace.json).';
+// The first line of every pack: the documents stay out of what the task creates.
+const CONTAINMENT =
+    'No address or path of these documents is written into anything this task creates.';
 
 /**
  * A consumer project that holds one fixture set as the workspace `docs`.
@@ -157,6 +160,39 @@ module.exports = () => {
                 NO_FROM('R1'),
                 NO_FROM('R2'),
             ]);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: an empty library list and a profile with no stack component write "- none"', () => {
+        const dir = makeSetProject('good');
+        try {
+            const stack = path.join(dir, '.magicspec', 'docs', 'stack', 'generic');
+            fs.mkdirSync(stack, {
+                recursive: true,
+            });
+            fs.writeFileSync(
+                path.join(stack, 'profile.md'),
+                '# Stack: generic\n\n## Components\n\n- none\n\n## Vocabulary\n\nzzqword\n',
+            );
+            const deps = path.join(stack, 'deps.md');
+            fs.writeFileSync(deps, '# Libraries: generic\n\n- none\n');
+            const empty = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(empty.status, 0, empty.stdout);
+            assert.deepStrictEqual(linesOf(empty.stdout), []);
+            // A library line in the same file is read: it names a product item that is not there.
+            fs.writeFileSync(
+                deps,
+                '# Libraries: generic\n\n- X1 libfoo 1.0 — realizes P99 — for hello\n',
+            );
+            const named = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(named.status, 1, named.stderr);
+            assert.match(named.stdout, /X1 realizes names P99, which is not defined/);
         } finally {
             cleanup(dir);
         }
@@ -319,7 +355,7 @@ module.exports = () => {
             );
             assert.match(r.stdout, /written to \.magicspec\/\.cache\/packs\/docs\/M2\.T1\.md/);
             const body = fs.readFileSync(path.join(dir, PACK_FILE, 'M2.T1.md'), 'utf8');
-            assert.ok(body.startsWith('# Task M2.T1\n'));
+            assert.ok(body.startsWith(`${CONTAINMENT}\n\n# Task M2.T1\n`));
             const units = [
                 ...body.matchAll(/<!-- unit (\S+)/g),
             ].map((m) => m[1]);
@@ -332,6 +368,36 @@ module.exports = () => {
             ]);
             assert.ok(body.indexOf('# Context') < body.indexOf('<!-- unit hello -->'));
             assert.ok(!body.includes('# Done before this task'));
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: every pack opens with the line that keeps the documents out of the product, outside its computed units', () => {
+        const dir = makeSetProject('good');
+        try {
+            const checked = simExec(dir, [
+                'check-docs',
+            ]);
+            const largest = /1 tasks, largest pack (\d+) tokens/.exec(checked.stderr);
+            assert.ok(largest, checked.stderr);
+            const r = simExec(dir, [
+                'pack',
+                'M2.T1',
+            ]);
+            assert.strictEqual(r.status, 0, r.stderr);
+            const printed = /pack (\d+) \/ 10000 tokens .* file (\d+) tokens/.exec(r.stdout);
+            assert.ok(printed, r.stdout);
+            // The checker measures the computed units alone: the line adds to the file, not to them.
+            assert.strictEqual(printed[1], largest[1]);
+            assert.ok(Number(printed[2]) > Number(printed[1]));
+            const body = fs.readFileSync(path.join(dir, PACK_FILE, 'M2.T1.md'), 'utf8');
+            assert.deepStrictEqual(body.split('\n').slice(0, 3), [
+                CONTAINMENT,
+                '',
+                '# Task M2.T1',
+            ]);
+            assert.strictEqual(body.split(CONTAINMENT).length, 2, 'the line is written once');
         } finally {
             cleanup(dir);
         }
@@ -751,22 +817,23 @@ module.exports = () => {
             linesIn(text).filter((line) => line.startsWith('|'));
         assert.strictEqual(rows(shipped).length, 20, 'a header, a separator and eighteen rows');
         assert.deepStrictEqual(rows(shipped), rows(concept));
-        // The paragraph that introduces the table and the review that follows it travel with it.
+        // The paragraph that introduces the table and every paragraph after it travel with it. The
+        // shipped file drops what only the specification needs: a change marker, a section pointer.
+        const prose = (/** @type {string} */ text) =>
+            linesIn(text).filter((line) => line && !line.startsWith('#') && !line.startsWith('|'));
+        const written = (/** @type {string} */ line) =>
+            line.replace(/^`\[[A-Z]+\]` /, '').replace(/ \(§[\d.]+\)(?=\.$)/, '');
         const intro = linesIn(concept)
             .find((line) => line.startsWith('**The neutral writing table.**'))
             ?.replace(/^\*\*The neutral writing table\.\*\* (?:`\[[A-Z]+\]` )?/, '');
-        const review = linesIn(concept).find((line) =>
-            line.startsWith('A neutral layer is reviewed'),
-        );
-        assert.deepStrictEqual(
-            linesIn(shipped).filter(
-                (line) => line && !line.startsWith('#') && !line.startsWith('|'),
-            ),
-            [
-                intro,
-                review,
-            ],
-        );
+        const lines = linesIn(concept);
+        const lastRow = lines.map((line) => line.startsWith('|')).lastIndexOf(true);
+        const after = prose(lines.slice(lastRow + 1).join('\n')).map(written);
+        assert.strictEqual(after.length, 2, 'the review and the repeated review');
+        assert.deepStrictEqual(prose(shipped), [
+            intro,
+            ...after,
+        ]);
     });
 
     test('document set: the templates of the 3.x layout stay beside the set, with their own meaning', () => {

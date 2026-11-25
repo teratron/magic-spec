@@ -12,7 +12,7 @@
 
 {Names, signatures, visibility, constraints and mechanisms of one part of the interface.}
 
-- Defines: {names this unit introduces that other units use — types, free functions, constants; each name defined once per stack}
+- Defines: {bare names, without signatures, that this unit introduces and other units use — types, free functions, constants; each name defined once per stack}
 - Visibility: {interface | internal}
 - Realizes: {behaviour addresses}
 - Accept: {the stack-level check, e.g. "compiles", with its expected result}

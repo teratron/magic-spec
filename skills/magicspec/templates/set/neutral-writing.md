@@ -24,3 +24,5 @@ A word list catches the words of a stack; these rows catch its concepts. A neutr
 | "a date", "a day", "today" | the calendar and its range ("the Gregorian calendar extended backwards, years 1000 to 9999"), and where today's date comes from (the local date of the machine, or a date given as input) |
 
 A neutral layer is reviewed across stacks before its first use on any stack: a reviewer who knows only another stack reads it and lists every concept that stack does not have, and each is rewritten by the table. A rewrite that names the mechanism it means to exclude ("whatever the usual line ending of the machine is") is the same leak and is rewritten again.
+
+After each rewrite a fresh reader of the same stack reads the layer again; the review ends when a reading lists none of the leaks the readings before it listed, and after three rewrites a leak still listed stays as an `Open:` line on its unit.

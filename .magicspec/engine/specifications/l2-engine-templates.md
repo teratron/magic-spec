@@ -1,6 +1,6 @@
 # Engine Templates
 
-**Version:** 1.3.6
+**Version:** 1.3.7
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -117,6 +117,7 @@ Rewriting the rows and the overview that already exist in a workspace is a task 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.7 | 2026-11-25 | Agent | As built in Phase 75, Stable retained: seven templates of the set carry the guidance of the concept's second amendment (a file a later task extends of any kind, which rules a task lists, a neutral `Observed by` mapped by the profile, the runtime in the profile and what the library list pins, empty lists as `- none`, bare names in `Defines`, the optional-integration mark, where a mark sits), and `neutral-writing.md` gains the repeated review. |
 | 1.3.6 | 2026-11-25 | Agent | As built in Phase 73, Stable retained: the folder of the set holds a fourteenth file, `neutral-writing.md`, and five of its templates carry the guidance lines of the amended concept (the rule's `From` written by the plan stage, `Realizes: —` and the profile reaching no pack, `Closes` of components only and the empty backlog, `Produces: —`, an extended test file and the exit status). |
 | 1.3.5 | 2026-11-24 | As built in Phase 68, Stable retained: the inventory gains `set/`, the thirteen templates of the 4.0 document set, and the flat-directory constraint names it as the one sub-folder. |
 | 1.3.4 | 2026-11-12 | As built in Phase 52, Stable retained: the inventory lists `simulation.md` (the scenario file) and `design-system.md` (the product's one design-system specification), and `spec.md` gains the optional `## Interface` section. |

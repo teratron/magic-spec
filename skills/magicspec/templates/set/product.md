@@ -17,7 +17,7 @@
 
 ## Components
 
-<!-- Kind: code, asset or existing. An existing component is present before the first milestone, at a pinned version. A dependency marked `?` is optional: it is needed only when the integration it serves is enabled. A component that exists only because of one stack is declared in that stack's profile, not here. -->
+<!-- Kind: code, asset or existing. An existing component is present before the first milestone, at a pinned version. A dependency of a component that only an optional integration (a product item) needs is marked `?` after its key. A component that exists only because of one stack is declared in that stack's profile, not here. -->
 
 | Key | Kind | Responsibility (one line) | Depends on |
 | --- | --- | --- | --- |

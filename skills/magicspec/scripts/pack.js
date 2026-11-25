@@ -15,10 +15,11 @@ const { resolveProjectRoot, resolveDesignRoot, runMain } = require('./utils');
 // PACK (The Computed Context of One Task)
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Assembles the pack of one task of a 4.0 workspace, in the order of the concept (§5.6): the
-// task, then the preamble of the component it builds, the units of its Consumes and Context,
-// the units they reference or whose names they use, each verbatim; then **Done before this
-// task**, the files the tasks it is After created, as built, read from the project.
+// Assembles the pack of one task of a 4.0 workspace, in the order of the concept (§5.6): one
+// line that keeps the documents out of what the task creates, then the task, then the preamble
+// of the component it builds, the units of its Consumes and Context, the units they reference or
+// whose names they use, each verbatim; then **Done before this task**, the files the tasks it is
+// After created, as built, read from the project.
 //
 // The pack is written to `.magicspec/.cache/packs/{workspace}/{task}.md`, a rebuildable cache
 // that `clean-cache` removes, and the line printed gives its size against the budget. The budget
@@ -27,6 +28,10 @@ const { resolveProjectRoot, resolveDesignRoot, runMain } = require('./utils');
 //
 // Usage:
 //   node skills/magicspec/scripts/executor.js pack <task> [--include <file>]...
+
+/** Opens every pack, outside the computed units: the documents stay out of the product. */
+const CONTAINMENT_LINE =
+    'No address or path of these documents is written into anything this task creates.';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Done Before This Task
@@ -181,6 +186,8 @@ function builtFiles(set, task, included) {
  */
 function packFile(address, taskText, parts, done) {
     return [
+        CONTAINMENT_LINE,
+        '',
         `# Task ${address}`,
         '',
         taskText,
