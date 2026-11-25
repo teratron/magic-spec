@@ -1,5 +1,11 @@
 # Engine Workspace Changelog
 
+## Phase 74 — 2026-11-25 (The Forward Gate, Run 2)
+
+- **The gate was run again with the amended format.** Ten fresh agents wrote a set of 76 addresses from the same idea, reviewed it across stacks, planned it, wrote three tasks and built them from packs: 103 tests pass and the milestone is observed; the checker found nothing at the first check of any stage.
+- **Verdict: FAIL.** Criterion 5 (the rewrite repeated a leak it was asked to close) and criterion 6 (twelve small format items, containment of document addresses reaching no pack among them). The findings of run 1 did not recur in their stated form.
+- **Records:** `simulations/forward-gate.md` section Run 2; the lab's `runs/run-26-state/`. **Specifications:** `l1-sdd-document-set` 1.1.1, `l2-sdd-document-set-engine` 1.1.2; registry 1.100.2. Phases 70 and 71 stay closed.
+
 ## Phase 73 — 2026-11-25 (The Format Brought to the Amendments of the Forward Gate)
 
 - **The neutral writing table ships with the engine.** `templates/set/neutral-writing.md` holds the table of the concept, eighteen rows, with its introducing and review paragraphs word for word; a harness case compares the two.

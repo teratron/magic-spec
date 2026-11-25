@@ -42,3 +42,27 @@ Not format losses, for the workflows of Phase 70: a component split across two t
 ## Decision
 
 Phases 70 and 71 do not start. The concept needs three amendments (§5.3 rule `From`; stack-only rules and the pack; the neutral writing table), made through `/magicspec spec amend l1-sdd-document-set.md`, with the minor guidance in the templates; the gate is then run again on the same idea, from the stage that failed first.
+
+## Run 2
+
+The record of the second run, 2026-11-25, on the same idea, stack and criteria. Detail: `D:\Projects\src\github.com\teratron\sdd-lab\runs\run-26-state\`.
+
+- **Engine:** 3.0.168. **Concept:** 1.1.0 (the agents' copy without the record of the first run; the requirements unchanged). **Agents:** ten fresh subagents (one model as in the first run): a documenter, two Go-only readers, a rewriting documenter, a stack documenter, a planner, a task writer and three builders.
+- **What came out:** a set of 76 addresses with three milestones; the first milestone holds one component (dates and schedules), so the build is narrower than in the first run: three tasks, one source file, 103 tests, all pass, no retry and no repair; every task's check and the milestone's observation hold.
+- **Checker:** no finding at the first check of any documenting stage; no repair round.
+
+| Criterion | Holds |
+| --- | --- |
+| 1. Every documenting stage ends with the checker reporting nothing | yes |
+| 2. Three to five tasks, every pack within budget | yes — 1,620, 1,884 and 2,549 tokens |
+| 3. Every task's own check passes after its builder, without repair | yes |
+| 4. The milestone's `Observed by` holds | yes |
+| 5. A second reader lists none of the first reader's leaks | no — the rewrite of the argument rule named the mechanism it excludes, the same leak again (the other reading, a different leak on that unit, would hold) |
+| 6. No loss attributed to the format; at most one behaviour-changing content item per task | no — twelve format items; behaviour-changing content items per task 0, 0, 0 |
+| 7. A defect of a script or a template is repaired before the verdict | yes — none found |
+
+**The first run's format findings:** the rule's `From` before the plan, the stack-only conventions, `Closes`, the empty backlog and absent `Needs`, `Produces` of the last task, the extended test file and the exit status did not recur; the neutral table closed every class of text semantics except the validity of text, which recurred on arguments and paths although a row covers them.
+
+**The format findings of this run:** the containment of document addresses reaches no pack, so a task writer copied it into each task; a file a later task extends has a mark only for test files; a few forms and links are unstated (where a mark sits, other empty lists, bare names in `Defines`, Done before this task following `After` indirectly, a neutral rule listed beside its stack rule, how `Observed by` names the stack's observation, the optional-dependency comment of the product template); and the review has one rewrite although a rewrite can repeat the leak.
+
+**Verdict: FAIL.** Steps 3 and 4 of the realization stay closed. The concept needs the six amendments the run's evaluation lists. For the owner of the gate: criterion 6 admits no format item of any size, and each run so far found new small ones; weighing items by their effect on the product would be a decision made before a run, not after it.

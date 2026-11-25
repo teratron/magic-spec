@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.100.1
+**Version:** 1.100.2
 **Status:** Active
 
 ## Overview
@@ -71,14 +71,15 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-engine-toolchain.md](specifications/l2-engine-toolchain.md) | The development toolchain of the engine repository: pnpm, TypeScript, Biome and Fallow, and the stages of adopting them without changing what ships. Open it before adding a development tool or changing the checks the repository runs. | Stable | 2 | 1.2.1 |
 | [l1-pipeline-stages.md](specifications/l1-pipeline-stages.md) | How the pipeline is cut into stages: one stage per invocation, handoffs carried by the files, and the reasoning demand that lets a different model take the next stage. Open it before making a workflow start another, or changing what a stage leaves for the next one. | Stable | 1 | 1.0.1 |
 | [l1-sync-command.md](specifications/l1-sync-command.md) | The user `sync` command that brings derived state — registries, projections, graph, version anchors, registered documentation blocks — back in line with its sources, and its extension in the engine repository. Open it before changing what is regenerated, or where a sync stops and a judgement starts. | Stable | 1 | 1.1.0 |
-| [l1-sdd-document-set.md](specifications/l1-sdd-document-set.md) | The documentation architecture of a workspace from engine 4.0.0: the document set, addresses, computed task packs, memory and recorded changes, designed and measured in the documentation lab. Open it before changing what a workspace holds or how a builder reads it. | Stable | 1 | 1.1.0 |
-| [l2-sdd-document-set-engine.md](specifications/l2-sdd-document-set-engine.md) | How the engine realizes the 4.0 document set: the workspace tree, the checker and pack scripts, the templates, the workflows, the migration from 3.x and the order of delivery under the forward gate. Open it before building any part of 4.0. | Stable | 2 | 1.1.1 |
+| [l1-sdd-document-set.md](specifications/l1-sdd-document-set.md) | The documentation architecture of a workspace from engine 4.0.0: the document set, addresses, computed task packs, memory and recorded changes, designed and measured in the documentation lab. Open it before changing what a workspace holds or how a builder reads it. | Stable | 1 | 1.1.1 |
+| [l2-sdd-document-set-engine.md](specifications/l2-sdd-document-set-engine.md) | How the engine realizes the 4.0 document set: the workspace tree, the checker and pack scripts, the templates, the workflows, the migration from 3.x and the order of delivery under the forward gate. Open it before building any part of 4.0. | Stable | 2 | 1.1.2 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-11-25d (No spec-count change (58), 3 patched, Stable retained, no requirement changed. Phase 73 recorded as built: `l2-sdd-document-set-engine.md` 1.1.1, `l2-engine-templates.md` 1.3.6 (the neutral writing table file beside the thirteen templates), `l2-test-suite.md` 1.48.8 (the document-set module grows to 21 cases).)
+- **Last Updated**: 2026-11-25e (No spec-count change (58), 2 patched, Stable retained, no requirement changed. Run 2 of the forward gate recorded as failed (criteria 5 and 6): `l1-sdd-document-set.md` 1.1.1 and `l2-sdd-document-set-engine.md` 1.1.2 state the result and that the gate stays closed.)
+- **Previous**: 2026-11-25d (No spec-count change (58), 3 patched, Stable retained, no requirement changed. Phase 73 recorded as built: `l2-sdd-document-set-engine.md` 1.1.1, `l2-engine-templates.md` 1.3.6 (the neutral writing table file beside the thirteen templates), `l2-test-suite.md` 1.48.8 (the document-set module grows to 21 cases).)
 - **Previous**: 2026-11-25c (No spec-count change (58), 2 amended minor, Stable after the Post-Update Review. `/magicspec spec amend` on the replan directive of the failed forward gate: `l1-sdd-document-set.md` 1.1.0 (a rule's `From` written by the plan stage; a convention only the stack has as a stack rule with `Realizes: —` listed in Context; the neutral writing table in full with six rows for text and the calendar; five guidance lines of the forms; the checker's `From` finding) and `l2-sdd-document-set-engine.md` 1.1.0 (the table shipped as `templates/set/neutral-writing.md`, the templates' guidance lines, run 2 after step 1 is brought to the amendments).)
 - **Previous**: 2026-11-25b (No spec-count change (58), 1 patched, Stable retained. Phase 72 recorded as built: `l2-test-suite.md` 1.48.7 (the case of the maintenance `reverse` body; the maintenance set of six).)
 - **Previous**: 2026-11-25 (Spec count 57 → 58: one added, one amended minor. `/magicspec spec` on the owner's request, confirmed after a playback, for a maintenance command that perfects any engine mechanic by experiment: `l1-reverse-command.md` 1.0.0 (Stable after the Post-Update Review) and `l1-command-surface.md` 2.4.0 (CS-15 names `reverse`; declared supersession of the five-command set, C11 amended through the rule workflow).)
