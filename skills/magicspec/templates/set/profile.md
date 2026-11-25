@@ -1,5 +1,7 @@
 # Stack: {name}
 
+<!-- The profile is not pulled into a pack, so it holds no convention a builder must follow: such a convention is a stack rule, listed in the Context of the tasks it governs. -->
+
 ## Tools
 
 {Languages, toolchain and versions.}

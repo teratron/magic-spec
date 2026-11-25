@@ -102,6 +102,93 @@ module.exports = () => {
         });
     }
 
+    // A rule names the milestone it applies from only once there is a plan.
+    const NO_FROM = (/** @type {string} */ rule) =>
+        `rules.md: ${rule} has no From, while plan.md defines milestones`;
+
+    /**
+     * Rewrites one file of the set held by a project, failing if the text it replaces is not there.
+     *
+     * @param {string} dir - The project.
+     * @param {string} rel - The path under the workspace `docs`.
+     * @param {string} from
+     * @param {string} to
+     */
+    const rewriteSet = (dir, rel, from, to) => {
+        const full = path.join(dir, '.magicspec', 'docs', rel);
+        const text = fs.readFileSync(full, 'utf8');
+        assert.ok(text.includes(from), `${rel} holds the text to replace: ${from}`);
+        fs.writeFileSync(
+            full,
+            text.replace(from, () => to),
+        );
+    };
+
+    test('document set: a rule without From is no finding while the plan defines no milestone', () => {
+        const dir = makeSetProject('good');
+        try {
+            rewriteSet(dir, 'rules.md', '- From: M1\n', '');
+            fs.writeFileSync(path.join(dir, '.magicspec', 'docs', 'plan.md'), '# Plan\n');
+            const r = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.ok(
+                !r.stdout.includes('From'),
+                `no From finding before there is a milestone:\n${r.stdout}`,
+            );
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: a rule without From beside a milestone is one finding per rule', () => {
+        const dir = makeSetProject('good');
+        try {
+            rewriteSet(dir, 'rules.md', '- From: M1\n', '');
+            fs.appendFileSync(
+                path.join(dir, '.magicspec', 'docs', 'rules.md'),
+                '\n## R2 — Write tests\n\nEvery behaviour has a test.\n\n- Applies to: all\n- Checked by: review\n- Why: proof\n',
+            );
+            const r = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(r.status, 1, r.stderr);
+            assert.deepStrictEqual(linesOf(r.stdout), [
+                NO_FROM('R1'),
+                NO_FROM('R2'),
+            ]);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: a stack rule with "Realizes: —" needs no neutral rule', () => {
+        const dir = makeSetProject('good');
+        try {
+            const rules = path.join(dir, '.magicspec', 'docs', 'stack', 'generic', 'rules.md');
+            fs.mkdirSync(path.dirname(rules), {
+                recursive: true,
+            });
+            const stackRule = (/** @type {string} */ realizes) =>
+                `# Stack rules: generic\n\n## S1 — Header line\n\nEvery source file starts with the header line.\n\n- Applies to: all\n- Checked by: review\n- Realizes: ${realizes}\n- Why: one form everywhere\n`;
+            fs.writeFileSync(rules, stackRule('—'));
+            const own = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(own.status, 0, own.stdout);
+            assert.deepStrictEqual(linesOf(own.stdout), []);
+            // The same rule naming a rule that is not there is reported, so the file is read.
+            fs.writeFileSync(rules, stackRule('R9'));
+            const missing = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(missing.status, 1, missing.stderr);
+            assert.match(missing.stdout, /S1 Realizes names R9, which is not defined/);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
     test('document set: a workspace without "format": "4" prints one line, exits 0 and changes nothing', () => {
         const dir = makeSetProject('bad', {
             format: null,
@@ -465,8 +552,11 @@ module.exports = () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────
-    // templates: the thirteen files a writer starts from
+    // templates: the thirteen files a writer starts from, and the neutral writing table
     // ───────────────────────────────────────────────────────────────────────
+
+    // The one file of the folder that is guidance for a writer and not a template of a document.
+    const NEUTRAL_TABLE = 'neutral-writing.md';
 
     // Where each template goes in a workspace, and the field lines the checker reads from it.
     /** @type {Record<string, [string, string[]]>} */
@@ -587,8 +677,11 @@ module.exports = () => {
             const templates = path.join(dir, ...SIM_ENGINE_REL.split('/'), 'templates', 'set');
             assert.deepStrictEqual(
                 fs.readdirSync(templates).sort(),
-                Object.keys(TEMPLATE_PLACES).sort(),
-                'the thirteen templates of the set, and no other file',
+                [
+                    ...Object.keys(TEMPLATE_PLACES),
+                    NEUTRAL_TABLE,
+                ].sort(),
+                'the thirteen templates of the set and the neutral writing table, and no other file',
             );
             writeIn(
                 dir,
@@ -631,6 +724,49 @@ module.exports = () => {
         } finally {
             cleanup(dir);
         }
+    });
+
+    test('document set: the shipped neutral writing table is the one of the concept, word for word', () => {
+        const concept = fs
+            .readFileSync(
+                path.join(
+                    TESTS_DIR,
+                    '..',
+                    '.magicspec',
+                    'engine',
+                    'specifications',
+                    'l1-sdd-document-set.md',
+                ),
+                'utf8',
+            )
+            .split('\n### 5.4 ')[0]
+            .split('\n### 5.3 ')[1];
+        const shipped = fs.readFileSync(
+            path.join(SIM_SCRIPTS, '..', 'templates', 'set', NEUTRAL_TABLE),
+            'utf8',
+        );
+        const linesIn = (/** @type {string} */ text) =>
+            text.split('\n').map((line) => line.trimEnd());
+        const rows = (/** @type {string} */ text) =>
+            linesIn(text).filter((line) => line.startsWith('|'));
+        assert.strictEqual(rows(shipped).length, 20, 'a header, a separator and eighteen rows');
+        assert.deepStrictEqual(rows(shipped), rows(concept));
+        // The paragraph that introduces the table and the review that follows it travel with it.
+        const intro = linesIn(concept)
+            .find((line) => line.startsWith('**The neutral writing table.**'))
+            ?.replace(/^\*\*The neutral writing table\.\*\* (?:`\[[A-Z]+\]` )?/, '');
+        const review = linesIn(concept).find((line) =>
+            line.startsWith('A neutral layer is reviewed'),
+        );
+        assert.deepStrictEqual(
+            linesIn(shipped).filter(
+                (line) => line && !line.startsWith('#') && !line.startsWith('|'),
+            ),
+            [
+                intro,
+                review,
+            ],
+        );
     });
 
     test('document set: the templates of the 3.x layout stay beside the set, with their own meaning', () => {

@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 73 — 2026-11-25 (The Format Brought to the Amendments of the Forward Gate)
+
+- **The neutral writing table ships with the engine.** `templates/set/neutral-writing.md` holds the table of the concept, eighteen rows, with its introducing and review paragraphs word for word; a harness case compares the two.
+- **A rule's `From` belongs to the plan stage.** `check-docs` is silent about a rule without it while `plan.md` defines no milestone and reports one finding per rule address once it does; the `good` fixture names `From: M1` and the recorded findings of `bad` and `bad4` gain one line each.
+- **Five templates state the forms run 1 left open**: the plan stage writes `From`; a convention only the stack has is a stack rule with `Realizes: —`, listed in Context; the profile reaches no pack; `Closes` names components only, `Needs: —`, an empty backlog; `Produces: —`, an extended test file, the exit status in a `Done when`.
+- **Records:** harness 484; engine 3.0.168. **Specifications:** `l2-sdd-document-set-engine` 1.1.1, `l2-engine-templates` 1.3.6, `l2-test-suite` 1.48.8; registry 1.100.1. Phase 74, run 2 of the forward gate, is next.
+
 ## Phase 72 — 2026-11-25 (Maintenance: The Reverse Command)
 
 - **`/magicspec-dev reverse` perfects any area of the engine by experiment.** Baseline, references studied in reverse, criteria before the first agent, clean-context replay against a ground truth, traced losses, a held-out gate, a report ending in a specification input; it changes no file of the repository. Constitution C11 lists it; harness 480.

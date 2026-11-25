@@ -1,7 +1,8 @@
 {
   "bad": [
     "duplicate address R1 in rules.md, rules.md",
-    "tasks/M2.md: M2.T1 Context names hello.9, which is not defined"
+    "tasks/M2.md: M2.T1 Context names hello.9, which is not defined",
+    "rules.md: R1 has no From, while plan.md defines milestones"
   ],
   "bad3": [
     "stack/rust/bind/hello.md: hello.b3 Defines greet, already defined by hello.b1",
@@ -16,6 +17,7 @@
     "product.md: P5 (should) is observed by no milestone of its priority — name one with \"observed in M{n}\""
   ],
   "bad4": [
+    "rules.md: R1 has no From, while plan.md defines milestones",
     "spec/hello.md: hello.4 carries C1, which does not list it under Affects",
     "changes.md: C1 is a revision with no Evidence line",
     "changes.md: C1 is in no Context of the tasks of M3",

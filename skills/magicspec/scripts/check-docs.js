@@ -19,6 +19,8 @@
  *   whose Observed by omits a component it closes or names a component closed
  *   later; a component closed by no milestone or by more than one; a
  *   milestone that closes a component whose dependency comes later;
+ * - a rule without From, once the plan defines a milestone (before that, a
+ *   rule has none: the plan stage writes it);
  * - a binding unit that realizes nothing that exists;
  * - a change without a kind, a status, Evidence or a building milestone, a
  *   revised unit without `Was`, a stale unit no task builds, a satisfied
@@ -198,6 +200,8 @@ class DocSet {
         this.stackComponents = new Map();
         /** @type {{ address: string, from: string, checkers: string[] }[]} */
         this.ruleChecks = [];
+        /** @type {Set<string>} neutral rules that name no milestone they apply from */
+        this.rulesWithoutFrom = new Set();
         /** @type {{ address: string, priority: number, keys: string[], observedIn: string | null }[]} scope items In */
         this.scopeItems = [];
         /** @type {Map<string, number>} unit address → revision the map records as built */
@@ -805,7 +809,10 @@ function parseTasks(set) {
 function parseRulesAndMemory(set) {
     for (const { address, text } of headedUnits(set, 'rules.md', /^R\d+$/, 'neutral')) {
         const from = field(text, 'From');
-        if (!from) continue;
+        if (!from) {
+            set.rulesWithoutFrom.add(address);
+            continue;
+        }
         set.refer('rules.md', address, 'From', [
             from,
         ]);
@@ -1608,6 +1615,9 @@ function checkPlan(set) {
     checkIntegrations(set, ctx);
     for (const r of set.ruleChecks.filter((rule) => byAddress.has(rule.from)))
         checkRule(set, ctx, r);
+    // Reached only with a plan: until it defines a milestone, a rule has none to name.
+    for (const address of set.rulesWithoutFrom)
+        set.findings.push(`rules.md: ${address} has no From, while plan.md defines milestones`);
     checkExtends(set, ctx);
     checkScopeObserved(set, ctx);
 }

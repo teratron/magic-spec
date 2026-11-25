@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-25 06:56
-**Phase:** 73 — The Format Brought to the Amendments of the Forward Gate
+**Updated:** 2026-11-25 07:14
+**Phase:** 74 — The Forward Gate, Run 2
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-69T01 Validation
+- **Task:** T-73T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Execute T-73F01 The neutral writing table in `templates/set/neutral-writing.md` via /magicspec run engine
+- **Next Action:** Execute T-74A01 Carry the idea, the stack and the criteria of run 1 into run 2, unchanged via /magicspec run engine
 
 ## Progress
 
 ```
-Phase 73: [0/8] ░░░░░░░░ 0%
-Overall: [70/71] ████████ 99%
+Phase 74: [0/13] ░░░░░░░░ 0%
+Overall: [71/72] ████████ 99%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-25 **Decision:** Phase 73 complete. Provides: neutral-writing.md shipped with the five templates' guidance, check-docs From finding once a milestone exists, harness 484, engine 3.0.168; run 2 of the forward gate (Phase 74) is next
 - 2026-11-25 **Decision:** Phase 72 complete: /magicspec-dev reverse (experimental refinement of any engine mechanic), constitution 1.25.0, harness 480
 - 2026-11-24 **Decision:** Phase 69 complete. Verdict FAIL: the forward gate built and observed the first milestone of an unseen product (218 tests, 9 of 9 observations) and failed criteria 1, 5 and 6; three format findings (rule From before the plan, stack-only convention and the pack, the neutral writing table's text rows); Phases 70 and 71 wait for the concept's amendments and a second run
 - 2026-11-24 **Decision:** Phase 68 complete. Provides: check-docs and pack of the 4.0 document set (behind format 4), lib/count-tokens.js, the pack cache owned by clean-cache, templates/set/ (13), document-set harness module (17 cases, harness 479), engine 3.0.164, registry 1.97.0
 - 2026-11-19 **Decision:** Phase 67 complete. Provides: goal's optional argument (the empty one continues an unfinished goal, else runs the active phase; phase-3..5 and plan), the first spec run takes the whole brief, premises decided, recorded in the goal block and reported under Assumptions with nothing asked after the intake; router row optional with the Dispatch exception removed; T367-T371, S-14; engine 3.0.160, harness 462, registry 1.94.0
-- 2026-11-19 **Decision:** Phase 65 complete. Provides: GM-10 in the goal body (the four ends of a turn the mode never takes, the host-ended turn told apart, a finalization handoff line as the input of the next iteration); IP-3 in the prompt-engineer card, its mirror and four texts (the host marking only adds to material, the person's own words adopt an instruction through every gate); the design-system Patterns Not Used section with the ui-ux-designer steps and mirror; suite T365 and T366, scenario S-13; engine 3.0.154, harness 461, registry 1.92.0
 
 ## Blockers
 

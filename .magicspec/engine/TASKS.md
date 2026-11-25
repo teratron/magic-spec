@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.82.0
+**Version:** 1.83.0
 **Generated:** 2026-11-25
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.88.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.88.1
 **Based on RULES:** .magicspec/RULES.md v1.25.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,7 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 73](tasks/phase-73.md) | The Format Brought to the Amendments of the Forward Gate (4.0 Step 1, after Run 1) — what run 2 of the gate hands its agents follows concept 1.1.0: `templates/set/neutral-writing.md` with the neutral writing table word for word, the guidance lines in five templates of the set, `check-docs` reporting a rule without `From` once the plan defines a milestone, the fixtures and harness cases with it, and the specifications as built; 8 tasks in five tracks (F, C, H, S, T) | `Todo` |
+| [Phase 74](tasks/phase-74.md) | The Forward Gate, Run 2 (4.0 Step 2) — the gate of Phase 69 repeated on the same idea, stack and criteria with concept 1.1.0 and engine 3.0.168, every stage from the spec stage on, in the lab run folder `runs/run-26-state`: clean-context agents write the set until `check-docs` reports nothing, clean-context builders build the first milestone from packs, the milestone is observed, every loss is traced and compared with run 1, and the verdict is appended to `simulations/forward-gate.md`; 13 tasks in six tracks (A, D, B, O, R, S/T) | `Todo` |
+| [Phase 73](archives/tasks/phase-73.md) | The Format Brought to the Amendments of the Forward Gate (4.0 Step 1, after Run 1) — what run 2 of the gate hands its agents follows concept 1.1.0: `templates/set/neutral-writing.md` with the neutral writing table word for word, the guidance lines in five templates of the set, `check-docs` reporting a rule without `From` once the plan defines a milestone, the fixtures and harness cases with it, and the specifications as built; 8 tasks in five tracks (F, C, H, S, T) | `Done (Archived)` |
 | [Phase 72](archives/tasks/phase-72.md) | Maintenance: The Reverse Command — `/magicspec-dev reverse` perfects an area of the engine by experiment (baseline, references studied in reverse, criteria before any agent, clean-context replay, loss tracing, a held-out gate, a report with a specification input), with its router row, command entry, documents and harness cases; 5 tasks | `Done (Archived)` |
 | [Phase 69](archives/tasks/phase-69.md) | The Forward Gate (4.0 Step 2) — one forward run from an idea alone, measured in the documentation lab's run folder: clean-context agents write a document set stage by stage (spec, cross-stack review, stack, plan, tasks) until `check-docs` reports nothing, clean-context builders build every task of its first milestone from `pack` output alone, the milestone is observed on what they built, every loss is traced to the format or to the content, and the verdict (pass criteria fixed before the run) decides whether Phases 70 and 71 may start; the record goes to `simulations/forward-gate.md`; 13 tasks in six tracks (A, D, B, O, R, S/T) | `Done (Archived)` |
 | [Phase 68](archives/tasks/phase-68.md) | The 4.0 Document Set: Format, Checker and Pack (4.0 Step 1) — `check-docs` and `pack` ported from the documentation lab onto the engine's resolvers and registered in the executor, behind `"format": "4"`, with the token counter as a library module, the pack cache owned by `clean-cache`, the thirteen templates of the set in `templates/set/`, the lab's four fixture sets and one harness module, and the specifications as built; nothing a 3.x workspace reads or writes changes; 11 tasks in five tracks (C, P, F, H, S/T) | `Done (Archived)` |

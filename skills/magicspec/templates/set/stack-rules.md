@@ -1,6 +1,6 @@
 # Stack rules: {stack}
 
-<!-- Rules that realize the neutral rules on this stack. Each names the neutral rule it realizes. -->
+<!-- The rules of this stack. Each realizes neutral rules, or is a convention only this stack has (Realizes: —), such as a line every source file starts with. A rule reaches a pack only through a task's Context, so every task it governs lists it there; no task copies a rule's text. -->
 
 ## S{n} — {short title}
 
@@ -8,5 +8,5 @@
 
 - Applies to: {all | component keys | file kinds | an action}
 - Checked by: {the tool and its configuration | review}
-- Realizes: {R addresses}
+- Realizes: {R addresses, or — for a convention only this stack has}
 - Why: {one line}
