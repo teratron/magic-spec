@@ -1,9 +1,9 @@
 # Implementation Plan
 
-**Version:** 1.85.0
-**Generated:** 2026-11-24
-**Based on:** .magicspec/engine/INDEX.md v1.98.0
-**Based on RULES:** .magicspec/RULES.md v1.24.0
+**Version:** 1.87.0
+**Generated:** 2026-11-25
+**Based on:** .magicspec/engine/INDEX.md v1.99.1
+**Based on RULES:** .magicspec/RULES.md v1.25.0
 **Status:** Active
 
 ## Overview
@@ -762,6 +762,18 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Outlined; its workbook is written when Phase 70 is Done.
   - Requires Phase 70.
   - Scenarios: `routing` — *`goal M3..M5` on a 4.0 workspace*; `session` — *`migrate --to 4` previews, asks once and moves a 3.x workspace, or leaves it on 3.x with the findings it cannot close*.
+
+### Phase 72 — Maintenance: The Reverse Command, Experimental Refinement of Any Engine Mechanic
+
+- [x] **`/magicspec-dev reverse`** ([l1-reverse-command.md](specifications/l1-reverse-command.md) 1.0.0; [l1-command-surface.md](specifications/l1-command-surface.md) 2.4.0 CS-15) [L1] — a maintenance workflow body realizing RV-1 to RV-14: the argument and resume, the study folder in the laboratory, the stages frame, baseline, study, design, iterate, gate and report, criteria fixed before the first agent, clean-context execution, loss tracing, measured cost, the closed stop list and the handoff to the specification pipeline; its router row and description, its generated command entry, the development guide and the distribution page naming six commands, and the harness pinning the body.
+  - Opened by `/magicspec plan` of 2026-11-25 on the owner's request; the constitution's C11 was amended through the rule workflow the same day. Independent of Phases 70 and 71, which wait for the amendments the forward gate named (the replan directive stays pending in the ledger).
+  - Order: `W` (body, then router, entry and documents) before `H` (harness), `S/T` last.
+  - Requires Phase 51 (the maintenance set and its router) and Phase 57 (one runtime per invocation). All are Done.
+  - Scenarios: none — a maintenance command of the repository, not a behaviour a user of the engine sees (SM-3).
+  - Plan check: `[Coherence] 4 artifacts compared — 0 findings` (l1-command-surface CS-15 amended in the same change, C11 amended, l1-fix-command and l1-product-simulation distinct subjects).
+  - Validation: the router lists six commands and the projection writes the entry of `reverse`; the harness cases on the maintenance set, C11, the distribution page and the input pass pass; a new case pins the body's invariants; the full harness passes; biome and fallow report nothing on the changed files.
+  - **Execution outcome**: all five tasks Done (one agent); harness 479 → 480; the command, its router row, entry, documents and cases; constitution 1.25.0 (C11) with the shipped template, engine C14 once; registry 1.99.1 (`l1-reverse-command` 1.0.0, `l1-command-surface` 2.4.0, `l2-test-suite` 1.48.7). No requirement changed while building. **Revalidated 2026-11-25 against registry 1.99.1.**
+  - Tasks: [archives/tasks/phase-72.md](archives/tasks/phase-72.md)
 
 ## Backlog
 

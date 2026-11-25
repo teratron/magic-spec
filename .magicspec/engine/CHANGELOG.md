@@ -1,5 +1,9 @@
 # Engine Workspace Changelog
 
+## Phase 72 — 2026-11-25 (Maintenance: The Reverse Command)
+
+- **`/magicspec-dev reverse` perfects any area of the engine by experiment.** Baseline, references studied in reverse, criteria before the first agent, clean-context replay against a ground truth, traced losses, a held-out gate, a report ending in a specification input; it changes no file of the repository. Constitution C11 lists it; harness 480.
+
 ## Phase 69 — 2026-11-24 (The Forward Gate)
 
 - **The one path the lab never measured was run: a document set written forward, from an idea alone.** Eleven fresh agents wrote a set of 82 addresses for a command-line tool the lab had never documented (stages spec, cross-stack review, stack, plan, tasks) and four builders built the first milestone from `pack` output alone: 218 tests pass, every task's own check exits 0 with no repair, and the milestone's nine observations hold.

@@ -61,7 +61,7 @@ These files are kept in the main repository for maintainers. They are not part o
 
 ### 3.2. Service Workflows
 
-- `/magicspec-dev <command>` — the maintenance commands `init`, `test`, `sync`, `release` and `fix`, under `.agents/`.
+- `/magicspec-dev <command>` — the maintenance commands `init`, `test`, `sync`, `release`, `fix` and `reverse`, under `.agents/`.
 
 ## 4. Internal Repository Files (Maintainer)
 

@@ -125,7 +125,7 @@ All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` c
 
 ### C11 — Maintenance Commands (C2 Exception)
 
-The commands of `/magicspec-dev` — `init`, `test`, `sync`, `release` and `fix` — are explicitly authorized as developer-facing tools of the engine's own repository: the setup of links and projections, engine validation and regression testing, the metadata and documentation sync, the release, and the repair of error feedback about the engine. They are exceptions to C2. Not intended for use in regular project workflows.
+The commands of `/magicspec-dev` — `init`, `test`, `sync`, `release`, `fix` and `reverse` — are explicitly authorized as developer-facing tools of the engine's own repository: the setup of links and projections, engine validation and regression testing, the metadata and documentation sync, the release, the repair of error feedback about the engine, and the experimental refinement of its mechanics. They are exceptions to C2. Not intended for use in regular project workflows.
 
 ### C12 — Quarantine Cascade
 

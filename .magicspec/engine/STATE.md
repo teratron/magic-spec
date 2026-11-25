@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-24 20:52
-**Phase:** 69 — The Forward Gate
+**Updated:** 2026-11-25 06:31
+**Phase:** 70 — The Pipeline on a 4.0 Workspace (waits on the forward gate)
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-69T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine to plan
+- **Next Action:** Run /magicspec plan engine "The forward gate of Phase 69 failed (record `.magicspec/engine/simulations/forward-gate.md`; evaluation in the documentation lab, `runs/run-25-state/summary.md`): the 4.0 concept needs three amendments before Phases 70 and 71 may start — a rule's `From` is written by the plan stage (§5.3, §5.9), a stack-only convention is a stack rule listed in the Context of the tasks it governs (§5.3, §5.6), and the neutral writing table gains rows for text semantics, line endings, the validity of text and calendar rules and ships with the engine — plus five minor guidance lines in the templates. Plan a phase that makes the amendments of l1-sdd-document-set.md (a specification pass, which the plan workflow routes) and brings the templates and the checker to them, then a phase that runs the gate again on the same idea; Phases 70 and 71 follow only a pass."
 
 ## Progress
 
 ```
-Overall: [69/69] ████████ 100%
+Overall: [70/70] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-25 **Decision:** Phase 72 complete: /magicspec-dev reverse (experimental refinement of any engine mechanic), constitution 1.25.0, harness 480
 - 2026-11-24 **Decision:** Phase 69 complete. Verdict FAIL: the forward gate built and observed the first milestone of an unseen product (218 tests, 9 of 9 observations) and failed criteria 1, 5 and 6; three format findings (rule From before the plan, stack-only convention and the pack, the neutral writing table's text rows); Phases 70 and 71 wait for the concept's amendments and a second run
 - 2026-11-24 **Decision:** Phase 68 complete. Provides: check-docs and pack of the 4.0 document set (behind format 4), lib/count-tokens.js, the pack cache owned by clean-cache, templates/set/ (13), document-set harness module (17 cases, harness 479), engine 3.0.164, registry 1.97.0
 - 2026-11-19 **Decision:** Phase 67 complete. Provides: goal's optional argument (the empty one continues an unfinished goal, else runs the active phase; phase-3..5 and plan), the first spec run takes the whole brief, premises decided, recorded in the goal block and reported under Assumptions with nothing asked after the intake; router row optional with the Dispatch exception removed; T367-T371, S-14; engine 3.0.160, harness 462, registry 1.94.0
 - 2026-11-19 **Decision:** Phase 65 complete. Provides: GM-10 in the goal body (the four ends of a turn the mode never takes, the host-ended turn told apart, a finalization handoff line as the input of the next iteration); IP-3 in the prompt-engineer card, its mirror and four texts (the host marking only adds to material, the person's own words adopt an instruction through every gate); the design-system Patterns Not Used section with the ui-ux-designer steps and mirror; suite T365 and T366, scenario S-13; engine 3.0.154, harness 461, registry 1.92.0
-- 2026-11-18 **Decision:** Phase 64 complete (maintenance). Provides: finalize names the task command after a plan only while a phase of the ledger is open; a finished ledger leaves the step to the plan state; l2-engine-finalization 3.10.0 (PL-5 restored), l2-test-suite 1.48.4; engine 3.0.149, harness 457, registry 1.90.0
 
 ## Blockers
 

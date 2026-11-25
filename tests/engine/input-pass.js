@@ -123,6 +123,7 @@ module.exports = () => {
                 '**Scope:**',
                 '## Core Invariants (Mandatory)',
             ],
+            'skills/magicspec-dev/workflows/reverse.md': ['**Command:**', '## Arguments'],
             'skills/magicspec-dev/workflows/release.md': [
                 '# Release Workflow',
                 '## Agent Guidelines',

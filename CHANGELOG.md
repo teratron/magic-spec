@@ -49,6 +49,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 
 ### Added
 
+- **`/magicspec-dev reverse`** (engine repository only): perfects any area of the engine by experiment — the area measured as it works today, reference projects studied in reverse, pass criteria written before the first agent, clean-context replay against an observable ground truth, every loss traced, a gate on a case never seen, and a report ending in an input for the specification workflow. Studies live in a laboratory folder beside the repository; the command changes no file of it. The constitution's list of maintenance commands names it.
 - **The 4.0 document set, step 1 (engine 3.0.164; nothing a 3.x workspace reads or writes changes).** `check-docs` checks the document set of a workspace without a model, and `pack {task}` computes a task's context pack (written to `.magicspec/.cache/packs/{workspace}/{task}.md`, its size printed against the 10,000-token budget). Both act only on a workspace whose entry in `workspace.json` carries `"format": "4"`; on any other they print one line and exit 0. The thirteen templates of the set are in `templates/set/`, and `clean-cache` removes the packs. The harness gains the `document-set` module (479 cases in all).
 - `docs/development.md`: layout, the harness, C14, the command tables, releasing. The Node.js floor (18) is stated and checked by the executor.
 - **`/magicspec help`** (and a bare `/magicspec`): the commands listed by group like a console tool's help, each with its argument, then offered in the host's choice form (two steps on a form of four choices) or as a numbered list in the chat; `help {command}` explains one, `help ru` (any language) translates the explanations and never the names. A first word that is not a command opens the same help with the typed text kept, the one-edit correction first.
@@ -104,6 +105,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - Updated 3 specifications (engine)
 - Updated 5 specifications (engine)
 - Added 2 specifications (engine)
+- Updated global project rules (engine)
 
 ## [3.0.0] - 2026-10-28
 

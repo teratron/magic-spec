@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.6
+**Version:** 1.48.7
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -209,6 +209,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.7 | 2026-11-25 | Agent | As built in Phase 72, Stable retained, no requirement changed: one case pins the maintenance `reverse` body (criteria before the first agent, the orchestrator outside every agent, the held-out gate case, reports saved on arrival, the closed stop list, no repository write, the seven stages and the fourteen invariants cited), and the maintenance-set, constitution, distribution and input-pass cases follow the sixth command. |
 | 1.48.6 | 2026-11-24 | Agent | As built in Phase 68, Stable retained, no requirement changed: the harness gains the `document-set` module and its fixtures (17 cases: the four fixture sets and their recorded findings, the 3.x line, `--budget`, the resolved workspace, the layer boundary, the pack's sections, budget report, `--include`, Done before this task and cache removal, and the thirteen templates), and the cache inventory case gains the row of `.cache/packs/`. |
 | 1.48.5 | 2026-11-19 | Agent | **Coverage for the optional argument of goal mode, as built in Phase 67** (Stable retained, no requirement changed): the goal block's range, premises and the drop of the oldest premise (one new case and the writer and resume cases extended), the goal body's forms, default, batched first run and premises (the goal-body case extended with a needle per statement, its first-row pin restated with the range), the router row (its case rewritten and a second case's list of the commands that ask restated) — 54 mutation entries, all caught — and the cognitive cases T367 to T371 with the restated control of T333 (suite 1.9.110, `Last: T371`). |
 | 1.48.4 | 2026-11-18 | Agent | As built in Phase 64, Stable retained, no requirement changed: the SC-2.1 coverage restates the control of the step after a plan — with nothing pending a finished ledger behind the plan names no step, an open phase behind it is re-synced — under four caught mutation entries (`l2-engine-finalization.md` 3.10.0). |

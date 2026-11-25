@@ -71,6 +71,7 @@ The repository has a second command, `/magicspec-dev <command> [argument]` (the 
 | `sync` | Runs `/magicspec sync`, then the engine-only stages: engine metadata, version anchors, links and documentation |
 | `release` | Validates, versions and triggers a GitHub Release |
 | `fix` | Carries error feedback about the engine — a pasted engine bug report, a pending feedback note, a failing harness case, a failed step of the engine's own scenarios — from report to a verified repair: the shipped `fix` triage with the engine as the product, a harness case shown to fail without the repair, C14, and every maintained release line |
+| `reverse` | Perfects one area of the engine by experiment: measures it as it is, studies reference projects in reverse, writes the pass criteria before any agent runs, replays the candidate with clean-context agents against a ground truth, gates it on a case never seen, and ends with a report and an input for the specification workflow. It changes no file of this repository; its studies live in the laboratory folder beside it |
 
 ## Releasing
 

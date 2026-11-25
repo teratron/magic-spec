@@ -81,7 +81,7 @@ The script prints link targets and runs a per-platform integrity check:
 - `scripts/init/setup_windows.ps1`
 - `scripts/init/setup_unix.sh`
 - `scripts/init/agents.json` — the agent registry both scripts read
-- `scripts/init/project-dev-skill.js` — links `.agents/skills/magicspec-dev` and writes the four `magicspec-dev` command entries
+- `scripts/init/project-dev-skill.js` — links `.agents/skills/magicspec-dev` and writes one `magicspec-dev` command entry per row of the maintenance router
 
 ## Windows Junction Safety
 

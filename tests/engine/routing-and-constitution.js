@@ -392,17 +392,24 @@ module.exports = () => {
         );
     });
 
-    test('the maintenance router has the space grammar, reads the colon spelling as text, lists five commands in the three-column shape the projection reads, and names no printed colon form itself (CS-15)', () => {
+    test('the maintenance router has the space grammar, reads the colon spelling as text, lists six commands in the three-column shape the projection reads, and names no printed colon form itself (CS-15)', () => {
         const router = readShipped('skills/magicspec-dev/SKILL.md');
         const projection = require(
             path.join(TESTS_DIR, '..', 'scripts', 'init', 'project-dev-skill.js'),
         );
         assert.deepStrictEqual(
             projection.readCommands(path.resolve(TESTS_DIR, '..')).map((c) => c.name),
-            ['init', 'test', 'sync', 'release', 'fix'],
-            'the projection reads the five rows in table order',
+            [
+                'init',
+                'test',
+                'sync',
+                'release',
+                'fix',
+                'reverse',
+            ],
+            'the projection reads the six rows in table order',
         );
-        assert.ok(router.includes('One skill, five commands, for the developer repository only.'));
+        assert.ok(router.includes('One skill, six commands, for the developer repository only.'));
         assert.ok(
             router.includes(
                 'The grammar is `/magicspec-dev <command> [argument]`. The colon spelling `/magicspec-dev:<command>`, typed as text, is read as that command too and is never printed by this router.',
@@ -416,10 +423,17 @@ module.exports = () => {
             'the dispatch reads both spellings',
         );
         const description = /^description: (.*)$/m.exec(router)[1];
-        for (const command of ['init', 'test', 'sync', 'release', 'fix'])
+        for (const command of [
+            'init',
+            'test',
+            'sync',
+            'release',
+            'fix',
+            'reverse',
+        ])
             assert.ok(description.includes(`\`${command}\``), `the description names ${command}`);
         const rows = router.split('\n').filter((line) => /^\| `[a-z]+` \|/.test(line));
-        assert.strictEqual(rows.length, 5, 'five rows');
+        assert.strictEqual(rows.length, 6, 'six rows');
         for (const row of rows) {
             const name = /^\| `([a-z]+)`/.exec(row)[1];
             assert.ok(
@@ -467,7 +481,7 @@ module.exports = () => {
         );
         assert.ok(
             readShipped('docs/distribution.md').includes(
-                'the maintenance commands `init`, `test`, `sync`, `release` and `fix`',
+                'the maintenance commands `init`, `test`, `sync`, `release`, `fix` and `reverse`',
             ),
             'the distribution page lists the set',
         );
@@ -476,6 +490,41 @@ module.exports = () => {
                 !readShipped(rel).includes('magicspec-dev'),
                 `${rel} names no maintenance command`,
             );
+    });
+
+    test('the maintenance reverse body fixes the criteria before the first agent, keeps the orchestrator out of every agent, holds a gate case back, saves reports on arrival, stops on a closed list and changes no file of the repository (RV-3, RV-4, RV-7, RV-11, RV-12, RV-13)', () => {
+        const body = readShipped('skills/magicspec-dev/workflows/reverse.md');
+        for (const needle of [
+            '**Command:** `/magicspec-dev reverse',
+            'This command changes **no engine file, no specification and no state of this repository** (RV-13)',
+            '`criteria.md` holds metrics, thresholds, the verdict rule, the gate case and the budget before any agent starts, the baseline run included.',
+            'at least one gate case is seen by no agent and no revision before the gate',
+            'You never play an agent and never edit what an agent wrote.',
+            'its report goes verbatim into `runs/{k}/reports/` the moment it arrives',
+            'a result that works and misses a criterion is `FAIL`',
+            'The study stops, and writes its report, only when one of these holds (RV-12):',
+            'Run no finalization: this command writes nothing in this repository.',
+        ]) {
+            assert.ok(body.includes(needle), `reverse.md states: ${needle}`);
+        }
+        const stages = [
+            ...body.matchAll(/^### \d\. (\w+)$/gm),
+        ].map((m) => m[1]);
+        assert.deepStrictEqual(
+            stages,
+            [
+                'Frame',
+                'Baseline',
+                'Study',
+                'Design',
+                'Iterate',
+                'Gate',
+                'Report',
+            ],
+            'the seven stages in order',
+        );
+        const cited = new Set(body.match(/RV-\d+/g));
+        assert.strictEqual(cited.size, 14, 'every invariant of the concept is cited');
     });
 
     test('the constitution authorizes the whole maintenance set in C11 (word for word in the shipped template), C28 item 2 names the entry for engine bug reports, and the consumer guard stays intact', () => {
@@ -495,7 +544,7 @@ module.exports = () => {
         );
         for (const needle of [
             '### C11 — Maintenance Commands (C2 Exception)',
-            "The commands of `/magicspec-dev` — `init`, `test`, `sync`, `release` and `fix` — are explicitly authorized as developer-facing tools of the engine's own repository",
+            "The commands of `/magicspec-dev` — `init`, `test`, `sync`, `release`, `fix` and `reverse` — are explicitly authorized as developer-facing tools of the engine's own repository",
             'They are exceptions to C2. Not intended for use in regular project workflows.',
         ]) {
             assert.ok(c11.includes(needle), `C11 states: ${needle}`);
