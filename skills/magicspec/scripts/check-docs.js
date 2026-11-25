@@ -267,6 +267,23 @@ class DocSet {
     }
 
     /**
+     * The body of the Tools section of a stack's profile: what its builders run the stack with.
+     * @param {string | null} stack
+     * @returns {string} Empty when there is no stack, no profile, or no such section.
+     */
+    stackTools(stack) {
+        if (!stack) return '';
+        const profile = this.read(`stack/${stack}/profile.md`) ?? '';
+        const tools = sections(profile, 2).find((s) => /^## Tools\s*$/.test(s.heading));
+        if (!tools) return '';
+        return tools.text
+            .split('\n')
+            .slice(1)
+            .join('\n')
+            .replace(/^(?:[ \t]*\n)+/, '');
+    }
+
+    /**
      * Addresses written in a text.
      * @param {string} text
      * @returns {string[]}

@@ -16,15 +16,17 @@ const { resolveProjectRoot, resolveDesignRoot, runMain } = require('./utils');
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // Assembles the pack of one task of a 4.0 workspace, in the order of the concept (§5.6): one
-// line that keeps the documents out of what the task creates, then the task, then the preamble
-// of the component it builds, the units of its Consumes and Context, the units they reference or
-// whose names they use, each verbatim; then **Done before this task**, the files the tasks it is
-// After created, as built, read from the project.
+// line that keeps the documents out of what the task creates, then the tools of the task's stack
+// as its profile states them, then the task, then the preamble of the component it builds, the
+// units of its Consumes and Context, the units they reference or whose names they use, each
+// verbatim; then **Done before this task**, the files the tasks it is After created, as built,
+// read from the project.
 //
 // The pack is written to `.magicspec/.cache/packs/{workspace}/{task}.md`, a rebuildable cache
 // that `clean-cache` removes, and the line printed gives its size against the budget. The budget
-// counts the computed units only, without the task and without Done before this task; a pack over
-// the budget is written all the same and says so, because the checker, not this script, is the gate.
+// counts the computed units only, without the task, the stack's tools and Done before this task;
+// a pack over the budget is written all the same and says so, because the checker, not this
+// script, is the gate.
 //
 // Usage:
 //   node skills/magicspec/scripts/executor.js pack <task> [--include <file>]...
@@ -176,18 +178,27 @@ function builtFiles(set, task, included) {
 }
 
 /**
- * The pack file: the task, the units of its context, and Done before this task.
+ * The pack file: the stack's tools, the task, the units of its context, and Done before this task.
  *
  * @param {string} address - The task.
+ * @param {string} tools - The body of the Tools section of the task's stack, or empty.
  * @param {string} taskText
  * @param {{ address: string, text: string, pulled: boolean }[]} parts
  * @param {string} done - The text of Done before this task.
  * @returns {string}
  */
-function packFile(address, taskText, parts, done) {
+function packFile(address, tools, taskText, parts, done) {
     return [
         CONTAINMENT_LINE,
         '',
+        ...(tools
+            ? [
+                  '# Tools of the stack',
+                  '',
+                  tools,
+                  '',
+              ]
+            : []),
         `# Task ${address}`,
         '',
         taskText,
@@ -244,7 +255,7 @@ function buildPack(workspaceDir, workspace, address, included) {
         pulled: !explicit.has(a),
     }));
     const done = doneBeforeText(projectRoot, builtFiles(set, task, included));
-    const body = packFile(address, set.packText(address), parts, done);
+    const body = packFile(address, set.stackTools(task.stack), set.packText(address), parts, done);
     const { designAbs } = resolveDesignRoot(projectRoot);
     const out = path.join(designAbs, '.cache', 'packs', workspace, `${address}.md`);
     fs.mkdirSync(path.dirname(out), {

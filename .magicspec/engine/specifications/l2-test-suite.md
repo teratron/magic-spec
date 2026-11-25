@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.9
+**Version:** 1.48.10
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -209,6 +209,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.10 | 2026-11-25 | Agent | As built in Phase 77, Stable retained, no requirement changed: the `document-set` module grows from 23 to 26 cases — a pack carries the tools of its stack after the first line and outside its computed units, and none when the profile has none; a pack holds the interface of the binding of the component it builds; a stack word matches whole and in any letter case, and a component key never — each under mutation control. |
 | 1.48.9 | 2026-11-25 | Agent | As built in Phase 75, Stable retained, no requirement changed: the `document-set` module grows from 21 to 23 cases — every pack opens with the containment line outside its computed units, and an empty library list and a profile with no stack component write `- none` — the pack order case asserts the line first, and the table case compares every paragraph after the table, the shipped file dropping the concept's change markers and section pointers. |
 | 1.48.8 | 2026-11-25 | Agent | As built in Phase 73, Stable retained, no requirement changed: the `document-set` module grows from 17 to 21 cases — a rule without `From` before a milestone is no finding and beside one is one finding per rule, a stack rule with `Realizes: —` needs no neutral rule, and the shipped neutral writing table equals the concept's, word for word; the template case expects the thirteen templates and the table file and no other; the `good` fixture's rule names `From: M1` and the recorded findings of `bad` and `bad4` gain one line each. |
 | 1.48.7 | 2026-11-25 | Agent | As built in Phase 72, Stable retained, no requirement changed: one case pins the maintenance `reverse` body (criteria before the first agent, the orchestrator outside every agent, the held-out gate case, reports saved on arrival, the closed stop list, no repository write, the seven stages and the fourteen invariants cited), and the maintenance-set, constitution, distribution and input-pass cases follow the sixth command. |

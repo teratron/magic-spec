@@ -90,3 +90,27 @@ The record of the third run, 2026-11-25, on the same idea, stack and criteria. D
 **The format findings of this run:** the stack's manifest has no owner (reported by three agents); a task that builds part of a binding unit has no address for the part; the runtime version reaches no builder; and six smaller forms or links are unstated (the empty `Realizes`, mixed visibility, whether a binding's interface section is in the pack, vocabulary matching, transitive `Needs`, runtime capabilities as external needs). None changed what was built.
 
 **Verdict: FAIL.** Steps 3 and 4 of the realization stay closed. The concept needs the seven amendments the run's evaluation lists. For the owner of the gate: criterion 6 as written has failed all three runs (8, 12 and 9 format items), each time on new small ones; a criterion that counts only format items changing the product's behaviour or what is written into it would be a decision made before a run.
+
+## Run 4
+
+The record of the fourth run, 2026-11-25, on the same idea and stack; the criteria are those of the first three runs except the sixth, whose measure the owner of the gate decided before the run. Detail: `D:\Projects\src\github.com\teratron\sdd-lab\runs\run-28-state\`.
+
+- **Engine:** 3.0.174. **Concept:** 1.3.0 (the agents' copy without the record of earlier runs). **Agents:** fourteen fresh subagents on one model, as before: a documenter, three Go-only readers and two rewriting documenters, a stack documenter, a planner, a task writer and five builders.
+- **What came out:** a set of 71 addresses with one milestone, the whole product, observed by running it; five tasks, eleven built files, 147 tests (146 pass, one skipped on this machine's system), no retry and no repair; both uses of the milestone's observation hold, as do 70 own checks of the behaviour requirements; the built files hold no address or path of the documents.
+- **Checker:** one finding at the first check of the spec stage (a byte value written as data read as a change address), none at any other stage.
+
+| Criterion | Holds |
+| --- | --- |
+| 1. Every documenting stage ends with the checker reporting nothing | yes — one repair round, in the spec stage |
+| 2. Three to five tasks, every pack within budget | yes — five tasks, packs 684 to 8,288 tokens |
+| 3. Every task's own check passes after its builder, without repair | not as written ("exits 0"): one check is a product use expected to exit 1, and it does; yes on the expected status |
+| 4. The milestone's `Observed by` holds | not as written, for the same reason; yes on the expected status |
+| 5. A second reader lists none of the first reader's leaks | no — the second reading repeats two (a template comment on optional dependencies; arguments taken as decoded text); the third, final reading is empty |
+| 6. The owner's measure: no format loss changing what was built; at most one behaviour-changing content item per task | yes — nine format items, none judged to change the product (one borderline: a first milestone cannot build a component in part); content per task 0, 0, 0, 0, 1. Earlier measure: no (nine items) |
+| 7. A defect of a script or a template is repaired before the verdict | yes — none found |
+
+**Earlier findings:** none of the first run's eight, the second run's twelve or the third run's nine recurred in its stated form; two returned in new forms (the manifest's owner, a task building part of a unit).
+
+**The format findings of this run:** text copied from the templates and the concept into neutral documents names stack concepts; data shaped like an address has no literal form; two empty forms are unstated (external needs, `Defines`); bindings are written before the plan that names the manifest's owner and the first milestone's scope; `Produces` has no form for several consumers or a unit with no names; whether component keys are addresses in the containment line is unsaid.
+
+**Verdict: FAIL.** Steps 3 and 4 of the realization stay closed. The concept needs the six amendments the run's evaluation lists. For the owner of the gate, before any further run: criteria 3 and 4 need wording for an observation that expects a nonzero status, and criterion 5 reads the second reading although the format's review ends at the first reading that repeats nothing.

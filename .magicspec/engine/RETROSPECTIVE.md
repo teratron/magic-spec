@@ -2,7 +2,7 @@
 
 **Last Full Run:** 2026-10-12
 **Full Sessions:** 21
-**Snapshots:** 65
+**Snapshots:** 67
 
 ## Snapshots
 
@@ -75,6 +75,8 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-11-25 | Phase 74 | 0/0/58 | 13/0/0 | 25 | 🟡 |
 | 2026-11-25 | Phase 75 | 0/0/58 | 7/0/0 | 25 | 🟡 |
 | 2026-11-25 | Phase 76 | 0/0/58 | 13/0/0 | 25 | 🟡 |
+| 2026-11-25 | Phase 77 | 0/0/58 | 6/0/0 | 25 | 🟡 |
+| 2026-11-25 | Phase 78 | 0/0/58 | 13/0/0 | 25 | 🟡 |
 
 ## Session 1 — 2026-06-12
 

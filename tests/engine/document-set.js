@@ -373,31 +373,158 @@ module.exports = () => {
         }
     });
 
+    /**
+     * @param {string} dir - The project.
+     * @returns {string} The size of the largest computed pack, as the checker reports it.
+     */
+    const largestPack = (dir) => {
+        const checked = simExec(dir, [
+            'check-docs',
+        ]);
+        const largest = /1 tasks, largest pack (\d+) tokens/.exec(checked.stderr);
+        assert.ok(largest, checked.stderr);
+        return largest[1];
+    };
+
+    /**
+     * Packs the one task of the `good` set and reads what was written.
+     *
+     * @param {string} dir - The project.
+     * @returns {{ units: string, file: number, body: string }} The printed sizes and the pack.
+     */
+    const packTask = (dir) => {
+        const r = simExec(dir, [
+            'pack',
+            'M2.T1',
+        ]);
+        assert.strictEqual(r.status, 0, r.stderr);
+        const printed = /pack (\d+) \/ 10000 tokens .* file (\d+) tokens/.exec(r.stdout);
+        assert.ok(printed, r.stdout);
+        return {
+            units: printed[1],
+            file: Number(printed[2]),
+            body: fs.readFileSync(path.join(dir, PACK_FILE, 'M2.T1.md'), 'utf8'),
+        };
+    };
+
     test('document set: every pack opens with the line that keeps the documents out of the product, outside its computed units', () => {
         const dir = makeSetProject('good');
         try {
-            const checked = simExec(dir, [
-                'check-docs',
-            ]);
-            const largest = /1 tasks, largest pack (\d+) tokens/.exec(checked.stderr);
-            assert.ok(largest, checked.stderr);
-            const r = simExec(dir, [
-                'pack',
-                'M2.T1',
-            ]);
-            assert.strictEqual(r.status, 0, r.stderr);
-            const printed = /pack (\d+) \/ 10000 tokens .* file (\d+) tokens/.exec(r.stdout);
-            assert.ok(printed, r.stdout);
+            const largest = largestPack(dir);
+            const { units, file, body } = packTask(dir);
             // The checker measures the computed units alone: the line adds to the file, not to them.
-            assert.strictEqual(printed[1], largest[1]);
-            assert.ok(Number(printed[2]) > Number(printed[1]));
-            const body = fs.readFileSync(path.join(dir, PACK_FILE, 'M2.T1.md'), 'utf8');
+            assert.strictEqual(units, largest);
+            assert.ok(file > Number(units));
             assert.deepStrictEqual(body.split('\n').slice(0, 3), [
                 CONTAINMENT,
                 '',
                 '# Task M2.T1',
             ]);
             assert.strictEqual(body.split(CONTAINMENT).length, 2, 'the line is written once');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    /**
+     * Moves the task file of the `good` set under a stack, where a set with a stack layer keeps it.
+     *
+     * @param {string} dir - The project.
+     * @param {string} stack
+     */
+    const putTasksUnder = (dir, stack) => {
+        const ws = path.join(dir, '.magicspec', 'docs');
+        const tasks = path.join(ws, 'stack', stack, 'tasks');
+        fs.mkdirSync(tasks, {
+            recursive: true,
+        });
+        fs.renameSync(path.join(ws, 'tasks', 'M2.md'), path.join(tasks, 'M2.md'));
+    };
+
+    test('document set: a pack carries the tools of its stack after the first line, outside its computed units', () => {
+        const dir = makeSetProject('good');
+        try {
+            putTasksUnder(dir, 'rust');
+            const profile = '.magicspec/docs/stack/rust/profile.md';
+            const rest = '## Notions\n\n- the rest of the profile\n';
+            writeIn(
+                dir,
+                profile,
+                `# Stack: rust\n\n## Tools\n\nRust 1.80 with its test runner.\n\n- a second line\n\n${rest}`,
+            );
+            const largest = largestPack(dir);
+            const withTools = packTask(dir);
+            assert.deepStrictEqual(withTools.body.split('\n').slice(0, 9), [
+                CONTAINMENT,
+                '',
+                '# Tools of the stack',
+                '',
+                'Rust 1.80 with its test runner.',
+                '',
+                '- a second line',
+                '',
+                '# Task M2.T1',
+            ]);
+            assert.ok(!withTools.body.includes('the rest of the profile'));
+            assert.strictEqual(withTools.units, largest, 'the tools are no computed unit');
+            // A profile without the section gives no section and no line about it.
+            writeIn(dir, profile, `# Stack: rust\n\n${rest}`);
+            const without = packTask(dir);
+            assert.ok(without.body.startsWith(`${CONTAINMENT}\n\n# Task M2.T1\n`));
+            assert.ok(!without.body.includes('# Tools of the stack'));
+            assert.strictEqual(without.units, withTools.units);
+            assert.ok(without.file < withTools.file);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: a pack holds the interface of the binding of the component it builds', () => {
+        const dir = makeSetProject('good');
+        try {
+            putTasksUnder(dir, 'rust');
+            writeIn(
+                dir,
+                '.magicspec/docs/stack/rust/bind/hello.md',
+                '# hello — binding for rust\n\n## Interface\n\nThe module `hello`, exported at the root of the library.\n\n## Units\n\n### hello.b1 — a unit nothing names\n\n- Defines: unnamed_helper\n- Visibility: internal\n- Realizes: —\n- Accept: compiles\n',
+            );
+            const { body } = packTask(dir);
+            // The preamble of the built component: its behaviour text, then its binding's.
+            const preamble = body.split('<!-- unit hello -->')[1].split('<!-- unit ')[0];
+            const behaviour = preamble.indexOf('## Contract');
+            const binding = preamble.indexOf('exported at the root of the library');
+            assert.ok(behaviour >= 0 && binding > behaviour, preamble);
+            assert.ok(preamble.includes('## Interface'));
+            assert.ok(!body.includes('a unit nothing names'), 'only the preamble comes with it');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: a stack word matches whole and in any letter case, and a component key never', () => {
+        const dir = makeSetProject('good');
+        try {
+            writeIn(
+                dir,
+                '.magicspec/docs/stack/rust/profile.md',
+                '# Stack: rust\n\n## Vocabulary\n\ncrate, hello\n',
+            );
+            writeIn(
+                dir,
+                '.magicspec/docs/spec/hello.md',
+                '\nA CRATE holds it; a crates, a supercrate and a crate-like name do not.\n',
+                true,
+            );
+            const r = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(r.status, 1, r.stderr);
+            assert.deepStrictEqual(
+                linesOf(r.stdout).filter((line) => line.includes('stack vocabulary')),
+                [
+                    'spec/hello.md: stack vocabulary in the neutral layer — crate ×1',
+                ],
+            );
         } finally {
             cleanup(dir);
         }

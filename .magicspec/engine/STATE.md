@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-25 16:51
-**Phase:** 77 — The Format Brought to the Amendments of Run 3
+**Updated:** 2026-11-25 19:26
+**Phase:** 78 — The Forward Gate, Run 4
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-76T01 Validation
+- **Task:** T-78T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Execute T-77P01 `pack` writes the stack's tools after the containment line via /magicspec run engine
+- **Next Action:** Run /magicspec plan engine "Run 4 of the forward gate (Phase 78) failed (record `.magicspec/engine/simulations/forward-gate.md`, section Run 4; evaluation in the documentation lab, `runs/run-28-state/summary.md`): criterion 5 does not hold (the second reading repeated two leaks of the first, one of them a comment of the product template), criteria 3 and 4 hold on the expected exit status and not as written, criteria 1, 2 and 7 hold, and criterion 6 holds under the owner's measure (nine format items, none judged to change what was built; one borderline) and not under the earlier one. First the owner of the gate decides, before any further run: the wording of criteria 3 and 4 for an observation that expects a nonzero status; whether criterion 5 is read on the second reading or on the reading that ends the review; and whether this run, built and observed as the whole product, is enough to open Phases 70 and 71. Otherwise a specification pass amends l1-sdd-document-set.md for six points — no stack concept in text copied into neutral documents and what happens to template comments (§5.1, the neutral templates); a literal form for data shaped like an address (§5.2, §5.9); the empty forms of External needs and Defines (§5.1, §5.3); who names the manifest's owner and splits binding units when bindings precede the plan (§5.1, §5.3, §5.5); Produces for several consumers and for a unit with no names (§5.3); whether component keys are addresses in the containment line (§5.6, I13) — then the plan opens the step that brings the format to them and a further run."
 
 ## Progress
 
 ```
-Phase 77: [0/6] ░░░░░░░░ 0%
-Overall: [74/75] ████████ 99%
+Overall: [76/76] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-25 **Decision:** Phase 78 complete. Verdict FAIL (run 4 of the forward gate): criterion 5 and criteria 3-4 as written; criterion 6 holds under the owner's measure; the whole product was built and observed by running it; the owner decides on the criteria before any further run
+- 2026-11-25 **Decision:** Phase 77 complete. Provides: the stack's tools in every pack after the containment line, the guidance of concept 1.3.0 in five set templates, harness 489, engine 3.0.174; run 4 of the forward gate (Phase 78) is next
 - 2026-11-25 **Decision:** Phase 76 complete. Verdict FAIL (run 3 of the forward gate): criterion 6 alone, nine format items none changing what was built; criteria 1-5 and 7 hold; the owner decides on criterion 6 before any further run
 - 2026-11-25 **Decision:** Phase 75 complete. Provides: the containment line in every pack, the guidance of concept 1.2.0 in seven templates, the repeated review in neutral-writing.md, harness 486, engine 3.0.172; run 3 of the forward gate (Phase 76) is next
 - 2026-11-25 **Decision:** Phase 74 complete. Verdict FAIL (run 2 of the forward gate): criteria 5 and 6; run 1's findings closed, twelve smaller format items; M1 built (103 tests) and observed; Phases 70 and 71 stay closed; replan directive in the ledger
-- 2026-11-25 **Decision:** Phase 73 complete. Provides: neutral-writing.md shipped with the five templates' guidance, check-docs From finding once a milestone exists, harness 484, engine 3.0.168; run 2 of the forward gate (Phase 74) is next
-- 2026-11-25 **Decision:** Phase 72 complete: /magicspec-dev reverse (experimental refinement of any engine mechanic), constitution 1.25.0, harness 480
 
 ## Blockers
 

@@ -29,4 +29,6 @@
 
 ## External needs
 
+<!-- An external need is a capability the product takes from outside its own code that a stack may meet with a library; what every runtime offers — reading a file, the local date and time, writing to the outputs — is not listed. -->
+
 - P{n} Needs: {capability the product takes from outside} — for {component keys}

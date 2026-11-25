@@ -1,5 +1,17 @@
 # Engine Workspace Changelog
 
+## Phase 78 — 2026-11-25 (The Forward Gate, Run 4)
+
+- **The gate was run a fourth time.** Fourteen fresh agents wrote a set of 71 addresses, reviewed it across stacks in two rewrites, planned the whole product as the first milestone, wrote five tasks and built them from packs: 147 tests (146 pass, 1 skipped), both product uses of the milestone hold, the built files hold no address of the documents.
+- **Verdict: FAIL.** Criterion 5 (the second reading repeated two leaks, one a comment of the product template) does not hold; criteria 3 and 4 hold on the expected exit status and not as written; criterion 6 holds under the owner's measure (nine format items, none judged to change what was built) and not under the earlier one.
+- **Records:** `simulations/forward-gate.md` section Run 4; the lab's `runs/run-28-state/`. **Specifications:** `l1-sdd-document-set` 1.3.1, `l2-sdd-document-set-engine` 1.3.2; registry 1.102.2. Phases 70 and 71 stay closed; the owner's questions on the criteria come first.
+
+## Phase 77 — 2026-11-25 (The Format Brought to the Amendments of Run 3)
+
+- **Every pack now carries the runtime.** After the containment line, `pack` writes the Tools section of the stack’s profile under `# Tools of the stack`; it counts toward no budget, and a stack without the section adds nothing.
+- **Five templates of the set state the amended forms**: a binding unit that realizes nothing, one visibility and one task per unit, the manifest’s owner, a first milestone observed by running the product, `Needs` naming direct dependencies only, what an external need is, how a vocabulary word matches.
+- **Records:** harness 489; engine 3.0.174. **Specifications:** `l2-sdd-document-set-engine` 1.3.1, `l2-engine-templates` 1.3.8, `l2-test-suite` 1.48.10; registry 1.102.1. Phase 78, run 4 of the forward gate, is next.
+
 ## Phase 76 — 2026-11-25 (The Forward Gate, Run 3)
 
 - **The gate was run a third time.** Ten fresh agents wrote a set of 71 addresses, reviewed it across stacks until nothing was listed, planned it, wrote three tasks and built them from packs: 15 tests pass, the milestone is observed, the built files hold no address of the documents.
