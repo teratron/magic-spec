@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-25 12:50
-**Phase:** 70 — The Pipeline on a 4.0 Workspace (waits on the forward gate)
+**Updated:** 2026-11-25 16:51
+**Phase:** 77 — The Format Brought to the Amendments of Run 3
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-76T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine "Run 3 of the forward gate (Phase 76) failed criterion 6 alone (record `.magicspec/engine/simulations/forward-gate.md`, section Run 3; evaluation in the documentation lab, `runs/run-27-state/summary.md`). Criteria 1 to 5 and 7 held, and none of the nine format items changed what was built. First the owner of the gate decides, before any further run, whether criterion 6 keeps its form or counts only format items that change the product's behaviour or what is written into it; under the second form run 3 would hold it, and whether that decision opens Phases 70 and 71 on run 3's evidence or asks a fourth run is the owner's too. Otherwise: a specification pass amends l1-sdd-document-set.md for seven points — an owner for the stack's manifest and other files no unit pins (I11, §5.3, the profile); a binding unit built by one task, split when too large (§5.3, §5.6); the runtime and its version reaching a builder (§5.1, §5.6); the empty form of Realizes, one visibility per unit or a mixed form, and whether the binding's Interface section is in the pack (§5.3, §5.6); transitive Needs (§5.5); runtime capabilities as external needs (§5.1); how a vocabulary word is matched (the profile) — then the templates and checker follow and the gate is run a fourth time on the same idea."
+- **Next Action:** Execute T-77P01 `pack` writes the stack's tools after the containment line via /magicspec run engine
 
 ## Progress
 
 ```
-Overall: [74/74] ████████ 100%
+Phase 77: [0/6] ░░░░░░░░ 0%
+Overall: [74/75] ████████ 99%
 ```
 
 ## Recent Decisions
