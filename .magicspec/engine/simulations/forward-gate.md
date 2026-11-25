@@ -66,3 +66,27 @@ The record of the second run, 2026-11-25, on the same idea, stack and criteria. 
 **The format findings of this run:** the containment of document addresses reaches no pack, so a task writer copied it into each task; a file a later task extends has a mark only for test files; a few forms and links are unstated (where a mark sits, other empty lists, bare names in `Defines`, Done before this task following `After` indirectly, a neutral rule listed beside its stack rule, how `Observed by` names the stack's observation, the optional-dependency comment of the product template); and the review has one rewrite although a rewrite can repeat the leak.
 
 **Verdict: FAIL.** Steps 3 and 4 of the realization stay closed. The concept needs the six amendments the run's evaluation lists. For the owner of the gate: criterion 6 admits no format item of any size, and each run so far found new small ones; weighing items by their effect on the product would be a decision made before a run, not after it.
+
+## Run 3
+
+The record of the third run, 2026-11-25, on the same idea, stack and criteria. Detail: `D:\Projects\src\github.com\teratron\sdd-lab\runs\run-27-state\`.
+
+- **Engine:** 3.0.172. **Concept:** 1.2.0 (the agents' copy without the record of earlier runs). **Agents:** ten fresh subagents on one model, as before: a documenter, two Go-only readers, a rewriting documenter, a stack documenter, a planner, a task writer and three builders.
+- **What came out:** a set of 71 addresses with four milestones of one component each; the first milestone holds the calendar alone, narrower again than in the second run: three tasks, one source file, 15 tests, all pass, no retry and no repair; every task's check and the milestone's observation hold; the built files hold no address or path of the documents.
+- **Checker:** no finding at the first check of any documenting stage.
+
+| Criterion | Holds |
+| --- | --- |
+| 1. Every documenting stage ends with the checker reporting nothing | yes |
+| 2. Three to five tasks, every pack within budget | yes — 915, 915 and 1,183 tokens |
+| 3. Every task's own check passes after its builder, without repair | yes |
+| 4. The milestone's `Observed by` holds | yes |
+| 5. A second reader lists none of the first reader's leaks | yes — the second reading lists nothing (the review ended after one rewrite) |
+| 6. No loss attributed to the format; at most one behaviour-changing content item per task | no — nine format items; behaviour-changing content items per task 0, 0, 0 |
+| 7. A defect of a script or a template is repaired before the verdict | yes — none found |
+
+**Earlier findings:** none of the first run's eight or the second run's twelve recurred in its stated form.
+
+**The format findings of this run:** the stack's manifest has no owner (reported by three agents); a task that builds part of a binding unit has no address for the part; the runtime version reaches no builder; and six smaller forms or links are unstated (the empty `Realizes`, mixed visibility, whether a binding's interface section is in the pack, vocabulary matching, transitive `Needs`, runtime capabilities as external needs). None changed what was built.
+
+**Verdict: FAIL.** Steps 3 and 4 of the realization stay closed. The concept needs the seven amendments the run's evaluation lists. For the owner of the gate: criterion 6 as written has failed all three runs (8, 12 and 9 format items), each time on new small ones; a criterion that counts only format items changing the product's behaviour or what is written into it would be a decision made before a run.

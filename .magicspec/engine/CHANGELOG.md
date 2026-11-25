@@ -1,5 +1,11 @@
 # Engine Workspace Changelog
 
+## Phase 76 — 2026-11-25 (The Forward Gate, Run 3)
+
+- **The gate was run a third time.** Ten fresh agents wrote a set of 71 addresses, reviewed it across stacks until nothing was listed, planned it, wrote three tasks and built them from packs: 15 tests pass, the milestone is observed, the built files hold no address of the documents.
+- **Verdict: FAIL, on criterion 6 alone** (nine small format items, none changing what was built). Criteria 1 to 5 and 7 hold; none of the twenty earlier findings recurred.
+- **Records:** `simulations/forward-gate.md` section Run 3; the lab's `runs/run-27-state/`. **Specifications:** `l1-sdd-document-set` 1.2.1, `l2-sdd-document-set-engine` 1.2.2; registry 1.101.2. Phases 70 and 71 stay closed; whether criterion 6 keeps its form is the owner's decision.
+
 ## Phase 75 — 2026-11-25 (The Format Brought to the Amendments of Run 2)
 
 - **Every pack keeps the documents out of the product.** `pack` opens each pack with one fixed line saying that no address or path of the documents is written into anything the task creates; it counts toward no budget.
