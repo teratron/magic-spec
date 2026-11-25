@@ -1,6 +1,6 @@
 # SDD Document Set (4.0)
 
-**Version:** 1.0.2
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -28,13 +28,13 @@ The architecture specified here was built the other way round. Finished projects
 - **Another stack.** A builder on a second stack, given the neutral layer only, covered the behaviours with few concept leaks once the neutral writing rules (§5.3) were in place.
 - **The auditors.** A second audit of three samples found every difference above minor that the first had found; only the counting of minor items differed.
 
-What was not measured is the forward path: a documenter that has only an idea writes the first documents, and builders build from them. The release of 4.0 is gated on that run (C-3). It was measured once, on 2026-11-24: the first milestone of an unseen product was built from packs and observed (218 tests pass), and the run failed three of its pre-registered criteria for gaps of the format that only a forward run exposes.
+What was not measured is the forward path: a documenter that has only an idea writes the first documents, and builders build from them. The release of 4.0 is gated on that run (C-3). It was measured once, on 2026-11-24: the first milestone of an unseen product was built from packs and observed (218 tests pass), and the run failed three of its pre-registered criteria for gaps of the format that only a forward run exposes. The format was amended for them (1.1.0: §5.3, §5.5, §5.6, §5.9), and the run is repeated on the same idea.
 
 ## 2. Constraints & Assumptions
 
 - **C-1 One set per workspace.** A workspace holds one document set; a repository with several products or stacks holds several workspaces, as in 3.x.
 - **C-2 Plain text.** Every document is Markdown with the fixed field lines of §5; a checker reads them without a model.
-- **C-3 Forward gate.** The format is not released for projects before one forward run passes: an agent given only a product idea writes the set, builders build every task of the first milestone from computed packs, and the milestone's checks hold on what they built. **Run 1 (2026-11-24) did not pass** (its criteria 1, 5 and 6; record `.magicspec/engine/simulations/forward-gate.md`): the gate stays closed until the amendments the record names are made (§5.3 a rule's `From` is written by the plan stage; a stack-only rule and the pack; the rows of the neutral writing table for text) and the run is repeated on the same idea.
+- **C-3 Forward gate.** The format is not released for projects before one forward run passes: an agent given only a product idea writes the set, builders build every task of the first milestone from computed packs, and the milestone's checks hold on what they built. **Run 1 (2026-11-24) did not pass** (its criteria 1, 5 and 6; record `.magicspec/engine/simulations/forward-gate.md`): the amendments the record names are made in 1.1.0 (§5.3 a rule's `From` is written by the plan stage; a convention only the stack has is a stack rule the tasks it governs list in Context; the neutral writing table gains its rows for text and calendar rules; five guidance lines of the forms), and the gate stays closed until a second run on the same idea passes the same criteria.
 - **C-4 The lab stays outside.** The documentation lab is the source of the design and its evidence; this engine ports the format and its checks and does not depend on the lab at run time.
 - **Assumption (forecast):** projects keep a 3.x workspace until they migrate, and the engine reads both layouts during the 4.x line. Runner-up: 4.0 reads only the new layout and every 3.x project migrates on upgrade. Override: /magicspec spec amend l1-sdd-document-set.md "4.0 reads only the new layout".
 - **Assumption (forecast):** the per-specification status lifecycle (Draft, RFC, Stable, Deprecated) does not survive into the new set: readiness is expressed by open questions in units and by the status of changes (§5.8). Runner-up: units keep a status field beside their revision. Override: /magicspec spec amend l1-sdd-document-set.md "units keep a status field".
@@ -95,11 +95,38 @@ An address is unique in the set and never reused; an address written in a unit i
 
 ### 5.3 Units
 
-- **Behaviour requirement** `{key}.{n}`: one behaviour stated so that it can be checked on any stack, with `Accept:`. The neutral layer states needs, not mechanisms; a table of substitutions (a type known at run time, "fails the build", implementation limits, threads, patterns, capability names, declaration mechanisms, closures, scoped borrowing, cloning, build features) and a review by a reader of another stack keep concepts out.
-- **Rule** `R{n}` / `S{n}`: one or two imperative sentences with `Applies to`, `From` (neutral), `Checked by`, `Realizes` (stack), `Why`.
+- **Behaviour requirement** `{key}.{n}`: one behaviour stated so that it can be checked on any stack, with `Accept:`. The neutral layer states needs, not mechanisms; the neutral writing table below and a review by a reader of another stack keep concepts out. `[MODIFIED]`
+- **Rule** `R{n}` / `S{n}`: one or two imperative sentences with `Applies to`, `From` (neutral), `Checked by`, `Realizes` (stack), `Why`. `[MODIFIED]`
+  - `From` names the milestone from which the rule applies, and the plan stage writes it: a rule written before a plan exists has no `From` line, and the stage that writes the milestones adds one to every rule.
+  - `Realizes` names the neutral rules a stack rule realizes, or is `—` for a convention only the stack has (a fact every file of the stack follows, such as a line at the top of each source file or the form in which built-in modules are named). Such a rule is listed in the `Context` of every task it governs, because a rule reaches a pack only through a task's fields (§5.6); the stack profile is not pulled into a pack, so it holds no convention a builder must follow, and a task never copies a rule's text into its own fields.
 - **Binding unit** `{key}.b{n}`: names, signatures, visibility, constraints and mechanisms of one part of the interface, with `Defines`, `Visibility` (interface or internal), `Realizes`, `Accept`. Test scaffolding several tasks share is an internal binding unit.
-- **Milestone** `M{n}`: `Priority`, `Works after it`, `Observed by`, `Needs`, optional `Observed after`, `Integrates`, `Extends`, `Revises`, and `Closes`.
-- **Task** `M{n}.T{k}`: `Goal`, `Priority`, `After`, `Builds`, `Consumes`, `Context`, `Produces` (with the consuming task), `Creates` (with the task's tests), `Done when` (with `Observe:`).
+- **Milestone** `M{n}`: `Priority`, `Works after it`, `Observed by`, `Needs`, optional `Observed after`, `Integrates`, `Extends`, `Revises`, and `Closes`. `[MODIFIED]` `Closes` names component keys only: a milestone that builds part of a component's requirements closes it, and a later milestone that builds the rest Extends it (§5.5). A milestone that needs none writes `Needs: —`.
+- **Task** `M{n}.T{k}`: `Goal`, `Priority`, `After`, `Builds`, `Consumes`, `Context`, `Produces` (with the consuming task), `Creates` (with the task's tests), `Done when` (with `Observe:`). `[MODIFIED]` A task whose work no later task of its milestone uses writes `Produces: —`; a later milestone reaches that work through the map. A test file that a later task extends is created by the earlier task and named in the later task's `Creates` as `{file} (extends M{n}.T{k})`, the address being the task that created it, and the later task is After the earlier one, so its pack holds the file as built. A `Done when` whose observation runs a command states the command's exit status in its expected result ("exits 0 and prints …").
+
+**The neutral writing table.** `[ADDED]` A word list catches the words of a stack; these rows catch its concepts. A neutral unit that would use the left column writes the right one, and where a stack's own library would decide the matter (which letters fold, what ends a line), the neutral unit names the set and the stack layer chooses the means:
+
+| Instead of | Write |
+| --- | --- |
+| a type known at run time, a generic resource, "the type's full name" | one per state type, keyed by that type; the stack layer adds an explicit key where types are erased |
+| "fails the build", "does not compile" | is rejected at the earliest stage the stack offers, with a message that says why |
+| an implementation limit ("a tuple of 1 to 15") | the need ("a group of several"); the limit lives in the binding |
+| threads, processes, "in parallel", "once per process" | at the same time where the stack runs work concurrently; once in a run of the program |
+| a pattern of values | a predicate over values |
+| trait or interface names for capabilities ("equality, hashing, copying, debug printing") | the need: comparable for equality, usable as a key, cheap to copy, printable in logs |
+| a mechanism of declaration ("derive", "marker", "annotation") | its effect: "a single declaration makes it a plain state" |
+| closures with sharing bounds | function values |
+| taking a part out of a container for a scope ("for the duration of a closure") | used in one operation together with the rest of the container |
+| cloning ("it can be cloned") | the use the copy serves: "the same condition can gate several systems" |
+| feature flags, configurations of a build tool | optional integrations, included by default or not (product items) |
+| a dependency on a component only one stack has | nothing: that component is declared in the stack profile |
+| "ignoring case", "case-insensitive", "a letter" | the exact characters that match regardless of case ("the letters A to Z and a to z"); every other character matches only itself |
+| "a digit", "a number" read from text | the exact characters that count as digits ("0 to 9"); every other character is not a digit |
+| "a word", "at a word boundary" | the characters that separate words, listed ("a space, a tab, the start or the end of the line") |
+| "a newline", "the line ending of the machine", "the platform's line ending" | the characters that end a line, named for what is read and for what is written ("a line ends at a line feed, or at a carriage return followed by a line feed; every line written ends with a line feed") |
+| "the text", "a string", for input read from outside the program | what counts as valid text (an encoding named by its standard) and what happens to input that is not valid text |
+| "a date", "a day", "today" | the calendar and its range ("the Gregorian calendar extended backwards, years 1000 to 9999"), and where today's date comes from (the local date of the machine, or a date given as input) |
+
+A neutral layer is reviewed across stacks before its first use on any stack: a reviewer who knows only another stack reads it and lists every concept that stack does not have, and each is rewritten by the table. A rewrite that names the mechanism it means to exclude ("whatever the usual line ending of the machine is") is the same leak and is rewritten again.
 
 ### 5.4 Priority
 
@@ -107,11 +134,11 @@ An address is unique in the set and never reused; an address written in a unit i
 
 ### 5.5 Plan rules
 
-Needs orders the build and is justified (a needed milestone closes something this one depends on, an end of an integration it wires, or a component it extends); an edge only an observation uses is Observed after. A component is closed once; later work on it is Extends, a change of what it does is Revises, and both need the closing milestone. A done milestone is never edited: a change adds a milestone at the end.
+Needs orders the build and is justified (a needed milestone closes something this one depends on, an end of an integration it wires, or a component it extends); an edge only an observation uses is Observed after. A component is closed once; later work on it is Extends, a change of what it does is Revises, and both need the closing milestone. A done milestone is never edited: a change adds a milestone at the end. A backlog with nothing waiting holds the one line `- none`. `[MODIFIED]`
 
 ### 5.6 The pack of a task
 
-Computed, in this order: the task and the preamble of the component it builds; every unit in Consumes and Context; one level from them (every requirement and binding unit their text references, and every binding unit of the built component that defines a name their text uses in code, acceptance lines excepted; a dependency's binding units only through Consumes); **Done before this task**, the files the tasks it is After created, as built, and for a task of a revising or extending milestone the component as built before it; and for a task that rewrites tests it did not write, the present text of those tests only. Nothing is pulled through rules, product items or decisions. The budget is 10,000 tokens for the computed units, without the task and without Done before. A produced unit uses only names produced by then; every test under Observe passes with the work of its task and of the tasks it is After.
+Computed, in this order: the task and the preamble of the component it builds; every unit in Consumes and Context; one level from them (every requirement and binding unit their text references, and every binding unit of the built component that defines a name their text uses in code, acceptance lines excepted; a dependency's binding units only through Consumes); **Done before this task**, the files the tasks it is After created, as built, and for a task of a revising or extending milestone the component as built before it; and for a task that rewrites tests it did not write, the present text of those tests only. Nothing is pulled through rules, product items or decisions: a rule, a stack rule with `Realizes: —` included, reaches a pack only by being named in the task's Context (§5.3). `[MODIFIED]` The budget is 10,000 tokens for the computed units, without the task and without Done before. A produced unit uses only names produced by then; every test under Observe passes with the work of its task and of the tasks it is After.
 
 ### 5.7 Memory
 
@@ -142,7 +169,7 @@ A unit whose revision is newer than the map's is stale, and every stale unit is 
 
 ### 5.9 The checker
 
-A checker reads a set and reports, without a model: unresolved and duplicate addresses; neutral units that reference stack units or use stack vocabulary; priorities against dependencies; Needs without justification; components and assets without an owner; produced names used before they are produced; consumed names whose defining unit is missing; packs over budget; tasks whose Creates names no test; changes without a kind, status, Evidence or building milestone; revised units without `Was`; stale units no task builds; open questions in a ready task's pack; satisfied changes that carry work; assets no task creates. A set with findings is not handed to a builder.
+A checker reads a set and reports, without a model: unresolved and duplicate addresses; neutral units that reference stack units or use stack vocabulary; priorities against dependencies; Needs without justification; components and assets without an owner; produced names used before they are produced; consumed names whose defining unit is missing; packs over budget; tasks whose Creates names no test; changes without a kind, status, Evidence or building milestone; rules without `From` on a set whose plan defines a milestone (a rule written before the plan has none, §5.3); `[MODIFIED]` revised units without `Was`; stale units no task builds; open questions in a ready task's pack; satisfied changes that carry work; assets no task creates. A set with findings is not handed to a builder.
 
 ## 6. Implementation Notes
 
@@ -152,7 +179,7 @@ A checker reads a set and reports, without a model: unresolved and duplicate add
 ## 7. Drawbacks & Alternatives
 
 - **More files.** A set has more, smaller files than a 3.x workspace; the pack, not the reader, picks among them. The alternative of keeping per-topic specifications and adding addresses inside them was rejected: a pack cannot take one requirement out of a long file without the rest, and the measured unused share of a pack fell from 39 % to between 3 % and 19 % only once units were addressed and pulled on their own.
-- **The forward path failed its first gate** (§1, C-3): three gaps of the format, found by writing forward; the gate bounds the cost of being wrong to one milestone of the realization, and it is run again after the amendments.
+- **The forward path failed its first gate** (§1, C-3): three gaps of the format, found by writing forward; the gate bounds the cost of being wrong to one milestone of the realization. The amendments of 1.1.0 answer them, and the run is repeated on the same idea before anything else is built.
 - **Model-free checking has limits.** The checker cannot see a change placed on the wrong operation, or an exception kept against a governing rule; those rules live in the format and in the workflow, and were measured with documenter agents.
 - **Status lifecycle.** Dropping Draft/RFC/Stable removes a familiar signal; open questions and change statuses carry the same information per unit rather than per file (assumption in §2).
 
@@ -172,4 +199,5 @@ The three paths are outside this repository, in the documentation lab beside it;
 | --- | --- | --- | --- |
 | 1.0.0 | 2026-11-24 | Agent | Initial specification of the 4.0 document set, from the lab's skeleton v7.3 |
 | 1.0.2 | 2026-11-24 | Agent | Recorded the first forward run (Phase 69), Stable retained, no requirement changed: the run built and observed the first milestone of an unseen product and did not pass its criteria (a rule's `From` before the plan, a stack-only convention that reaches no pack, the rows of the neutral writing table for text); C-3, §1 and §7 state the result and that the gate stays closed until the amendments are made and the run is repeated. |
+| 1.1.0 | 2026-11-25 | Agent | **The amendments of the forward gate** (origin: the record of run 1, `.magicspec/engine/simulations/forward-gate.md`, and its evaluation in the documentation lab, format findings F1 to F8). §5.3: a rule's `From` is written by the plan stage and is absent before it (F1); a convention only the stack has is a stack rule with `Realizes: —`, listed in the Context of the tasks it governs, the profile holding no convention a builder must follow (F2); the neutral writing table is stated in full and gains six rows — letter case, digits, word boundaries, line endings, valid text, the calendar and today's date — and a rewrite that names the excluded mechanism is the same leak (F3); `Closes` names component keys only (F4), `Needs: —` (F5), `Produces: —` (F6), a test file a later task extends (F7), the exit status in a `Done when` (F8). §5.5 the empty backlog (F5); §5.6 a rule reaches a pack only through Context; §5.9 the checker reports a rule without `From` once the plan defines a milestone; C-3, §1 and §7 state that the gate waits for the second run. Amendment Rule round trip: RFC, Post-Update Review (coherence: 8 artifacts compared — `l2-sdd-document-set-engine.md`, `l2-engine-templates.md`, `l1-sdd-reference-containment.md`, the forward-gate record, the templates of `templates/set/`, `check-docs`, its four fixture sets and the lab's evaluation — 2 findings, both interaction gaps resolved by amending `l2-sdd-document-set-engine.md` 1.1.0: the thirteen templates of `l2-engine-templates.md`, and three fixture sets whose rules have no `From`; spec-critic PASS; prompt-engineer PASS), Stable. |
 | 1.0.1 | 2026-11-24 | Agent | Stabilized on the owner's signal: the supersession of §6 extended to the goal arguments, the fix trace, the scenario list, the sync command's registry cells and the constitution's lifecycle rule (coherence check); the canonical references say where they live |

@@ -2,7 +2,7 @@
   "private": true,
   "type": "commonjs",
   "description": "Development repository of Magic Spec, a Specification-Driven Development engine for AI coding agents: the engine skill, its maintenance scripts and the regression harness.",
-  "packageManager": "pnpm@12.21.0",
+  "packageManager": "pnpm@12.23.0",
   "engines": {
     "node": ">=24"
   },
@@ -19,8 +19,8 @@
     "test": "node --test tests/engine.js"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.8",
-    "@types/node": "^26.6.6",
+    "@biomejs/biome": "^2.6.9",
+    "@types/node": "^26.6.8",
     "fallow": "^3.48.0",
     "typescript": "^7.0.2"
   }

@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-25 06:31
-**Phase:** 70 — The Pipeline on a 4.0 Workspace (waits on the forward gate)
+**Updated:** 2026-11-25 06:56
+**Phase:** 73 — The Format Brought to the Amendments of the Forward Gate
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-69T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine "The forward gate of Phase 69 failed (record `.magicspec/engine/simulations/forward-gate.md`; evaluation in the documentation lab, `runs/run-25-state/summary.md`): the 4.0 concept needs three amendments before Phases 70 and 71 may start — a rule's `From` is written by the plan stage (§5.3, §5.9), a stack-only convention is a stack rule listed in the Context of the tasks it governs (§5.3, §5.6), and the neutral writing table gains rows for text semantics, line endings, the validity of text and calendar rules and ships with the engine — plus five minor guidance lines in the templates. Plan a phase that makes the amendments of l1-sdd-document-set.md (a specification pass, which the plan workflow routes) and brings the templates and the checker to them, then a phase that runs the gate again on the same idea; Phases 70 and 71 follow only a pass."
+- **Next Action:** Execute T-73F01 The neutral writing table in `templates/set/neutral-writing.md` via /magicspec run engine
 
 ## Progress
 
 ```
-Overall: [70/70] ████████ 100%
+Phase 73: [0/8] ░░░░░░░░ 0%
+Overall: [70/71] ████████ 99%
 ```
 
 ## Recent Decisions
