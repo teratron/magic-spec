@@ -13,6 +13,7 @@ Generates and revalidates `PLAN.md` (Phases → Specifications) and its `## Back
 - Argument Routing
 - Core Invariants (Mandatory)
 - Workflow: Planning
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Plan Completion Checklist
 - Handoffs
@@ -171,6 +172,19 @@ node scripts/executor.js export-wiki
 Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in a pure dependency-graph audit (no plan written).
 
 **Read-side tip (planning)**: before building the dependency matrix in Step 3, prefer reading `.magicspec/graph/wiki/index.md` and per-spec wiki articles over scanning every raw spec file. The wiki gives layer/status/version/refs at ~10× lower token cost than full spec reads. Fall back to direct `.magicspec/specifications/` reads only when the wiki is absent or `WIKI_STALE` was reported by the most recent `analyze` Mode C run.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+`PLAN.md`, its phases and backlog dispositions, Pre-Planning Stabilization, the specification registry and the versions a plan records are 3.x only: the plan of a set is `plan.md` of the workspace, written from `templates/set/plan.md`, whose comments state the plan rules and are not copied into it.
+
+1. **Pre-flight**: `node scripts/executor.js check-docs --workspace={active-workspace}`. This stage closes every finding in `plan.md` and those a missing milestone causes (a change without its milestone, a component or scope item no milestone covers, a rule without `From`); a stale unit no task builds and an asset no task creates are the task stage's. Any other finding, or a set with no stack layer, ends the run with `/magicspec spec {workspace}` as the one next step and nothing written.
+2. **First plan** (`plan.md` holds no milestone): write the milestones from the components, the scope items and their priorities, each with the fields of the template. `Needs` names only the milestones that justify it; a component is closed once; the first milestone is observed by running the product — its `Observed by` is a use of the product and its outcome — and closes every component that use needs. Every rule of `rules.md` gains its `From`. A backlog with nothing waiting holds `- none`.
+3. **Replan** (milestones exist): a done milestone (`- Done: M{n}` in `memory/state.md`) is never edited. Each `placed` change with no milestone under `Built by` gets one appended at the end, which `Closes`, `Extends` or `Revises` what the change affects, and names it under `Built by`; a new rule gains its `From`. A directive reorders or reprioritizes only milestones that are not done.
+4. **Review**: `@role:planner` reviews the draft before it is written.
+5. **Check**: run `check-docs` again; only the findings the task stage closes may remain.
+6. **Handoff**: name `/magicspec task {workspace}`.
 
 ## Finalization Protocol (Mandatory)
 

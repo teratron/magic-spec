@@ -1,6 +1,6 @@
 # Decisions
 
-<!-- Decisions taken during the build. A settled decision moves into a unit or a rule. -->
+<!-- A document written from this template keeps none of its comments. Decisions taken during the build. A settled decision moves into a unit or a rule. -->
 
 ## D{n} — {decision}
 

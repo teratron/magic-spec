@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { loadDocSet, computePack, locateSet, notSetLine, DEFAULT_BUDGET } = require('./check-docs');
 const { countTokens } = require('./lib/count-tokens');
+const { fileNamesIn } = require('./lib/created-files');
 const { resolveProjectRoot, resolveDesignRoot, runMain } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -31,9 +32,10 @@ const { resolveProjectRoot, resolveDesignRoot, runMain } = require('./utils');
 // Usage:
 //   node skills/magicspec/scripts/executor.js pack <task> [--include <file>]...
 
-/** Opens every pack, outside the computed units: the documents stay out of the product. */
+/** Opens every pack, outside the computed units: the documents stay out of the product, component keys
+ *  excepted where the bindings use them as names. */
 const CONTAINMENT_LINE =
-    'No address or path of these documents is written into anything this task creates.';
+    'No address or path of these documents is written into anything this task creates; a component key is written only where the bindings use it as a name.';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Done Before This Task
@@ -64,20 +66,6 @@ function afterClosure(tasks, address) {
         stack.push(...(byAddress.get(a)?.after ?? []));
     }
     return tasks.map((t) => t.address).filter((a) => seen.has(a));
-}
-
-/**
- * The file names written in a task's Creates text: words with an extension, such as
- * `src/hello.rs` or `` `go.mod` ``. A word that is not a file of the project is dropped by the caller.
- *
- * @param {string} creates - The Creates field.
- * @returns {string[]} Distinct names, in the order written.
- */
-function fileNamesIn(creates) {
-    const names = creates.match(/[\w./-]+/g) ?? [];
-    return [
-        ...new Set(names.filter((n) => /^[\w./-]*[\w-]\.[A-Za-z0-9]+$/.test(n))),
-    ];
 }
 
 /**

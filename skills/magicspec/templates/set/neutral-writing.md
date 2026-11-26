@@ -21,6 +21,7 @@ A word list catches the words of a stack; these rows catch its concepts. A neutr
 | "a word", "at a word boundary" | the characters that separate words, listed ("a space, a tab, the start or the end of the line") |
 | "a newline", "the line ending of the machine", "the platform's line ending" | the characters that end a line, named for what is read and for what is written ("a line ends at a line feed, or at a carriage return followed by a line feed; every line written ends with a line feed") |
 | "the text", "a string", for input read from outside the program | what counts as valid text (an encoding named by its standard) and what happens to input that is not valid text |
+| "the runtime", "what the runtime offers", "the standard library" | what every stack provides by itself, named for the need ("reading a file, the local date of the machine, writing to the outputs") |
 | "a date", "a day", "today" | the calendar and its range ("the Gregorian calendar extended backwards, years 1000 to 9999"), and where today's date comes from (the local date of the machine, or a date given as input) |
 
 A neutral layer is reviewed across stacks before its first use on any stack: a reviewer who knows only another stack reads it and lists every concept that stack does not have, and each is rewritten by the table. A rewrite that names the mechanism it means to exclude ("whatever the usual line ending of the machine is") is the same leak and is rewritten again.

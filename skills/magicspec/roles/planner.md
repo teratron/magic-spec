@@ -36,6 +36,8 @@ Own plan construction in `plan.md`. Produces the phase breakdown and the depende
 8. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
 9. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
 
+On a 4.0 workspace the plan is milestones and the decomposition is tasks: Needs justified, the first milestone observed by running the product, every task's pack within its budget.
+
 ## Anti-patterns
 
 - Skipping the adversarial pass because the plan "looks fine".

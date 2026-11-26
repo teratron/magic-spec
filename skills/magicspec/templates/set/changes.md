@@ -1,6 +1,6 @@
 # Changes
 
-<!-- Every change after the first version. Kind: addition, revision, fix, withdrawal, stack or clarification. Status: open, placed, built, or satisfied for an input the documents already state. A unit may carry `- Rev: {n} — C{k}`, `- Withdrawn: C{k} — replaced by {address | nothing}`, `- Assumption: {premise} — if wrong: {what changes}`, `- Open: {question}` and, until the change is built, `- Was (rev {n}): {the sentences of the built revision}`. -->
+<!-- A document written from this template keeps none of its comments. Every change after the first version. Kind: addition, revision, fix, withdrawal, stack or clarification. Status: open, placed, built, or satisfied for an input the documents already state. A unit may carry `- Rev: {n} — C{k}`, `- Withdrawn: C{k} — replaced by {address | nothing}`, `- Assumption: {premise} — if wrong: {what changes}`, `- Open: {question}` and, until the change is built, `- Was (rev {n}): {the sentences of the built revision}`. -->
 
 ## C{n} — {title}
 

@@ -29,7 +29,7 @@ const GOLDEN = JSON.parse(fs.readFileSync(path.join(FIXTURES, 'golden.json'), 'u
 const NOT_A_SET = '[check-docs] docs is not a 4.0 workspace (no "format": "4" in workspace.json).';
 // The first line of every pack: the documents stay out of what the task creates.
 const CONTAINMENT =
-    'No address or path of these documents is written into anything this task creates.';
+    'No address or path of these documents is written into anything this task creates; a component key is written only where the bindings use it as a name.';
 
 /**
  * A consumer project that holds one fixture set as the workspace `docs`.
@@ -70,7 +70,116 @@ const makeSetProject = (fixture, { format = '4' } = {}) => {
  */
 const linesOf = (text) => text.split('\n').filter(Boolean);
 
+// The first paragraph of every body's 4.0 section: when it is taken and what it replaces.
+const SECTION_OPENING =
+    'Taken when the resolved workspace\'s entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.';
+
+// What each pipeline body's 4.0 section runs, and the role it hands the work to.
+const BODY_SECTIONS = [
+    {
+        body: 'spec',
+        calls: [
+            'check-docs',
+        ],
+        role: 'spec-critic',
+    },
+    {
+        body: 'plan',
+        calls: [
+            'check-docs',
+        ],
+        role: 'planner',
+    },
+    {
+        body: 'task',
+        calls: [
+            'check-docs',
+            'pack {task}',
+        ],
+        role: 'planner',
+    },
+    {
+        body: 'run',
+        calls: [
+            'check-docs',
+            'pack {task}',
+            'mark-built M{n}',
+            'check-log',
+        ],
+        role: 'coder',
+    },
+];
+
+/** A file of this repository as text. */
+const repoText = (/** @type {string[]} */ ...parts) =>
+    fs.readFileSync(path.join(TESTS_DIR, '..', ...parts), 'utf8');
+
 module.exports = () => {
+    for (const { body, calls, role } of BODY_SECTIONS) {
+        test(`document set: the ${body} body takes its 4.0 section before the finalization and names its scripts and its role`, () => {
+            const text = repoText('skills', 'magicspec', 'workflows', `${body}.md`);
+            const parts = text.split('\n## On a 4.0 Workspace\n');
+            assert.strictEqual(parts.length, 2, 'one 4.0 section');
+            const [section, ...after] = parts[1].split('\n## ');
+            assert.ok(
+                after[0]?.startsWith('Finalization Protocol (Mandatory)\n'),
+                'the section stands right before the finalization',
+            );
+            assert.ok(
+                text.includes('\n- On a 4.0 Workspace\n- Finalization Protocol (Mandatory)\n'),
+                'the contents list names it at the same place',
+            );
+            assert.strictEqual(linesOf(section)[0], SECTION_OPENING);
+            for (const call of calls)
+                assert.ok(
+                    section.includes(
+                        `node scripts/executor.js ${call} --workspace={active-workspace}`,
+                    ),
+                    `runs ${call}`,
+                );
+            assert.ok(section.includes(`@role:${role}`), `hands the work to ${role}`);
+        });
+    }
+
+    test('document set: the three role cards that read a 4.0 workspace end their protocol with the line their specifications hold', () => {
+        const cards = {
+            'spec-critic': [
+                'l2-role-cards-governance.md',
+                'On a 4.0 workspace the review reads units and changes: the `check-docs` report first, then each unit against the form its template in `templates/set/` states, and each change against the three steps of `workflows/spec.md` (record, place, build).',
+            ],
+            planner: [
+                'l2-role-cards-execution.md',
+                "On a 4.0 workspace the plan is milestones and the decomposition is tasks: Needs justified, the first milestone observed by running the product, every task's pack within its budget.",
+            ],
+            coder: [
+                'l2-role-cards-execution.md',
+                "On a 4.0 workspace the builder reads its task's pack and the files of the workspace, and nothing of the documents beyond the pack.",
+            ],
+        };
+        for (const [id, [spec, line]] of Object.entries(cards)) {
+            const card = repoText('skills', 'magicspec', 'roles', `${id}.md`);
+            assert.ok(
+                card.includes(`\n\n${line}\n\n## Anti-patterns\n`),
+                `the ${id} card ends its protocol with the line`,
+            );
+            assert.ok(
+                repoText('.magicspec', 'engine', 'specifications', spec).includes(
+                    `\n\n${line}\n\n**Anti-patterns:**\n`,
+                ),
+                `the ${id} mirror holds it`,
+            );
+        }
+    });
+
+    test('document set: the builder of the run body is given the pack file and the workspace, nothing else of the documents', () => {
+        const run = repoText('skills', 'magicspec', 'workflows', 'run.md');
+        assert.ok(
+            run.includes(
+                'receives the pack file the command names and the workspace, and reads nothing else of the documents.',
+            ),
+        );
+    });
+
     test('document set: the good fixture has no finding and check-docs exits 0', () => {
         const dir = makeSetProject('good');
         try {
@@ -530,6 +639,64 @@ module.exports = () => {
         }
     });
 
+    test('document set: a comment left in a neutral file is one finding for that file, and none in a stack file', () => {
+        const dir = makeSetProject('good');
+        try {
+            writeIn(dir, '.magicspec/docs/spec/hello.md', '\n<!-- one -->\n\n<!-- two -->\n', true);
+            // A comment opener written as data is no comment, and a stack file may keep its notes.
+            writeIn(dir, '.magicspec/docs/plan.md', '\nThe opener `<!--` is data here.\n', true);
+            writeIn(
+                dir,
+                '.magicspec/docs/stack/rust/profile.md',
+                '# Stack: rust\n\n<!-- guidance -->\n',
+            );
+            const r = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(r.status, 1, r.stderr);
+            assert.deepStrictEqual(linesOf(r.stdout), [
+                'spec/hello.md: a template comment left in a neutral document',
+            ]);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: a value shaped like an address is a literal in a code span and a reference when bare', () => {
+        const dir = makeSetProject('good');
+        try {
+            const spec = '.magicspec/docs/spec/hello.md';
+            const check = () =>
+                simExec(dir, [
+                    'check-docs',
+                ]);
+            writeIn(dir, spec, '\nThe byte `C3`, the road `M1` and ``a `C9` b`` are data.\n', true);
+            const literal = check();
+            assert.strictEqual(literal.status, 0, literal.stdout);
+            assert.deepStrictEqual(linesOf(literal.stdout), []);
+            writeIn(dir, spec, '\nThe byte C3 is bare.\n', true);
+            const bare = check();
+            assert.strictEqual(bare.status, 1, bare.stderr);
+            assert.deepStrictEqual(linesOf(bare.stdout), [
+                'spec/hello.md: hello.1 mentions C3, which is not defined',
+            ]);
+            // A component key an Observed by names in backticks is still read.
+            rewriteSet(
+                dir,
+                'plan.md',
+                'Observed by: `cargo check` of core',
+                'Observed by: `cargo check` of core and `hello`',
+            );
+            assert.ok(
+                linesOf(check().stdout).some((line) =>
+                    line.startsWith('plan.md: M1 is observed through hello, closed by M2'),
+                ),
+            );
+        } finally {
+            cleanup(dir);
+        }
+    });
+
     test('document set: a pack over the budget is written and says so, and the checker reports the same task', () => {
         const dir = makeSetProject('good');
         try {
@@ -745,6 +912,294 @@ module.exports = () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────
+    // the scripts of the pipeline: mark-built, check-log, and the 4.0 branches
+    // ───────────────────────────────────────────────────────────────────────
+
+    const docsFile = (/** @type {string} */ dir, /** @type {string} */ rel) =>
+        path.join(dir, '.magicspec', 'docs', rel);
+    const readDocs = (/** @type {string} */ dir, /** @type {string} */ rel) =>
+        fs.readFileSync(docsFile(dir, rel), 'utf8');
+
+    test('document set: mark-built records a milestone, revisions and changes, and a second run writes nothing', () => {
+        const dir = makeSetProject('good');
+        try {
+            rewriteSet(
+                dir,
+                'spec/hello.md',
+                '- Accept: the output is "hello"',
+                '- Accept: the output is "hello"\n- Rev: 2 — C1\n- Was (rev 1): `greet()` printed "hi".',
+            );
+            writeIn(
+                dir,
+                '.magicspec/docs/changes.md',
+                '# Changes\n\n## C1 — Greet with hello\n\n- Source: owner\n- Kind: revision\n- Status: placed\n- Affects: hello.1\n- Changes: the greeting\n- Built by: M2\n- Evidence: none found\n- Why: clarity\n',
+            );
+            const r = simExec(dir, [
+                'mark-built',
+                'M2',
+            ]);
+            assert.strictEqual(r.status, 0, r.stderr);
+            assert.strictEqual(
+                r.stdout.trim(),
+                'M2 built: map 1 rows, 1 changes built, 1 Was lines removed',
+            );
+            assert.match(readDocs(dir, 'memory/state.md'), /^- Done: M2 — the greeting prints$/m);
+            assert.match(readDocs(dir, 'memory/map.md'), /^\| map:hello \| src \| hello\.1@2 \|$/m);
+            assert.match(readDocs(dir, 'changes.md'), /^- Status: built$/m);
+            assert.ok(!readDocs(dir, 'spec/hello.md').includes('- Was (rev 1)'));
+            const before = treeHashes(dir);
+            assert.strictEqual(
+                simExec(dir, [
+                    'mark-built',
+                    'M2',
+                ]).status,
+                0,
+            );
+            assert.ok(sameTree(before, treeHashes(dir)), 'a second run changed the set');
+            const unknown = simExec(dir, [
+                'mark-built',
+                'M9',
+            ]);
+            assert.strictEqual(unknown.status, 1);
+            assert.match(unknown.stderr, /M9 is not a milestone of plan\.md/);
+            assert.ok(sameTree(before, treeHashes(dir)), 'an unknown milestone wrote');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: the map row of mark-built names files, never the task an extends marker names', () => {
+        const dir = makeSetProject('good');
+        try {
+            rewriteSet(
+                dir,
+                'tasks/M2.md',
+                '- Creates: src/hello.rs',
+                '- Creates: `src/hello.rs` (extends M2.T1)',
+            );
+            writeIn(
+                dir,
+                '.magicspec/docs/memory/map.md',
+                '# Map\n\n| Address | Where (path) | API (interface files and manifest) | Provides (addresses) |\n| --- | --- | --- | --- |\n',
+            );
+            const r = simExec(dir, [
+                'mark-built',
+                'M2',
+            ]);
+            assert.strictEqual(r.status, 0, r.stderr);
+            assert.match(
+                readDocs(dir, 'memory/map.md'),
+                /^\| map:hello \| src \| hello\.rs \| hello\.1 \|$/m,
+            );
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: check-log passes a change history in order and reports one that goes back', () => {
+        const dir = makeSetProject('good');
+        const git = (/** @type {string[]} */ ...args) =>
+            require('child_process').execFileSync('git', args, {
+                cwd: dir,
+                stdio: [
+                    'ignore',
+                    'pipe',
+                    'ignore',
+                ],
+            });
+        try {
+            const none = simExec(dir, [
+                'check-log',
+            ]);
+            assert.strictEqual(none.status, 0, none.stderr);
+            assert.match(none.stdout, /no committed history/);
+            git('init', '-q');
+            git('config', 'user.email', 'harness@example.invalid');
+            git('config', 'user.name', 'harness');
+            const commit = (/** @type {string} */ status) => {
+                writeIn(
+                    dir,
+                    '.magicspec/docs/changes.md',
+                    `# Changes\n\n## C1 — A change\n\n- Kind: addition\n- Status: ${status}\n- Built by: M2\n`,
+                );
+                git('add', '-A');
+                git('commit', '-q', '-m', status);
+            };
+            for (const status of [
+                'open',
+                'placed',
+                'built',
+            ])
+                commit(status);
+            const ordered = simExec(dir, [
+                'check-log',
+            ]);
+            assert.strictEqual(ordered.status, 0, ordered.stdout);
+            assert.strictEqual(
+                ordered.stdout.trim(),
+                'check-log: 1 changes, no status out of order',
+            );
+            commit('placed');
+            const back = simExec(dir, [
+                'check-log',
+            ]);
+            assert.strictEqual(back.status, 1, back.stdout);
+            assert.strictEqual(back.stdout.trim(), 'changes.md: C1 was built before placed');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: check-prerequisites reports the checker in place of the registry on a 4.0 workspace', () => {
+        for (const fixture of [
+            'bad',
+            'good',
+        ]) {
+            const dir = makeSetProject(fixture);
+            try {
+                // A registry left beside the set is not read: its Draft row would be a SPEC_STATUS finding.
+                writeIn(
+                    dir,
+                    '.magicspec/docs/INDEX.md',
+                    '# Registry\n\n| File | Description | Status | Layer | Version |\n| --- | --- | --- | --- | --- |\n| [a.md](specifications/a.md) | a | Draft | 1 | 0.1.0 |\n',
+                );
+                const r = simExec(dir, [
+                    'check-prerequisites',
+                    '--json',
+                    '--require-plan',
+                    '--require-tasks',
+                    '--verify-headers',
+                ]);
+                const out = JSON.parse(r.stdout);
+                assert.deepStrictEqual(out.missing_required, [], fixture);
+                const types = new Set(
+                    out.warnings.map((/** @type {{type: string}} */ w) => w.type),
+                );
+                for (const registry of [
+                    'SYNC_GAP',
+                    'ORPHANED_SPEC',
+                    'SPEC_STATUS',
+                ])
+                    assert.ok(!types.has(registry), `${fixture}: ${registry}`);
+                const docSet = out.warnings.filter(
+                    (/** @type {{type: string}} */ w) => w.type === 'DOC_SET',
+                );
+                assert.deepStrictEqual(
+                    docSet.map((/** @type {{message: string}} */ w) => w.message),
+                    GOLDEN[fixture] ?? [],
+                );
+            } finally {
+                cleanup(dir);
+            }
+        }
+    });
+
+    test('document set: resume-state reads memory/state.md on a 4.0 workspace, and is silent with nothing in flight', () => {
+        const dir = makeSetProject('good');
+        try {
+            const resume = () =>
+                simExec(dir, [
+                    'resume-state',
+                    '--all',
+                ]).stdout.trim();
+            assert.strictEqual(resume(), '▶ Resume [docs]: Now M2.T1 · Next M2.T1 · Open 0');
+            writeIn(
+                dir,
+                '.magicspec/docs/memory/state.md',
+                '# State\n\n- Done: M1 — shared types compile\n- Next: M2.T1\n- Open: —\n',
+            );
+            assert.strictEqual(resume(), '');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: finalize writes the next ready task into memory/state.md on a 4.0 workspace', () => {
+        const dir = makeSetProject('good');
+        try {
+            const state = '.magicspec/docs/memory/state.md';
+            writeIn(
+                dir,
+                state,
+                '# State\n\n- Now: —\n- Done: M1 — shared types compile\n- Open: —\n',
+            );
+            const first = simExec(dir, [
+                'finalize',
+                '--workflow=run',
+            ]);
+            assert.strictEqual(first.status, 0, first.stderr);
+            assert.match(readDocs(dir, 'memory/state.md'), /^- Next: M2\.T1$/m);
+            assert.match(first.stdout, /^Next: \/magicspec run docs — /m);
+            assert.match(first.stdout, /^\| memory\/state\.md \| updated/m);
+            assert.ok(
+                !fs.existsSync(docsFile(dir, 'STATE.md')),
+                'a 4.0 workspace gets no STATE.md',
+            );
+            writeIn(dir, state, '- Done: M2.T1 — greet prints\n', true);
+            simExec(dir, [
+                'finalize',
+                '--workflow=run',
+            ]);
+            assert.match(readDocs(dir, 'memory/state.md'), /^- Next: none$/m);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: finalize names the stage a 4.0 workspace waits for, never the spec command', () => {
+        const dir = makeSetProject('good');
+        try {
+            const step = () => {
+                const r = simExec(dir, [
+                    'finalize',
+                    '--workflow=spec',
+                    '--dry-run',
+                ]);
+                assert.strictEqual(r.status, 0, r.stderr);
+                return r.stdout.match(/### Next step\n\n(.*)\n/)?.[1];
+            };
+            const state = '.magicspec/docs/memory/state.md';
+            writeIn(dir, state, '# State\n\n- Done: M1 — shared types compile\n');
+            assert.strictEqual(step(), 'Execute M2.T1 via /magicspec run docs');
+            // A placed change waits for its milestone before any task runs.
+            const change = (/** @type {string} */ builtBy) =>
+                writeIn(
+                    dir,
+                    '.magicspec/docs/changes.md',
+                    `# Changes\n\n## C1 — A change\n\n- Kind: revision\n- Status: placed\n- Affects: hello.1\n- Built by: ${builtBy}\n`,
+                );
+            change('—');
+            assert.strictEqual(
+                step(),
+                'Run /magicspec plan docs to add the milestones of the placed changes',
+            );
+            // Its milestone, once written, waits for tasks.
+            writeIn(
+                dir,
+                '.magicspec/docs/plan.md',
+                '\n## M3 — The change\n\n- Priority: must\n- Needs: M2\n- Revises: hello — the greeting\n',
+                true,
+            );
+            change('M3');
+            assert.strictEqual(step(), 'Run /magicspec task docs to write the tasks of M3');
+            fs.rmSync(docsFile(dir, 'changes.md'));
+            writeIn(dir, state, '- Done: M2.T1 — greet prints\n', true);
+            assert.strictEqual(step(), 'Run /magicspec task docs to write the tasks of M3');
+            writeIn(dir, state, '- Done: M3 — changed\n', true);
+            assert.strictEqual(step(), 'Run /magicspec run docs to observe M2 and record it built');
+            writeIn(dir, state, '- Done: M2 — the greeting prints\n', true);
+            assert.strictEqual(step(), 'All milestones are done — nothing pending');
+            // No milestone: the plan is next once the stack layer exists.
+            writeIn(dir, '.magicspec/docs/plan.md', '# Plan\n');
+            assert.strictEqual(step(), 'The stack layer is not written yet — nothing to plan');
+            writeIn(dir, '.magicspec/docs/stack/rust/profile.md', '# Profile\n');
+            assert.strictEqual(step(), 'Run /magicspec plan docs to write the milestones');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────
     // templates: the thirteen files a writer starts from, and the neutral writing table
     // ───────────────────────────────────────────────────────────────────────
 
@@ -942,7 +1397,7 @@ module.exports = () => {
             text.split('\n').map((line) => line.trimEnd());
         const rows = (/** @type {string} */ text) =>
             linesIn(text).filter((line) => line.startsWith('|'));
-        assert.strictEqual(rows(shipped).length, 20, 'a header, a separator and eighteen rows');
+        assert.strictEqual(rows(shipped).length, 21, 'a header, a separator and nineteen rows');
         assert.deepStrictEqual(rows(shipped), rows(concept));
         // The paragraph that introduces the table and every paragraph after it travel with it. The
         // shipped file drops what only the specification needs: a change marker, a section pointer.

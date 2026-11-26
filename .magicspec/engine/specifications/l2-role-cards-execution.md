@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.3.3
+**Version:** 1.3.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -58,6 +58,8 @@ related_rules: [C24]
 7. **Scenario list (for a phase with user-facing behaviour, before write-back):** activate `@role:simulator-tester` for each phase that adds or changes what a person sees or does with the product; it lists in the phase entry the scenarios to write or update (the area file and the scenario titles), and the phase's validation tasks write them. A phase with user-facing behaviour and no scenario is a planning finding, resolved before the plan is written; a phase with none lists none and records no finding.
 8. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
 9. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
+
+On a 4.0 workspace the plan is milestones and the decomposition is tasks: Needs justified, the first milestone observed by running the product, every task's pack within its budget.
 
 **Anti-patterns:**
 
@@ -145,6 +147,8 @@ related_rules: [C2, C3]
 6. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
 7. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
 8. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
+
+On a 4.0 workspace the builder reads its task's pack and the files of the workspace, and nothing of the documents beyond the pack.
 
 **Anti-patterns:**
 
@@ -313,6 +317,7 @@ related_rules: [C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.4 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `planner` and `coder` cards and their mirrors end the operating protocol with their line for a 4.0 workspace. |
 | 1.3.3 | 2026-11-19 | Clarification patch, Stable retained (as built in Phase 65; the mirror follows the deployed card word for word): steps 2 and 5 and the first anti-pattern of the `ui-ux-designer` card name the patterns the product does not use and compare a draft with the design context. |
 | 1.3.2 | 2026-11-13 | Clarification patch, Stable retained (the mirror follows the deployed card word for word). Planner: step 6, the plan check, reads the cited lines, not the file, and, when the first line of the query counts more matches than it showed, takes the next page it names or narrows the query before treating the set as complete; the fallback to a direct search is unchanged. |
 | 1.3.1 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 54; the mirror follows the deployed card word for word). Planner: step 6, the plan check, searches for the names the draft introduces with `memory-query "{name}"` (with `--history` to reach archived phases), reads a cited section before relying on it and falls back to a direct search when the query prints that the index is unavailable. |

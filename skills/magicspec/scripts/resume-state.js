@@ -18,6 +18,7 @@ const { collectInFlight } = require('./lib/in-flight');
 const { isGitRepo, headSha, changedPaths } = require('./lib/git-utils');
 const diagnostics = require('./lib/diagnostics');
 const { countCriteria, describeScope, parseGoalSection } = require('./lib/goal-block');
+const { isDocSetWorkspace } = require('./lib/doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RESUME STATE (Shared Resume-Detection Predicate)
@@ -115,19 +116,34 @@ function workspaceFromEnv(designAbs) {
  */
 function listWorkspaces(designAbs, request) {
     const registry = readRegistry(designAbs);
-    const at = (name) => ({ name, dir: path.join(designAbs, name) });
+    const at = (name) => ({
+        name,
+        dir: path.join(designAbs, name),
+    });
 
     if (request.workspace !== null) {
-        return WORKSPACE_NAME_RE.test(request.workspace) ? [at(request.workspace)] : [];
+        return WORKSPACE_NAME_RE.test(request.workspace)
+            ? [
+                  at(request.workspace),
+              ]
+            : [];
     }
     if (request.all && registry !== null) return registry.names.map(at);
 
     const resolved = workspaceFromEnv(designAbs) || registry?.defaultName;
-    if (resolved) return [at(resolved)];
+    if (resolved)
+        return [
+            at(resolved),
+        ];
 
     // No registry: an older single-workspace layout keeps STATE.md at the root.
     return fs.existsSync(path.join(designAbs, 'STATE.md'))
-        ? [{ name: 'default', dir: designAbs }]
+        ? [
+              {
+                  name: 'default',
+                  dir: designAbs,
+              },
+          ]
         : [];
 }
 
@@ -143,9 +159,17 @@ function listWorkspaces(designAbs, request) {
  */
 function readText(file) {
     try {
-        return { text: fs.readFileSync(file, 'utf8') };
+        return {
+            text: fs.readFileSync(file, 'utf8'),
+        };
     } catch (error) {
-        return error && error.code === 'ENOENT' ? { missing: true } : { error };
+        return error && error.code === 'ENOENT'
+            ? {
+                  missing: true,
+              }
+            : {
+                  error,
+              };
     }
 }
 
@@ -184,6 +208,7 @@ function readStateField(stripped, raw, labelRe) {
  *          no readable `STATE.md`. `changedFiles` is filled in by the caller.
  */
 function inspectWorkspace(workspace) {
+    if (isDocSetWorkspace(workspace.dir, workspace.name)) return inspectDocSet(workspace);
     const state = readText(path.join(workspace.dir, 'STATE.md'));
     if (state.error) {
         // A missing STATE.md is a fresh workspace and not a finding; one that
@@ -219,6 +244,46 @@ function inspectWorkspace(workspace) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// A 4.0 Workspace (memory/state.md)
+// ───────────────────────────────────────────────────────────────────────────
+
+/** A field value that says nothing is recorded there. */
+const EMPTY_VALUE = /^(—|-|none|)$/i;
+
+/**
+ * The resume summary of a 4.0 workspace, from `memory/state.md`: what is being built now, what
+ * is next and how many questions are open. Nothing to resume when neither `Now` nor `Open`
+ * holds something.
+ *
+ * @param {{ name: string, dir: string }} workspace
+ * @returns {object|null}
+ */
+function inspectDocSet(workspace) {
+    const state = readText(path.join(workspace.dir, 'memory', 'state.md'));
+    if (state.text === undefined) return null;
+    const values = (/** @type {string} */ label) =>
+        [
+            ...state.text.matchAll(new RegExp(`^- ${label}:[ \\t]*(.*)$`, 'gm')),
+        ]
+            .map((m) => m[1].trim())
+            .filter((v) => !EMPTY_VALUE.test(v));
+    const now = values('Now')[0] ?? null;
+    const open = values('Open').length;
+    if (now === null && open === 0) return null;
+    return {
+        workspace: workspace.name,
+        source: 'memory',
+        tasks: [],
+        attempts: 0,
+        now,
+        open,
+        nextAction: values('Next')[0] ?? null,
+        changedFiles: null,
+        goal: null,
+    };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Working Tree
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -248,6 +313,8 @@ function countModifiedFiles() {
  * @returns {string}
  */
 function formatLine(summary) {
+    if (summary.source === 'memory')
+        return `▶ Resume [${summary.workspace}]: Now ${summary.now ?? '—'} · Next ${summary.nextAction ?? '—'} · Open ${summary.open}`;
     const parts = [];
     if (summary.tasks.length > 0) {
         const named = summary.tasks
@@ -312,8 +379,13 @@ function goalJson(goal) {
  */
 function main() {
     const { values, flags, errors } = parseFlags(process.argv.slice(2), {
-        valueFlags: ['--workspace'],
-        boolFlags: ['--all', '--json'],
+        valueFlags: [
+            '--workspace',
+        ],
+        boolFlags: [
+            '--all',
+            '--json',
+        ],
     });
     // A malformed invocation is silence, not a halt: this script is called from
     // rules and workflow bodies that treat a fault here as "nothing to report".
@@ -343,7 +415,11 @@ function main() {
                     tasks: summary.tasks,
                     changed_files: summary.changedFiles,
                     next_action: summary.nextAction,
-                    ...(summary.goal === null ? {} : { goal: goalJson(summary.goal) }),
+                    ...(summary.goal === null
+                        ? {}
+                        : {
+                              goal: goalJson(summary.goal),
+                          }),
                 })),
             }),
         );
@@ -365,4 +441,8 @@ if (require.main === module) {
     }
 }
 
-module.exports = { listWorkspaces, inspectWorkspace, formatLine };
+module.exports = {
+    listWorkspaces,
+    inspectWorkspace,
+    formatLine,
+};

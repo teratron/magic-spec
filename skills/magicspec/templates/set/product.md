@@ -6,7 +6,7 @@
 
 ## Scope
 
-<!-- A scope item is observed at its own priority: by a milestone of that priority that closes one of its components, or by the milestone it names after `observed in`; a `could` item may wait in the plan's Backlog instead. -->
+<!-- A document written from this template keeps none of its comments. A scope item is observed at its own priority: by a milestone of that priority that closes one of its components, or by the milestone it names after `observed in`; a `could` item may wait in the plan's Backlog instead. -->
 
 - P{n} In ({must | should | could}): {capability} → {component keys}[; observed in M{n}]
 - P{n} Out: {what the product deliberately does not do}
@@ -29,6 +29,6 @@
 
 ## External needs
 
-<!-- An external need is a capability the product takes from outside its own code that a stack may meet with a library; what every runtime offers — reading a file, the local date and time, writing to the outputs — is not listed. -->
+<!-- An external need is a capability the product takes from outside its own code that a stack may meet with a library; what every stack provides by itself — reading a file, the local date and time, writing to the outputs — is not listed. With no external need the section holds the one line `- none`. -->
 
 - P{n} Needs: {capability the product takes from outside} — for {component keys}

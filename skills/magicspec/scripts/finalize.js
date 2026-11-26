@@ -35,6 +35,13 @@ const { findPendingWork } = require('./lib/pending-work');
 const { readSimulationFindings } = require('./lib/simulation-findings');
 const { getTrackingBlock, readField } = require('./lib/tracking-entries');
 const { updateState } = require('./update-state');
+const {
+    isDocSetWorkspace,
+    doneAddresses,
+    nextReadyTask,
+    nextStep,
+    withNextLine,
+} = require('./lib/doc-set-state');
 const diagnostics = require('./lib/diagnostics');
 const feedback = require('./lib/feedback');
 
@@ -61,7 +68,15 @@ const projectRoot = resolveProjectRoot();
 const designCacheDir = statePath(projectRoot, '.cache');
 const stateFile = path.join(designCacheDir, 'finalize-state.json');
 
-const VALID_WORKFLOWS = new Set(['spec', 'plan', 'task', 'run', 'rule', 'fix', 'simulate']);
+const VALID_WORKFLOWS = new Set([
+    'spec',
+    'plan',
+    'task',
+    'run',
+    'rule',
+    'fix',
+    'simulate',
+]);
 
 /**
  * The words finalize uses to tell the user that the SC-2 state update was
@@ -90,8 +105,16 @@ const CHECKPOINT_CLAIM = 'checkpoint saved';
  */
 function parseArgs() {
     const { values, flags, errors } = parseFlags(process.argv.slice(2), {
-        valueFlags: ['--workflow', '--workspace'],
-        boolFlags: ['--dry-run', '--no-bump', '--no-changelog', '--force'],
+        valueFlags: [
+            '--workflow',
+            '--workspace',
+        ],
+        boolFlags: [
+            '--dry-run',
+            '--no-bump',
+            '--no-changelog',
+            '--force',
+        ],
     });
 
     if (errors.length > 0) {
@@ -218,7 +241,11 @@ function noteArchivalOff(wsDir) {
                 `${waiting.length} finished phase(s) stay in tasks/.`,
         );
     }
-    return { archived: [], skipped: [], unrecognized: [] };
+    return {
+        archived: [],
+        skipped: [],
+        unrecognized: [],
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -473,7 +500,11 @@ function classifyPlanState(wsDir) {
                 firstExcludedTask = firstExcludedTask || inlineOpen.id;
                 continue;
             }
-            return { kind: 'inline-open', id: inlineOpen.id, title: inlineOpen.title };
+            return {
+                kind: 'inline-open',
+                id: inlineOpen.id,
+                title: inlineOpen.title,
+            };
         }
 
         // 2. Phase files — canonical two-level format (tasks/phase-N.md,
@@ -500,7 +531,10 @@ function classifyPlanState(wsDir) {
                 // Dispatching a resuming session into the very blocker the same
                 // STATE.md records would make the file contradict itself.
                 if (isPhaseBlocked(content, tasks, phaseNo)) {
-                    return { kind: 'blocked-phase', id: anyOpen[2] };
+                    return {
+                        kind: 'blocked-phase',
+                        id: anyOpen[2],
+                    };
                 }
                 // The phase itself is not Blocked, but the first-matched line
                 // alone is still not licence to recommend it: that exact
@@ -529,7 +563,11 @@ function classifyPlanState(wsDir) {
                     }
                     const rawTask = parseOpenTask(rawLines[i] ?? '');
                     const title = rawTask ? rawTask.title : openTask.title;
-                    return { kind: 'actionable', id: openTask.id, title };
+                    return {
+                        kind: 'actionable',
+                        id: openTask.id,
+                        title,
+                    };
                 }
                 // Every open item in this phase file was excluded — keep
                 // scanning subsequent phase files before giving up.
@@ -542,18 +580,29 @@ function classifyPlanState(wsDir) {
             // The plan is not complete — tasks remain — so this must not fall
             // through to the plan-complete branch below (tier 3), and must not
             // name the excluded task as /magicspec run-executable.
-            return { kind: 'all-excluded', id: firstExcludedTask };
+            return {
+                kind: 'all-excluded',
+                id: firstExcludedTask,
+            };
         }
 
         // 3. Registry table fallback — non-Done phase means work remains.
         const activePhase = tasks.match(
             /\| \[Phase (\d+)\]\([^)]+\) \|[^|]+\| `(?!Done)([^`]+)` \|/,
         );
-        if (activePhase) return { kind: 'registry-open', phase: activePhase[1] };
+        if (activePhase)
+            return {
+                kind: 'registry-open',
+                phase: activePhase[1],
+            };
 
-        return { kind: 'complete' };
+        return {
+            kind: 'complete',
+        };
     } catch {
-        return { kind: 'unreadable' };
+        return {
+            kind: 'unreadable',
+        };
     }
 }
 
@@ -775,6 +824,7 @@ function resolveWorkspaceDir(cliWorkspace, workspace, designAbs) {
  * @returns {{updated: boolean, dryRun?: boolean, nextAction?: string}}
  */
 function updateSessionState(opts, workspace, wsDir) {
+    if (isDocSetWorkspace(wsDir, workspace)) return updateDocSetState(opts, workspace, wsDir);
     // One ledger read feeds both fields, so they cannot describe different plans.
     const plan = classifyPlanState(wsDir);
     const nextAction = computeNextAction(opts.workflow, workspace, wsDir, plan);
@@ -784,13 +834,31 @@ function updateSessionState(opts, workspace, wsDir) {
         console.log(
             `[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}"${statusPart}, auto-progress recompute.`,
         );
-        return { updated: false, dryRun: true, nextAction };
+        return {
+            updated: false,
+            dryRun: true,
+            nextAction,
+        };
     }
     try {
-        updateState(wsDir, status ? { nextAction, status } : { nextAction }, {
-            autoProgress: true,
-        });
-        return { updated: true, nextAction };
+        updateState(
+            wsDir,
+            status
+                ? {
+                      nextAction,
+                      status,
+                  }
+                : {
+                      nextAction,
+                  },
+            {
+                autoProgress: true,
+            },
+        );
+        return {
+            updated: true,
+            nextAction,
+        };
     } catch (e) {
         console.warn(`⚠  STATE.md update skipped (non-blocking): ${e.message}`);
         diagnostics.record({
@@ -800,7 +868,104 @@ function updateSessionState(opts, workspace, wsDir) {
             message: `STATE.md update skipped (non-blocking): ${e.message}`,
             locus: 'STATE.md',
         });
-        return { updated: false };
+        return {
+            updated: false,
+        };
+    }
+}
+
+/**
+ * Archives the finished phases of a 3.x workspace, or reports archival off; a 4.0 workspace has no
+ * phase workbooks (its done milestones stay in plan.md), so nothing is archived there.
+ *
+ * @param {string} wsDir - The workspace design directory.
+ * @param {string} workspace
+ * @param {{ dryRun?: boolean }} opts
+ * @returns {{ archived: string[], skipped: string[] }}
+ */
+function archivePhases(wsDir, workspace, opts) {
+    if (isDocSetWorkspace(wsDir, workspace))
+        return {
+            archived: [],
+            skipped: [],
+        };
+    return isArchivalEnabled()
+        ? archiveCompletedPhases(wsDir, {
+              dryRun: opts.dryRun,
+          })
+        : noteArchivalOff(wsDir);
+}
+
+/**
+ * The state file a finalize result wrote: `memory/state.md` on a 4.0 workspace, `STATE.md` otherwise.
+ *
+ * @param {{ stateFile?: string }} stateResult
+ * @returns {string}
+ */
+function stateFileOf(stateResult) {
+    return stateResult.stateFile || 'STATE.md';
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// A 4.0 Workspace (memory/state.md)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * The session-state step of a 4.0 workspace: the next ready task is written as the `Next` line of
+ * `memory/state.md`; `Now`, `Done` and `Open` stay as the workflows wrote them, and `STATE.md`
+ * is not written. Non-blocking, as the 3.x step is.
+ *
+ * @param {Object} opts - Parsed CLI options.
+ * @param {string} workspace
+ * @param {string} wsDir - Absolute path to the workspace's design directory.
+ * @returns {{updated: boolean, dryRun?: boolean, nextAction?: string, stateFile: string}}
+ */
+function updateDocSetState(opts, workspace, wsDir) {
+    const stateFile = 'memory/state.md';
+    try {
+        const statePath = path.join(wsDir, 'memory', 'state.md');
+        const text = fs.existsSync(statePath) ? fs.readFileSync(statePath, 'utf8') : '# State\n';
+        const { loadDocSet } = require('./check-docs');
+        const set = loadDocSet(wsDir);
+        const done = doneAddresses(text);
+        const next = nextReadyTask(set.tasks, done);
+        const nextAction = nextStep(set, done, {
+            next,
+            hasStack: fs.existsSync(path.join(wsDir, 'stack')),
+            workspace,
+        });
+        if (opts.dryRun) {
+            console.log(`[state] (dry-run) Would set ${stateFile}: Next=${next ?? 'none'}.`);
+            return {
+                updated: false,
+                dryRun: true,
+                nextAction,
+                stateFile,
+            };
+        }
+        const after = withNextLine(text, next);
+        fs.mkdirSync(path.dirname(statePath), {
+            recursive: true,
+        });
+        if (after !== text) fs.writeFileSync(statePath, after);
+        return {
+            updated: true,
+            nextAction,
+            stateFile,
+        };
+    } catch (e) {
+        console.warn(`⚠  ${stateFile} update skipped (non-blocking): ${e.message}`);
+        diagnostics.record({
+            severity: 'error',
+            source: 'finalize',
+            code: 'STATE_UPDATE_SKIPPED',
+            message: `${stateFile} update skipped (non-blocking): ${e.message}`,
+            locus: stateFile,
+        });
+        return {
+            updated: false,
+            stateFile,
+        };
     }
 }
 
@@ -833,7 +998,10 @@ const MAX_LISTED_FILES = 15;
 function collectChangedFiles(fallbackFiles) {
     const probe = gitChangedPaths(projectRoot);
     if (!probe.available || probe.paths.length === 0) {
-        return { files: fallbackFiles, omitted: 0 };
+        return {
+            files: fallbackFiles,
+            omitted: 0,
+        };
     }
     const capped = probe.paths.slice(0, MAX_LISTED_FILES);
     return {
@@ -955,7 +1123,7 @@ function emitSuccess(ctx) {
             : stateResult.dryRun
               ? 'dry-run preview'
               : 'skipped (warning above)';
-        lines.push(`| STATE.md | ${stateStatus} |`);
+        lines.push(`| ${stateFileOf(stateResult)} | ${stateStatus} |`);
     }
     // DG-7: a row that renders on every invocation regardless of content is a
     // row nobody reads — present only when there is something to report.
@@ -1081,7 +1249,17 @@ function emitTail(ctx) {
         // The handoff line follows the step it summarizes, once: the next command, its argument, its demand.
         const handoff = handoffLine(nextAction, workspace);
         blocks.push(
-            ['### Next step', '', nextAction, ...(handoff ? ['', handoff] : [])].join('\n'),
+            [
+                '### Next step',
+                '',
+                nextAction,
+                ...(handoff
+                    ? [
+                          '',
+                          handoff,
+                      ]
+                    : []),
+            ].join('\n'),
         );
     }
 
@@ -1104,7 +1282,9 @@ function main() {
 
     if (!opts.workflow || !VALID_WORKFLOWS.has(opts.workflow)) {
         console.error(
-            `❌ Invalid or missing --workflow. Expected one of: ${[...VALID_WORKFLOWS].join(', ')} (for example --workflow=run).`,
+            `❌ Invalid or missing --workflow. Expected one of: ${[
+                ...VALID_WORKFLOWS,
+            ].join(', ')} (for example --workflow=run).`,
         );
         return 1;
     }
@@ -1151,8 +1331,14 @@ function main() {
     const versionPath = resolveInsideProject(projectRoot, config.versionPath);
     const changelogPath = resolveInsideProject(projectRoot, config.changelogPath);
     for (const [key, resolved] of [
-        ['versionPath', versionPath],
-        ['changelogPath', changelogPath],
+        [
+            'versionPath',
+            versionPath,
+        ],
+        [
+            'changelogPath',
+            changelogPath,
+        ],
     ]) {
         if (!resolved) {
             console.error(
@@ -1195,7 +1381,8 @@ function main() {
         const stateResult = updateSessionState(opts, workspace, wsDir);
         // SC-6.1: this path prints no summary table, so the claim is its own
         // line — after the update it describes, and outside the terminal block.
-        if (stateResult.updated) console.log(`[state] STATE.md updated — ${CHECKPOINT_CLAIM}.`);
+        if (stateResult.updated)
+            console.log(`[state] ${stateFileOf(stateResult)} updated — ${CHECKPOINT_CLAIM}.`);
         // DG-4.1: a preview must not consume what the real run would report.
         // DG-10: revalidate() runs on both paths, after the drain/read that
         // already runs after every mutating step, so a condition this
@@ -1203,7 +1390,12 @@ function main() {
         const findings = diagnostics.revalidate(
             opts.dryRun ? diagnostics.read() : diagnostics.drain(),
         );
-        emitTail({ nextAction: stateResult.nextAction, workspace, findings, dryRun: opts.dryRun });
+        emitTail({
+            nextAction: stateResult.nextAction,
+            workspace,
+            findings,
+            dryRun: opts.dryRun,
+        });
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
             lastWorkflow: `magic.${opts.workflow}`,
@@ -1230,7 +1422,11 @@ function main() {
             const category = deriveChangelogCategory(opts.workflow, sig.files);
             const bullet = buildChangelogBullet(opts.workflow, workspace, sig.files);
             const result = appendBullet(changelogPath, category, bullet);
-            changelogResult = { ...result, category, bullet };
+            changelogResult = {
+                ...result,
+                category,
+                bullet,
+            };
 
             if (changelogResult.formatWarning) {
                 console.warn(
@@ -1263,9 +1459,7 @@ function main() {
     let archivedPhases = [];
     if (opts.workflow === 'run' || opts.workflow === 'fix') {
         try {
-            const archiveResult = isArchivalEnabled()
-                ? archiveCompletedPhases(wsDir, { dryRun: opts.dryRun })
-                : noteArchivalOff(wsDir);
+            const archiveResult = archivePhases(wsDir, workspace, opts);
             archivedPhases = archiveResult.archived;
             if (archiveResult.skipped.length > 0) {
                 console.warn(
@@ -1321,7 +1515,12 @@ function main() {
         stateResult,
         diagnosticsCount,
     });
-    emitTail({ nextAction: stateResult.nextAction, workspace, findings, dryRun: opts.dryRun });
+    emitTail({
+        nextAction: stateResult.nextAction,
+        workspace,
+        findings,
+        dryRun: opts.dryRun,
+    });
 
     const nextState = {
         lastVersion: next,

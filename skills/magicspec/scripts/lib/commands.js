@@ -25,8 +25,14 @@ const { STATE_DIR_NAME } = require('../utils');
 
 /** Options the executor itself consumes for every command, before the table is read. */
 const EXECUTOR_OPTIONS = Object.freeze([
-    ['--workspace <name>', 'Act on this workspace (default: the one in workspace.json)'],
-    ['--root <dir>', 'Act on this project (default: found from the working directory)'],
+    [
+        '--workspace <name>',
+        'Act on this workspace (default: the one in workspace.json)',
+    ],
+    [
+        '--root <dir>',
+        'Act on this project (default: found from the working directory)',
+    ],
 ]);
 
 /** @type {Record<string, {summary: string, options?: Record<string, {kind: string, help: string}>, positional?: string[], ownHelp?: boolean, provisions?: boolean, usesSqlite?: boolean}>} */
@@ -34,7 +40,10 @@ const COMMANDS = {
     'analyze-coverage': {
         summary: 'Classify project files by how well the specifications cover them.',
         options: {
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
             '--scope': {
                 kind: 'value',
                 help: 'Comma-separated scope entries (default: the workspace scope)',
@@ -45,8 +54,14 @@ const COMMANDS = {
         summary: 'Move finished phases (status Done, nothing left unchecked) into archives/tasks/.',
         provisions: true,
         options: {
-            '--dry-run': { kind: 'bool', help: 'List what would be archived; change nothing' },
-            '--check': { kind: 'bool', help: 'Report pending archival only; change nothing' },
+            '--dry-run': {
+                kind: 'bool',
+                help: 'List what would be archived; change nothing',
+            },
+            '--check': {
+                kind: 'bool',
+                help: 'Report pending archival only; change nothing',
+            },
         },
     },
     'build-spec-graph': {
@@ -64,12 +79,20 @@ const COMMANDS = {
                 kind: 'optSpace',
                 help: 'Write the interactive page (default: graph/graph.html)',
             },
-            '--no-cache': { kind: 'bool', help: 'Ignore the extraction cache' },
+            '--no-cache': {
+                kind: 'bool',
+                help: 'Ignore the extraction cache',
+            },
         },
     },
     'check-bloat': {
         summary: 'Advisory: flag oversized specifications, phase files and working documents.',
-        options: { '--json': { kind: 'bool', help: 'Print machine-readable JSON' } },
+        options: {
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
+        },
     },
     'check-docs': {
         summary:
@@ -81,6 +104,10 @@ const COMMANDS = {
             },
         },
     },
+    'check-log': {
+        summary:
+            'Check that no change of a 4.0 workspace went back in its statuses in the history of changes.md (open, placed, built; satisfied ends it).',
+    },
     'check-prerequisites': {
         summary: 'Pre-flight: engine integrity, projections, registry and plan consistency.',
         options: {
@@ -88,9 +115,18 @@ const COMMANDS = {
                 kind: 'bool',
                 help: 'Print machine-readable JSON (what the workflows read)',
             },
-            '--require-plan': { kind: 'bool', help: 'Fail when PLAN.md is missing' },
-            '--require-tasks': { kind: 'bool', help: 'Fail when TASKS.md is missing' },
-            '--require-specs': { kind: 'bool', help: 'Fail when no specification exists' },
+            '--require-plan': {
+                kind: 'bool',
+                help: 'Fail when PLAN.md is missing',
+            },
+            '--require-tasks': {
+                kind: 'bool',
+                help: 'Fail when TASKS.md is missing',
+            },
+            '--require-specs': {
+                kind: 'bool',
+                help: 'Fail when no specification exists',
+            },
             '--verify-headers': {
                 kind: 'bool',
                 help: 'Compare each specification header with the registry',
@@ -110,30 +146,62 @@ const COMMANDS = {
     'create-workspace': {
         summary: 'Create a workspace folder and register it in workspace.json.',
         options: {
-            '--name': { kind: 'eq', help: 'Workspace name (required), as --name=<name>' },
-            '--description': { kind: 'eq', help: 'One-line description, as --description="..."' },
-            '--default': { kind: 'bool', help: 'Make it the default workspace' },
-            '--dry-run': { kind: 'bool', help: 'Print the plan; change nothing' },
+            '--name': {
+                kind: 'eq',
+                help: 'Workspace name (required), as --name=<name>',
+            },
+            '--description': {
+                kind: 'eq',
+                help: 'One-line description, as --description="..."',
+            },
+            '--default': {
+                kind: 'bool',
+                help: 'Make it the default workspace',
+            },
+            '--dry-run': {
+                kind: 'bool',
+                help: 'Print the plan; change nothing',
+            },
         },
     },
     'detect-communities': {
         summary:
             'Detect communities in the dependency graph and score them against workspace scopes.',
         options: {
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
-            '--include-md': { kind: 'bool', help: 'Include Markdown files as nodes' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
+            '--include-md': {
+                kind: 'bool',
+                help: 'Include Markdown files as nodes',
+            },
             '--threshold': {
                 kind: 'value',
                 help: 'Oversized-community threshold in percent (default 25)',
             },
-            '--max-iter': { kind: 'value', help: 'Iteration limit (default 50)' },
-            '--min-nodes': { kind: 'value', help: 'Smallest community to report (default 2)' },
+            '--max-iter': {
+                kind: 'value',
+                help: 'Iteration limit (default 50)',
+            },
+            '--min-nodes': {
+                kind: 'value',
+                help: 'Smallest community to report (default 2)',
+            },
         },
     },
     'diff-spec-graph': {
         summary: 'Compare two graph snapshots.',
-        positional: ['<before.json>', '<after.json>'],
-        options: { '--json': { kind: 'bool', help: 'Print machine-readable JSON' } },
+        positional: [
+            '<before.json>',
+            '<after.json>',
+        ],
+        options: {
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
+        },
     },
     'export-wiki': {
         summary: 'Export the graph as a Markdown wiki under graph/wiki/.',
@@ -142,14 +210,20 @@ const COMMANDS = {
                 kind: 'space',
                 help: 'Use a graph JSON file instead of building the graph',
             },
-            '--out': { kind: 'space', help: 'Write the wiki to this folder' },
+            '--out': {
+                kind: 'space',
+                help: 'Write the wiki to this folder',
+            },
         },
     },
     'extract-rationale': {
         summary:
             'Find design-rationale markers in source and detect logic no specification covers.',
         options: {
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
             '--scope': {
                 kind: 'value',
                 help: 'Comma-separated scope entries (default: the workspace scope)',
@@ -159,18 +233,39 @@ const COMMANDS = {
     feedback: {
         summary:
             'Engine feedback notes: note records one, list shows the pending ones, draft turns them into reports, submit publishes a draft the person approved, keep delivers a draft as text, discard removes a note or a draft. Always exits 0.',
-        positional: ['<action>', '<id>'],
+        positional: [
+            '<action>',
+            '<id>',
+        ],
         options: {
             '--kind': {
                 kind: 'value',
                 help: 'note: bug | missing-capability | improvement | docs',
             },
-            '--summary': { kind: 'value', help: 'note: one line' },
-            '--tried': { kind: 'value', help: 'note: what was tried' },
-            '--happened': { kind: 'value', help: 'note: what happened' },
-            '--expected': { kind: 'value', help: 'note: what was expected (optional)' },
-            '--suggestion': { kind: 'value', help: 'note: what is suggested (optional)' },
-            '--impact': { kind: 'value', help: 'note: blocked | workaround | minor (optional)' },
+            '--summary': {
+                kind: 'value',
+                help: 'note: one line',
+            },
+            '--tried': {
+                kind: 'value',
+                help: 'note: what was tried',
+            },
+            '--happened': {
+                kind: 'value',
+                help: 'note: what happened',
+            },
+            '--expected': {
+                kind: 'value',
+                help: 'note: what was expected (optional)',
+            },
+            '--suggestion': {
+                kind: 'value',
+                help: 'note: what is suggested (optional)',
+            },
+            '--impact': {
+                kind: 'value',
+                help: 'note: blocked | workaround | minor (optional)',
+            },
             '--engine-file': {
                 kind: 'value',
                 help: 'note: the engine file concerned, a path inside the skill folder (optional)',
@@ -206,10 +301,22 @@ const COMMANDS = {
                 kind: 'value',
                 help: 'spec | plan | task | run | rule | fix | simulate (required)',
             },
-            '--dry-run': { kind: 'bool', help: 'Report what would change; write nothing' },
-            '--no-bump': { kind: 'bool', help: 'Skip the project version bump' },
-            '--no-changelog': { kind: 'bool', help: 'Skip the changelog entry' },
-            '--force': { kind: 'bool', help: 'Finalize even when no change is significant' },
+            '--dry-run': {
+                kind: 'bool',
+                help: 'Report what would change; write nothing',
+            },
+            '--no-bump': {
+                kind: 'bool',
+                help: 'Skip the project version bump',
+            },
+            '--no-changelog': {
+                kind: 'bool',
+                help: 'Skip the changelog entry',
+            },
+            '--force': {
+                kind: 'bool',
+                help: 'Finalize even when no change is significant',
+            },
         },
     },
     'generate-context': {
@@ -235,20 +342,28 @@ const COMMANDS = {
             'Build or refresh the local index over the specification artifacts. Always exits 0.',
         usesSqlite: true,
         options: {
-            '--rebuild': { kind: 'bool', help: 'Delete the index and build it from nothing' },
+            '--rebuild': {
+                kind: 'bool',
+                help: 'Delete the index and build it from nothing',
+            },
         },
     },
     'memory-query': {
         summary:
             'Find the sections that bear on a question, ranked, with citations. Always exits 0 when the index is unavailable.',
         usesSqlite: true,
-        positional: ['<text>'],
+        positional: [
+            '<text>',
+        ],
         options: {
             '--kind': {
                 kind: 'value',
                 help: 'Comma-separated kinds to keep: spec, rules, plan, tasks, state, registry, archive, history, retrospective, changelog',
             },
-            '--k': { kind: 'value', help: 'Most results to print, 1 to 50 (default: 10)' },
+            '--k': {
+                kind: 'value',
+                help: 'Most results to print, 1 to 50 (default: 10)',
+            },
             '--offset': {
                 kind: 'value',
                 help: 'Results to skip, for the next page of a cut list (default: 0); the first line names the next offset',
@@ -257,23 +372,38 @@ const COMMANDS = {
                 kind: 'bool',
                 help: 'Include archives, history tables, retrospectives and changelogs',
             },
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
         },
     },
     migrate: {
         summary: 'Migrate a 2.x project to the current layout (a dry run unless --apply is given).',
         options: {
-            '--apply': { kind: 'bool', help: 'Execute the plan' },
+            '--apply': {
+                kind: 'bool',
+                help: 'Execute the plan',
+            },
             '--host': {
                 kind: 'value',
                 help: 'Comma-separated hosts to project for (default: the hosts found)',
             },
         },
     },
+    'mark-built': {
+        summary:
+            'Record a milestone of a 4.0 workspace as built: its Done line, its map rows and revisions, its changes built, Was lines removed.',
+        positional: [
+            '<milestone>',
+        ],
+    },
     pack: {
         summary:
             'Compute the context pack of one task of a 4.0 workspace and write it under .cache/packs/; print its size against the budget.',
-        positional: ['<task>'],
+        positional: [
+            '<task>',
+        ],
         options: {
             '--include': {
                 kind: 'value',
@@ -284,20 +414,44 @@ const COMMANDS = {
     'record-diagnostic': {
         summary: 'Record a finding so the next finalize digest shows it. Always exits 0.',
         options: {
-            '--severity': { kind: 'value', help: 'error | warning | fix' },
-            '--code': { kind: 'value', help: 'UPPER_SNAKE_CASE code' },
-            '--message': { kind: 'value', help: 'One line' },
-            '--source': { kind: 'value', help: 'Origin (default: agent)' },
-            '--locus': { kind: 'value', help: 'File or place concerned' },
-            '--remedy': { kind: 'value', help: 'Suggested fix' },
+            '--severity': {
+                kind: 'value',
+                help: 'error | warning | fix',
+            },
+            '--code': {
+                kind: 'value',
+                help: 'UPPER_SNAKE_CASE code',
+            },
+            '--message': {
+                kind: 'value',
+                help: 'One line',
+            },
+            '--source': {
+                kind: 'value',
+                help: 'Origin (default: agent)',
+            },
+            '--locus': {
+                kind: 'value',
+                help: 'File or place concerned',
+            },
+            '--remedy': {
+                kind: 'value',
+                help: 'Suggested fix',
+            },
         },
     },
     'release-changelog': {
         summary: 'Rotate CHANGELOG.md [Unreleased] into a dated release section.',
         ownHelp: true,
         options: {
-            '--version': { kind: 'value', help: 'X.Y.Z (default: the project version)' },
-            '--date': { kind: 'value', help: 'YYYY-MM-DD (default: today, UTC)' },
+            '--version': {
+                kind: 'value',
+                help: 'X.Y.Z (default: the project version)',
+            },
+            '--date': {
+                kind: 'value',
+                help: 'YYYY-MM-DD (default: today, UTC)',
+            },
         },
     },
     remove: {
@@ -306,7 +460,10 @@ const COMMANDS = {
             STATE_DIR_NAME +
             '/ and your files.',
         options: {
-            '--dry-run': { kind: 'bool', help: 'List what would be removed; change nothing' },
+            '--dry-run': {
+                kind: 'bool',
+                help: 'List what would be removed; change nothing',
+            },
         },
     },
     'resolve-workspace': {
@@ -325,14 +482,23 @@ const COMMANDS = {
                 kind: 'value',
                 help: 'Comma-separated paths the work touches, in addition to those in the text',
             },
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
         },
     },
     'resume-state': {
         summary: 'Print one line when a task was left In Progress (silent otherwise).',
         options: {
-            '--all': { kind: 'bool', help: 'Read every registered workspace' },
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+            '--all': {
+                kind: 'bool',
+                help: 'Read every registered workspace',
+            },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
         },
     },
     'serve-spec-graph': {
@@ -341,7 +507,9 @@ const COMMANDS = {
     sync: {
         summary:
             'Bring derived state up to date: registries, projections, graph, live-memory progress, version anchors, registered documentation blocks. Reports every disagreement with its command; deletes nothing.',
-        positional: ['[area|workspace]'],
+        positional: [
+            '[area|workspace]',
+        ],
         options: {
             '--dry-run': {
                 kind: 'bool',
@@ -353,7 +521,10 @@ const COMMANDS = {
         summary:
             'Verify engine integrity (--check); in the engine repository also bump the version and regenerate the manifest.',
         options: {
-            '--check': { kind: 'bool', help: 'Verify only; exit 1 on drift' },
+            '--check': {
+                kind: 'bool',
+                help: 'Verify only; exit 1 on drift',
+            },
             '--workflow': {
                 kind: 'value',
                 help: 'Accepted and ignored (older callers pass it)',
@@ -365,17 +536,50 @@ const COMMANDS = {
         summary: 'Patch STATE.md (live project memory).',
         provisions: true,
         options: {
-            '--task': { kind: 'value', help: 'Current task, "{T-ID} {title}"' },
-            '--status': { kind: 'value', help: 'Active | Blocked | Paused' },
-            '--phase': { kind: 'value', help: 'Phase, "{N} — {name}"' },
-            '--next-action': { kind: 'value', help: 'Next action' },
-            '--decision': { kind: 'value', help: 'Append a decision' },
-            '--constraint-title': { kind: 'value', help: 'Add a blocking constraint: title' },
-            '--constraint-desc': { kind: 'value', help: 'Add a blocking constraint: description' },
-            '--bootstrap': { kind: 'value', help: 'true | false' },
-            '--goal-file': { kind: 'value', help: 'Record the goal block from a JSON file' },
-            '--goal-clear': { kind: 'bool', help: 'Remove the goal block' },
-            '--auto-progress': { kind: 'bool', help: 'Recompute the progress block' },
+            '--task': {
+                kind: 'value',
+                help: 'Current task, "{T-ID} {title}"',
+            },
+            '--status': {
+                kind: 'value',
+                help: 'Active | Blocked | Paused',
+            },
+            '--phase': {
+                kind: 'value',
+                help: 'Phase, "{N} — {name}"',
+            },
+            '--next-action': {
+                kind: 'value',
+                help: 'Next action',
+            },
+            '--decision': {
+                kind: 'value',
+                help: 'Append a decision',
+            },
+            '--constraint-title': {
+                kind: 'value',
+                help: 'Add a blocking constraint: title',
+            },
+            '--constraint-desc': {
+                kind: 'value',
+                help: 'Add a blocking constraint: description',
+            },
+            '--bootstrap': {
+                kind: 'value',
+                help: 'true | false',
+            },
+            '--goal-file': {
+                kind: 'value',
+                help: 'Record the goal block from a JSON file',
+            },
+            '--goal-clear': {
+                kind: 'bool',
+                help: 'Remove the goal block',
+            },
+            '--auto-progress': {
+                kind: 'bool',
+                help: 'Recompute the progress block',
+            },
         },
     },
 };
@@ -511,7 +715,9 @@ function usageLine(name) {
  * @returns {string} The one-line usage.
  */
 function usageFor(name, entry) {
-    const parts = [name];
+    const parts = [
+        name,
+    ];
     for (const [flag, spec] of Object.entries(entry.options || {})) {
         const shown =
             spec.kind === 'bool'
@@ -546,7 +752,11 @@ function helpText(name, prefix = 'node scripts/executor.js') {
  */
 function helpFor(name, entry, prefix, viaExecutor = false, usageTail = null) {
     const usage = usageTail === null ? usageFor(name, entry) : usageTail;
-    const lines = [`${name} — ${entry.summary}`, '', `Usage: ${prefix} ${usage}`.trimEnd()];
+    const lines = [
+        `${name} — ${entry.summary}`,
+        '',
+        `Usage: ${prefix} ${usage}`.trimEnd(),
+    ];
     const shown = (flag, spec) => {
         if (spec.kind === 'bool') return flag;
         if (spec.kind === 'eq') return `${flag}=<value>`;
@@ -557,7 +767,10 @@ function helpFor(name, entry, prefix, viaExecutor = false, usageTail = null) {
         shown(flag, spec),
         spec.help,
     ]);
-    rows.push(['--help', 'Show this text']);
+    rows.push([
+        '--help',
+        'Show this text',
+    ]);
     lines.push('', 'Options:');
     for (const [flag, help] of rows) lines.push(`  ${flag.padEnd(22)} ${help}`);
     if (viaExecutor) {
@@ -576,7 +789,11 @@ function helpFor(name, entry, prefix, viaExecutor = false, usageTail = null) {
 function listText(prefix = 'node scripts/executor.js') {
     const names = commandNames();
     const width = Math.max(...names.map((n) => n.length));
-    const lines = [`Usage: ${prefix} <command> [options]`, '', 'Commands:'];
+    const lines = [
+        `Usage: ${prefix} <command> [options]`,
+        '',
+        'Commands:',
+    ];
     for (const n of names) lines.push(`  ${n.padEnd(width)}  ${COMMANDS[n].summary}`);
     lines.push('', `Run \`${prefix} <command> --help\` for the options of one command.`);
     return lines.join('\n');
@@ -637,7 +854,9 @@ function guardArgv(name, scriptModule) {
  */
 function runtimeFlags(entry, allowedFlags = process.allowedNodeEnvironmentFlags) {
     return entry.usesSqlite && allowedFlags.has('--disable-warning')
-        ? ['--disable-warning=ExperimentalWarning']
+        ? [
+              '--disable-warning=ExperimentalWarning',
+          ]
         : [];
 }
 

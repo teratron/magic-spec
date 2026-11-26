@@ -12,6 +12,7 @@
  * - an address defined twice, or one that resolves to nothing — in a field or
  *   anywhere in a unit's text; a neutral unit that references a stack unit;
  * - a word of a stack's vocabulary in a neutral file;
+ * - an HTML comment left in a neutral file;
  * - a task without Builds or Priority, whose Done when has no `Observe:`,
  *   that is After a task of lower priority, or whose computed pack exceeds the
  *   budget (default 10000 tokens);
@@ -94,6 +95,16 @@ function sections(text, level) {
 }
 
 /**
+ * A text with its code spans taken out: a run of backticks, the text up to the next run of the same
+ * length on the same line, and that run. A value inside one is a literal, never a reference.
+ * @param {string} text
+ * @returns {string}
+ */
+function withoutCodeSpans(text) {
+    return text.replace(/(?<!`)(`+)(?!`)[^\n]*?(?<!`)\1(?!`)/g, ' ');
+}
+
+/**
  * The address a heading defines: its first token before the em dash.
  * @param {string} heading
  * @returns {string | null}
@@ -166,7 +177,7 @@ const RANK = /** @type {Record<string, number>} */ ({
 /**
  * @typedef {{ address: string, file: string, text: string, layer: 'neutral' | 'stack' | 'memory' | 'change' }} Unit
  * @typedef {{ file: string, owner: string, field: string, refs: string[] }} RefSite
- * @typedef {{ address: string, priority: string | null, needs: string[], closes: string[], observed: string, observedAfter: string[], integrates: string[], extends: string[], revises: string[] }} Milestone
+ * @typedef {{ address: string, priority: string | null, needs: string[], closes: string[], worksAfter: string | null, observed: string, observedAfter: string[], integrates: string[], extends: string[], revises: string[] }} Milestone
  * @typedef {{ address: string, stack: string | null, priority: string | null, after: string[], builds: string | null, consumes: string[], context: string[], doneWhen: string | null, creates: string | null, produces: string[] }} Task
  */
 
@@ -284,17 +295,18 @@ class DocSet {
     }
 
     /**
-     * Addresses written in a text.
+     * Addresses written in a text. A value inside a code span is a literal, not a reference.
      * @param {string} text
      * @returns {string[]}
      */
     inlineRefs(text) {
         const found = new Set();
-        for (const m of text.matchAll(
+        const prose = withoutCodeSpans(text);
+        for (const m of prose.matchAll(
             /(?<![\w.:-])(R\d+|S\d+|X\d+|P\d+|D\d+|C\d+|M\d+(?:\.T\d+)?|map:[\w-]+|term:[\w-]+)(?![\w-])/g,
         ))
             found.add(m[1]);
-        for (const m of text.matchAll(/(?<![\w.:-])([a-z][a-z0-9_]*)\.(b?\d+)(?![\w.])/g)) {
+        for (const m of prose.matchAll(/(?<![\w.:-])([a-z][a-z0-9_]*)\.(b?\d+)(?![\w.])/g)) {
             if (this.componentDeps.has(m[1])) found.add(`${m[1]}.${m[2]}`);
         }
         return [
@@ -724,6 +736,7 @@ function parsePlan(set) {
             priority: field(text, 'Priority'),
             needs,
             closes,
+            worksAfter: field(text, 'Works after it'),
             observed: field(text, 'Observed by') ?? '',
             observedAfter,
             integrates,
@@ -1056,16 +1069,36 @@ function checkAddresses(set) {
     }
 }
 
-/** @param {DocSet} set */
-function checkVocabulary(set) {
-    if (set.vocabulary.size === 0) return;
-    const neutralFiles = [
+/**
+ * The files of the neutral layer.
+ * @param {DocSet} set
+ * @returns {string[]} Paths relative to the set.
+ */
+function neutralFiles(set) {
+    return [
         'product.md',
         'rules.md',
         'plan.md',
         ...set.list('spec').map((n) => `spec/${n}`),
     ];
-    for (const rel of neutralFiles) {
+}
+
+/**
+ * A document written from a template keeps none of its comments, which guide its writer: one
+ * finding for each neutral file that holds an HTML comment outside a code span.
+ * @param {DocSet} set
+ */
+function checkComments(set) {
+    for (const rel of neutralFiles(set)) {
+        if (withoutCodeSpans(set.read(rel) ?? '').includes('<!--'))
+            set.findings.push(`${rel}: a template comment left in a neutral document`);
+    }
+}
+
+/** @param {DocSet} set */
+function checkVocabulary(set) {
+    if (set.vocabulary.size === 0) return;
+    for (const rel of neutralFiles(set)) {
         const text = set.read(rel);
         if (!text) continue;
         /** @type {Map<string, number>} */
@@ -2364,6 +2397,7 @@ function checkDocSet(set, budget = DEFAULT_BUDGET) {
     }
     checkAddresses(set);
     checkVocabulary(set);
+    checkComments(set);
     checkTasks(set, budget);
     checkPlan(set);
     checkChanges(set);
@@ -2453,6 +2487,7 @@ function main() {
 
 module.exports = {
     loadDocSet,
+    revisionOf,
     computePack,
     checkDocSet,
     locateSet,

@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.4.10
+**Version:** 1.4.11
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -61,6 +61,8 @@ related_rules: [C24]
 8. **Regulation Necessity (RA-1):** every regulation the change introduces — a blocking gate, a mandatory check, a required approval or record — cites an observed occurrence (RA-2), survives the with/without comparison (RA-3) and takes the weakest form that covers its evidence (RA-4). Product invariants are out of this step; their completeness stays with step 3.
 9. **Sync Check:** `check-prerequisites` status.
 10. Emit PASS or FAIL with itemized issues. FAIL returns control to `spec.md` for revision. PASS is never emitted without step 1 having run (CH-6).
+
+On a 4.0 workspace the review reads units and changes: the `check-docs` report first, then each unit against the form its template in `templates/set/` states, and each change against the three steps of `workflows/spec.md` (record, place, build).
 
 **Anti-patterns:**
 
@@ -305,6 +307,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.11 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `spec-critic` card and its mirror end the operating protocol with the line for a 4.0 workspace. |
 | 1.4.10 | 2026-11-19 | Clarification patch, Stable retained (as built in Phase 65; the mirror follows the deployed card word for word): item 3 of the `prompt-engineer` card's *Input Pass* states the host's marking, its limit and the boundary of the person's own words, and its anti-pattern line names the instruction the person's words do not ask for. |
 | 1.4.9 | 2026-11-13 | Clarification patch, Stable retained (the mirror follows the deployed card word for word). Spec-critic: the Comparison set bullet of step 1 reads the cited lines, not the file, and, when the first line of the query counts more matches than it showed, takes the next page it names or narrows the query before treating the set as complete; the fallback to a direct text search is unchanged. |
 | 1.4.8 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 55; the mirror follows the deployed card word for word). The prompt-engineer card lists `sync.md` among its Input Pass triggers, so every shipped body (fourteen) is one. |

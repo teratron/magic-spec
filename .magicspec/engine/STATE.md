@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-25 19:26
-**Phase:** 78 — The Forward Gate, Run 4
+**Updated:** 2026-11-26 07:25
+**Phase:** 80 — The Pipeline Bodies on a 4.0 Workspace
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-78T01 Validation
+- **Task:** T-80T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine "Run 4 of the forward gate (Phase 78) failed (record `.magicspec/engine/simulations/forward-gate.md`, section Run 4; evaluation in the documentation lab, `runs/run-28-state/summary.md`): criterion 5 does not hold (the second reading repeated two leaks of the first, one of them a comment of the product template), criteria 3 and 4 hold on the expected exit status and not as written, criteria 1, 2 and 7 hold, and criterion 6 holds under the owner's measure (nine format items, none judged to change what was built; one borderline) and not under the earlier one. First the owner of the gate decides, before any further run: the wording of criteria 3 and 4 for an observation that expects a nonzero status; whether criterion 5 is read on the second reading or on the reading that ends the review; and whether this run, built and observed as the whole product, is enough to open Phases 70 and 71. Otherwise a specification pass amends l1-sdd-document-set.md for six points — no stack concept in text copied into neutral documents and what happens to template comments (§5.1, the neutral templates); a literal form for data shaped like an address (§5.2, §5.9); the empty forms of External needs and Defines (§5.1, §5.3); who names the manifest's owner and splits binding units when bindings precede the plan (§5.1, §5.3, §5.5); Produces for several consumers and for a unit with no names (§5.3); whether component keys are addresses in the containment line (§5.6, I13) — then the plan opens the step that brings the format to them and a further run."
+- **Next Action:** Run /magicspec plan engine to bring the plan up to date before decomposing Phase 71
 
 ## Progress
 
 ```
-Overall: [76/76] ████████ 100%
+Overall: [79/79] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
-- 2026-11-25 **Decision:** Phase 78 complete. Verdict FAIL (run 4 of the forward gate): criterion 5 and criteria 3-4 as written; criterion 6 holds under the owner's measure; the whole product was built and observed by running it; the owner decides on the criteria before any further run
-- 2026-11-25 **Decision:** Phase 77 complete. Provides: the stack's tools in every pack after the containment line, the guidance of concept 1.3.0 in five set templates, harness 489, engine 3.0.174; run 4 of the forward gate (Phase 78) is next
-- 2026-11-25 **Decision:** Phase 76 complete. Verdict FAIL (run 3 of the forward gate): criterion 6 alone, nine format items none changing what was built; criteria 1-5 and 7 hold; the owner decides on criterion 6 before any further run
-- 2026-11-25 **Decision:** Phase 75 complete. Provides: the containment line in every pack, the guidance of concept 1.2.0 in seven templates, the repeated review in neutral-writing.md, harness 486, engine 3.0.172; run 3 of the forward gate (Phase 76) is next
-- 2026-11-25 **Decision:** Phase 74 complete. Verdict FAIL (run 2 of the forward gate): criteria 5 and 6; run 1's findings closed, twelve smaller format items; M1 built (103 tests) and observed; Phases 70 and 71 stay closed; replan directive in the ledger
+- 2026-11-26 **Decision:** Phase 80 complete. Provides: the 4.0 sections of spec, plan, task and run, the three card lines, pipeline S-4, the 4.0 next step repaired, harness 504, engine 3.0.191; the plan is behind registry 1.104.3, then the owner's narrowing of the lifecycle rule precedes Phase 71
+- 2026-11-26 **Decision:** Phase 70 complete. Provides: mark-built, check-log, the 4.0 branches of check-prerequisites, resume-state and finalize, harness 496, engine 3.0.186; Phase 80 (the four pipeline bodies) is next
+- 2026-11-26 **Decision:** Phase 79 complete. Provides: the containment line with the component-key exception, the comment finding and the code-span literal in check-docs, the templates and neutral-writing.md at 1.5.0, harness 491, engine 3.0.179; Phase 70 (the pipeline on 4.0) is next
+- 2026-11-26 **Decision:** Six format items of run 4 specified: l1/l2 sdd-document-set 1.5.0 (registry 1.104.0); the harness table case is red until neutral-writing.md gains the runtime row
+- 2026-11-26 **Decision:** Owner's decision on run 4 (2026-11-26): criteria 3-4 on each check's stated result, criterion 5 on the reading that ends the review; run 4 passes, the gate is open; l1/l2 sdd-document-set 1.4.0; the six format items come first
 
 ## Blockers
 

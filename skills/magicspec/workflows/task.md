@@ -9,6 +9,7 @@ Decomposes a planned phase into atomic tasks: writes `TASKS.md` (the ledger) and
 - Argument Routing
 - Core Invariants (Mandatory)
 - Workflow: Decomposition
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Task Completion Checklist
 - Handoffs
@@ -141,6 +142,20 @@ After TASKS.md and the phase files are written:
 
 After writing TASKS.md and the phase files, regenerate the workspace context file:
 `node scripts/executor.js generate-context --workspace={active-workspace}`
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+`TASKS.md`, the phase workbooks, the specification registry and the Plan Gate's version test are 3.x only: the tasks of a milestone are one file, `stack/{stack}/tasks/M{n}.md`, written from `templates/set/tasks.md`, whose comments state the task rules and are not copied into it. The task files of done milestones stay as written.
+
+1. **Gate**: `node scripts/executor.js check-docs --workspace={active-workspace}`. This stage closes every finding in a task file and those a missing task causes (a stale unit no task builds, a change in no task's `Context`, an asset no task creates). A plan with no milestone, or a finding in `plan.md`, ends the run naming `/magicspec plan {workspace}`; any other finding but an open question (step 5) names `/magicspec spec {workspace}`; in both cases nothing is written.
+2. **Select**: every milestone that builds a placed change and has no task file — a change gets its tasks as soon as it has its milestone — and the next milestone: not done, its `Needs` done, without a task file, of the highest priority, ties to the order of `plan.md`. A directive may name another (`M3`).
+3. **Split** before any task is written: a binding unit too large for one task, or needed only in part, keeps its address for the part built first, each other part takes a new address of its component, and its text, `Defines`, `Realizes` and `Accept` are divided between them.
+4. **Write** the task file with the fields of the template: every binding unit the milestone builds is built by exactly one task; a task that builds a change lists it in `Context`; `Creates` names the task's tests; `Done when` states each observation with its expected result; a milestone observed by running the product has a task whose `Done when` runs that use. `@role:planner` and the Task Instruction Review apply to these tasks.
+5. **Pack**: run `node scripts/executor.js pack {task} --workspace={active-workspace}` for every task. A task whose computed units exceed the budget is split. A task whose pack holds an `- Open:` line is reported not ready, with the question.
+6. **Check**: run `check-docs` again; only the open questions reported in step 5 may remain.
+7. **Handoff**: name `/magicspec run {workspace}` while a task is ready, otherwise `/magicspec spec {workspace}` for the open question.
 
 ## Finalization Protocol (Mandatory)
 

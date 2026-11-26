@@ -9,6 +9,7 @@ Executes `TASKS.md` atomic tasks. Input: `.magicspec/TASKS.md`.
 - Core Invariants (Mandatory)
 - Execution Setup
 - Workflow: Task Execution
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Run Completion Checklist
 - Handoffs
@@ -194,6 +195,21 @@ Shape — a nested list on the entry, one physical line per dead end, created on
 2. **Changelog L2**: compile and write the release entry, then display it verbatim. The user reviews release artifacts independently afterward — not via an inline Yes/No prompt. This preserves the C9 §9 release-artifact gate without re-introducing inline confirmation.
 3. **Version Bump**: bump the **project's** release version file (`package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent) per the changelog (Major/Minor/Patch). Do NOT modify `.version` — engine version is managed by `update-engine-meta` (C14) and is not a per-plan artifact.
 4. **Finalize**: regenerate `CONTEXT.md`.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+`memory/state.md` takes the place of `STATE.md` and `update-state`. The ledger, the phase workbooks and their `Attempts`, the specification-status guards, phase archival and the retrospective's phase snapshot are 3.x only. A memory file that is missing is written from its template in `templates/set/`, without the template's comments and placeholder entries (`map.md` keeps its table header and no row).
+
+1. **Pre-flight**: `node scripts/executor.js check-docs --workspace={active-workspace}`. A set with findings is not handed to a builder: end the run naming the stage that owns the findings (`spec`, `plan` or `task`).
+2. **Select**: the task the argument names; otherwise the task of a `- Now:` line an earlier session left; otherwise the next ready task, which the `Next` line of `memory/state.md` names. A ready task is one not done whose `After` tasks are all done; the next is the one of the highest priority (`must`, `should`, `could`), ties to the order of the file. With none, name `/magicspec task {workspace}`.
+3. **Start**: write `- Now: {task}` in `memory/state.md`, then run `node scripts/executor.js pack {task} --workspace={active-workspace}`.
+4. **Build**: the builder — a fresh subagent where the host has one — receives the pack file the command names and the workspace, and reads nothing else of the documents. `@role:coder` builds what the task states; the reviews of Steps 3.1 to 3.6 above apply, the pack standing for the specification.
+5. **Observe**: run every `Observe` of the task's `Done when` and compare its result with the expected one, exit status included. The task is done only when each holds.
+6. **Record**: replace the `Now` line with `- Done: {task} — {outcome}`; a decision taken during the build is a `D{n}` of `memory/decisions.md`. A task that cannot be done is a `- Open: {task} — {what blocks}` line, and the run ends naming `/magicspec spec {workspace}` when the documents leave a question open, or `/magicspec plan {workspace}` when the plan no longer fits. This workflow changes no document of the set outside `memory/` except as step 7 states.
+7. **Milestone end**: when every `must` and `should` task of a milestone is done and its `Observed by` holds on what was built — run as the profile's `observe` row says — list its open `could` tasks in the Backlog of `plan.md`, then run `node scripts/executor.js mark-built M{n} --workspace={active-workspace}`, which records the milestone and the map, sets its changes `built` and removes their `Was` lines. When it reports a change built, run `node scripts/executor.js check-log --workspace={active-workspace}`. An `Observed by` that does not hold is recorded as in step 6.
+8. **Continue** with the next ready task of a milestone that has its task file. With none, the finalization names the next step.
 
 ## Finalization Protocol (Mandatory)
 

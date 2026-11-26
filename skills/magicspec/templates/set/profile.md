@@ -1,6 +1,6 @@
 # Stack: {name}
 
-<!-- The profile is not pulled into a pack, so it holds no convention a builder must follow: such a convention is a stack rule, listed in the Context of the tasks it governs. Tools names the runtime and its own test runner with their versions; what is installed beside them is pinned in deps.md. A Vocabulary word matches in the neutral layer as a whole word, in any letter case, and a component key is never matched; the Vocabulary section holds the words alone, each of its lines being read as words. -->
+<!-- A document written from this template keeps none of its comments. The profile is not pulled into a pack, so it holds no convention a builder must follow: such a convention is a stack rule, listed in the Context of the tasks it governs. Tools names the runtime and its own test runner with their versions; what is installed beside them is pinned in deps.md. A Vocabulary word matches in the neutral layer as a whole word, in any letter case, and a component key is never matched; the Vocabulary section holds the words alone, each of its lines being read as words. -->
 
 ## Tools
 

@@ -52,10 +52,26 @@ const warnings = [];
 // repository state), never an event, so this is attached unconditionally.
 const RECHECK_ARGS = [
     '--json',
-    ...(reqPlan ? ['--require-plan'] : []),
-    ...(reqTasks ? ['--require-tasks'] : []),
-    ...(reqSpecs ? ['--require-specs'] : []),
-    ...(verifyHeaders ? ['--verify-headers'] : []),
+    ...(reqPlan
+        ? [
+              '--require-plan',
+          ]
+        : []),
+    ...(reqTasks
+        ? [
+              '--require-tasks',
+          ]
+        : []),
+    ...(reqSpecs
+        ? [
+              '--require-specs',
+          ]
+        : []),
+    ...(verifyHeaders
+        ? [
+              '--verify-headers',
+          ]
+        : []),
 ];
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -69,11 +85,20 @@ const RECHECK_ARGS = [
  * @param {string|null} fix - Suggested fix command or null if no automated fix.
  */
 function warn(type, message, fix) {
-    warnings.push({ type, message, fix: fix || null });
+    warnings.push({
+        type,
+        message,
+        fix: fix || null,
+    });
     // Forwards the existing typed-warning shape 1:1 — `type` becomes the
     // diagnostics `code`, `fix` the `remedy`. No new literal codes here; this
     // site already produced DG-3's shape before DG-3 existed.
-    const finding = { severity: 'warning', source: 'check-prerequisites', code: type, message };
+    const finding = {
+        severity: 'warning',
+        source: 'check-prerequisites',
+        code: type,
+        message,
+    };
     if (fix) finding.remedy = fix;
     // DG-10 recheck reference. MAGIC_DESIGN_DIR is re-read here rather than
     // closing over the module-scope `designDir` const declared below — the
@@ -83,7 +108,9 @@ function warn(type, message, fix) {
     finding.recheck = {
         script: 'check-prerequisites',
         args: RECHECK_ARGS,
-        env: { MAGIC_DESIGN_DIR: process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME },
+        env: {
+            MAGIC_DESIGN_DIR: process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME,
+        },
     };
     diagnostics.record(finding);
 }
@@ -137,9 +164,15 @@ if (fs.existsSync(checksumsFile)) {
                 if (currentHash !== storedHash) {
                     const delta = describeManifestDelta(fullPath, storedHash);
                     if (delta?.lineEndingsOnly) {
-                        eolOnlyFiles.push({ file: normalizedRelPath, found: delta.found });
+                        eolOnlyFiles.push({
+                            file: normalizedRelPath,
+                            found: delta.found,
+                        });
                     } else {
-                        mismatchedFiles.push({ file: normalizedRelPath, delta });
+                        mismatchedFiles.push({
+                            file: normalizedRelPath,
+                            delta,
+                        });
                     }
                 }
             } else {
@@ -163,7 +196,9 @@ if (fs.existsSync(checksumsFile)) {
             );
         }
         if (eolOnlyFiles.length > 0) {
-            const styles = [...new Set(eolOnlyFiles.map((f) => f.found))].join('/');
+            const styles = [
+                ...new Set(eolOnlyFiles.map((f) => f.found)),
+            ].join('/');
             warn(
                 'ENGINE_LINE_ENDINGS',
                 `${eolOnlyFiles.length} file(s) of ${ENGINE_REL}/ differ from the release only in line endings (found ${styles}); they are treated as unchanged.`,
@@ -260,8 +295,12 @@ const planRemedy =
 // SH-1 + SH-4: read from the stripped copy, bound to the filename grammar — the
 // pre-fix `[^)]*` capture doesn't exclude newlines, so a bare `specifications/` mention
 // in prose (no immediate closing `)`) could run the match past the paragraph it started in.
-const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-const indexSpecs = [...new Set(indexSpecMatches.map((m) => m[1]))];
+const indexSpecMatches = [
+    ...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g')),
+];
+const indexSpecs = [
+    ...new Set(indexSpecMatches.map((m) => m[1])),
+];
 
 for (const spec of indexSpecs) {
     if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
@@ -297,8 +336,12 @@ if (planExists && indexExists) {
         }
     }
 
-    const planSpecMatches = [...planContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-    const planSpecs = [...new Set(planSpecMatches.map((m) => m[1]))];
+    const planSpecMatches = [
+        ...planContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g')),
+    ];
+    const planSpecs = [
+        ...new Set(planSpecMatches.map((m) => m[1])),
+    ];
 
     for (const pSpec of planSpecs) {
         if (!indexSpecs.includes(pSpec)) {
@@ -455,7 +498,15 @@ if (verifyHeaders && indexExists) {
         }
 
         // ── Status parity ──
-        if (indexStatus && ['Draft', 'RFC', 'Stable', 'Deprecated'].includes(indexStatus)) {
+        if (
+            indexStatus &&
+            [
+                'Draft',
+                'RFC',
+                'Stable',
+                'Deprecated',
+            ].includes(indexStatus)
+        ) {
             if (!fileStatusMatch) {
                 warn(
                     'STATUS_DRIFT',
@@ -508,7 +559,10 @@ try {
 const rolesDir = path.join(ENGINE, 'roles');
 const templatesRoot = path.join(ENGINE, 'templates');
 // Workflow bodies live in workflows/ and references/.
-const bodyDirs = [path.join(ENGINE, 'workflows'), path.join(ENGINE, 'references')];
+const bodyDirs = [
+    path.join(ENGINE, 'workflows'),
+    path.join(ENGINE, 'references'),
+];
 const roleRefPattern = /@role:([a-z][a-z0-9-]*)/g;
 
 const roleRegistry = {
@@ -538,15 +592,22 @@ if (fs.existsSync(rolesDir)) {
             roleIds.add(id);
             cards[id] = {
                 file: cardFile,
-                handoffTargets: [...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm)].map((m) => m[1]),
-                triggerWorkflows: [...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm)].map((m) => m[1]),
+                handoffTargets: [
+                    ...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm),
+                ].map((m) => m[1]),
+                triggerWorkflows: [
+                    ...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm),
+                ].map((m) => m[1]),
             };
         });
 
     roleRegistry.total = roleIds.size;
 
     const referencedIds = new Set();
-    const scanRoots = [...bodyDirs, templatesRoot].filter((d) => fs.existsSync(d));
+    const scanRoots = [
+        ...bodyDirs,
+        templatesRoot,
+    ].filter((d) => fs.existsSync(d));
 
     for (const root of scanRoots) {
         fs.readdirSync(root)
@@ -568,7 +629,10 @@ if (fs.existsSync(rolesDir)) {
                         if (
                             !roleRegistry.missing.some((m) => m.location === rel && m.id === refId)
                         ) {
-                            roleRegistry.missing.push({ location: rel, id: refId });
+                            roleRegistry.missing.push({
+                                location: rel,
+                                id: refId,
+                            });
                         }
                     }
                 }
@@ -596,7 +660,10 @@ if (fs.existsSync(rolesDir)) {
                     `Role '${id}' declares handoff to '${target}' but target card is missing.`,
                     'Create target role card or fix handoff reference',
                 );
-                roleRegistry.dangling_handoffs.push({ from: id, to: target });
+                roleRegistry.dangling_handoffs.push({
+                    from: id,
+                    to: target,
+                });
             }
         }
         for (const wf of info.triggerWorkflows) {
@@ -622,14 +689,18 @@ if (fs.existsSync(rolesDir)) {
 function checkConfigDrift() {
     try {
         // Verify git is available and we're in a repo
-        execSync('git rev-parse --is-inside-work-tree', { stdio: 'pipe' });
+        execSync('git rev-parse --is-inside-work-tree', {
+            stdio: 'pipe',
+        });
     } catch {
         return; // No git or not a repo — skip silently
     }
 
     // The global constitution is always monitored; a workspace RULES.md (C22) is monitored
     // in addition — it never stands in for the global one.
-    const rulesToCheck = [path.join(STATE_DIR_NAME, 'RULES.md')];
+    const rulesToCheck = [
+        path.join(STATE_DIR_NAME, 'RULES.md'),
+    ];
 
     if (designDir !== STATE_DIR_NAME) {
         const wsRulesPath = path.join(designDir, 'RULES.md');
@@ -639,10 +710,23 @@ function checkConfigDrift() {
     for (const rPath of rulesToCheck) {
         const posixPath = normalizePath(rPath);
         try {
-            const diff = execFileSync('git', ['diff', 'HEAD', '--', posixPath], {
-                encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe'],
-            });
+            const diff = execFileSync(
+                'git',
+                [
+                    'diff',
+                    'HEAD',
+                    '--',
+                    posixPath,
+                ],
+                {
+                    encoding: 'utf8',
+                    stdio: [
+                        'pipe',
+                        'pipe',
+                        'pipe',
+                    ],
+                },
+            );
             if (diff.trim().length > 0) {
                 warn(
                     'CONFIG_DRIFT',
@@ -657,6 +741,49 @@ function checkConfigDrift() {
 }
 
 checkConfigDrift();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 4.0 DOCUMENT SET (the checker in place of the registry)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// A workspace in the 4.0 format has no registry, plan or ledger to read: the findings that
+// compare them (and the artifacts they require) do not apply, and the checker's findings take
+// their place, one DOC_SET warning each.
+const REGISTRY_FINDINGS = new Set([
+    'SPEC_STATUS',
+    'ORPHANED_SPEC',
+    'SYNC_GAP',
+    'VERSION_DRIFT',
+    'STATUS_DRIFT',
+    'DESIGN_DEBT_PENDING',
+    'GHOST_REGISTRY',
+    'REGISTRY_MISMATCH',
+    'NAMING_VIOLATION',
+]);
+let docSet = null;
+try {
+    const { locateSet, loadDocSet, checkDocSet } = require('./check-docs');
+    const where = locateSet();
+    if (where.isSet && where.dir) {
+        const result = checkDocSet(loadDocSet(where.dir));
+        docSet = {
+            workspace: where.name,
+            addresses: result.addresses,
+            tasks: result.tasks,
+            findings: result.findings.length,
+        };
+        for (let i = missing.length - 1; i >= 0; i--) {
+            if (/^(INDEX|PLAN|TASKS)\.md$|^Stable specs/.test(missing[i])) missing.splice(i, 1);
+        }
+        for (let i = warnings.length - 1; i >= 0; i--) {
+            if (REGISTRY_FINDINGS.has(warnings[i].type)) warnings.splice(i, 1);
+        }
+        for (const finding of result.findings)
+            warn('DOC_SET', finding, `/magicspec spec ${where.name}`);
+    }
+} catch {
+    // A set the checker cannot read is reported by check-docs itself; the pre-flight goes on.
+}
 
 const integrity_ok = !warnings.some(
     (w) =>
@@ -680,13 +807,34 @@ if (jsonOutput) {
         checked_at: date,
         design_dir: designDir,
         artifacts: {
-            'INDEX.md': { exists: indexExists, path: normalizePath(indexPath) },
-            'RULES.md': { exists: rulesExists, path: normalizePath(rulesPath) },
-            'PLAN.md': { exists: planExists, path: normalizePath(planPath) },
-            'TASKS.md': { exists: tasksExists, path: normalizePath(tasksPath) },
-            specs: { count: specCount, stable: stableCount, draft: draftCount },
+            'INDEX.md': {
+                exists: indexExists,
+                path: normalizePath(indexPath),
+            },
+            'RULES.md': {
+                exists: rulesExists,
+                path: normalizePath(rulesPath),
+            },
+            'PLAN.md': {
+                exists: planExists,
+                path: normalizePath(planPath),
+            },
+            'TASKS.md': {
+                exists: tasksExists,
+                path: normalizePath(tasksPath),
+            },
+            specs: {
+                count: specCount,
+                stable: stableCount,
+                draft: draftCount,
+            },
         },
         role_registry: roleRegistry,
+        ...(docSet
+            ? {
+                  doc_set: docSet,
+              }
+            : {}),
         missing_required: missing,
         warnings,
     };

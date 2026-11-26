@@ -51,3 +51,22 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** the person types the one command named, `/magicspec plan`, and the plan then holds the later version of the specification: if the phase it holds changed, the invocation ends naming `/magicspec task {workspace}`, otherwise it ends with the step the plan state computes (composed).
 
 **Last run:** never
+
+## S-4: An idea on a 4.0 workspace reaches a built first milestone
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l2-sdd-document-set-engine.md §5.4 rows `spec`, `plan`, `task`, `run`, l2-sdd-document-set-engine.md §5.2 (`check-docs`, `pack`, `mark-built`, `finalize`), l1-pipeline-stages.md §5.4 Handoff Line
+**Preconditions:** a disposable project with the engine installed, one registered workspace whose entry in `workspace.json` carries `"format": "4"`, no document in it and no product code. The stages are typed one at a time.
+
+**Steps:**
+
+1. `/magicspec spec "a command that reads a list of dated items and prints those due on a given date, in JavaScript on Node"` → expect: `product.md`, `rules.md` without a `From` line and one `spec/{key}.md` per component with behaviour, then a reading by a reader of another stack and its rewrites, at most three (composed; `spec.md` §On a 4.0 Workspace, steps 2.1 and 2.2).
+2. The same invocation writes the stack layer → expect: `stack/{stack}/` holds the profile, the stack's rules, the dependencies and one binding per component (composed; `spec.md` §On a 4.0 Workspace, step 2.3); `check-docs` prints a summary with 0 findings, and no `plan.md` and no task file exists (printed; `spec.md` §On a 4.0 Workspace, step 4); the invocation ends with `Next: /magicspec plan {workspace} — deep reasoning` (printed; l2-sdd-document-set-engine.md §5.2, `finalize`).
+3. `/magicspec plan` → expect: `plan.md` holds milestones whose first is observed by running the product, and every rule gains its `From` (composed; `plan.md` §On a 4.0 Workspace, step 2); `check-docs` reports 0 findings and no task file exists (printed; step 5); the invocation ends with `Next: /magicspec task {workspace} — standard reasoning` (printed).
+4. `/magicspec task` → expect: `stack/{stack}/tasks/M1.md` holds the tasks of the first milestone, every binding unit it builds in exactly one task, and a task whose `Done when` runs the use the milestone is observed by (composed; `task.md` §On a 4.0 Workspace, step 4); `pack` prints each task's pack within its budget and `check-docs` reports 0 findings (printed; steps 5 and 6); the invocation ends with `Next: /magicspec run {workspace} — standard reasoning` (printed).
+5. `/magicspec run` → expect: each task is built from its pack by a builder that reads the pack file and the workspace and nothing else of the documents, and is recorded done in `memory/state.md` only once its observations hold (composed; `run.md` §On a 4.0 Workspace, steps 3 to 6).
+6. The same invocation closes the milestone → expect: the milestone's `Observed by` is run on the built product (composed; step 7); `mark-built M1` prints the map rows it wrote, `memory/state.md` gains `- Done: M1`, and `memory/map.md` names for each built component its files, never a task address (printed; l2-sdd-document-set-engine.md §5.2, `mark-built`); the finalization writes the `Next` line and ends naming the stage the set waits for (printed; l2-sdd-document-set-engine.md §5.2, `finalize`).
+
+**Variants:** an input after the first version, "an item due today is listed first": `/magicspec spec` records it in `changes.md` before editing a unit, edits the units at a new revision and sets the change `placed` (composed; `spec.md` §On a 4.0 Workspace, step 3); until the later stages run, `check-docs` reports only the change without its milestone and its stale units (printed; step 4); the invocation ends with `Next: /magicspec plan {workspace} — deep reasoning` (printed). A stack not named by the idea: no stack layer is written, the finalization names no command, and the invocation asks for the stack through `/magicspec spec` (composed; step 6).
+
+**Last run:** never

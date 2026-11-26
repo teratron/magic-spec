@@ -1,5 +1,23 @@
 # Engine Workspace Changelog
 
+## Phase 80 — 2026-11-26 (The Pipeline Bodies on a 4.0 Workspace)
+
+- **The pipeline works on a 4.0 workspace.** `spec`, `plan`, `task` and `run` each carry a section for it: an idea becomes the documents of a set, reviewed across stacks; a later input becomes a change; milestones are planned, their tasks written and packed within budget, and each task built from its pack. On a 3.x workspace each command reads exactly as before.
+- **The next step follows the stage the set waits for.** After a 4.0 stage the finalization names planning, tasking or running as the documents need, and no command when the stack is unknown or every milestone is done; the map row of a built milestone lists files only.
+- **Records:** harness 504; engine 3.0.191. **Specifications:** `l2-sdd-document-set-engine` 1.5.3, `l1-plan-command` 2.0.2, `l2-engine-finalization` 3.10.2, `l2-engine-automation` 1.33.2, `l2-role-cards-governance` 1.4.11, `l2-role-cards-execution` 1.3.4, `l2-test-suite` 1.48.13; registry 1.104.3. Phase 71, the remaining commands and the migration, follows the owner's narrowing of the lifecycle rule.
+
+## Phase 70 — 2026-11-26 (The Scripts of the Pipeline on a 4.0 Workspace)
+
+- **Two new subcommands for a 4.0 workspace.** `mark-built` records that a milestone is built — its Done line, its map rows and revisions, its changes built, the old revision text removed — and a second run changes nothing; `check-log` reports a change whose status went back in the history of `changes.md`.
+- **Three subcommands read a 4.0 workspace.** `check-prerequisites` reports the checker's findings in place of the registry's, `resume-state` reads `memory/state.md`, and `finalize` writes the next ready task there; on a 3.x workspace each does exactly what it did.
+- **Records:** harness 496; engine 3.0.186. **Specifications:** `l2-sdd-document-set-engine` 1.5.2, `l2-engine-finalization` 3.10.1, `l1-session-continuity` 2.6.2, `l2-engine-automation` 1.33.1, `l2-test-suite` 1.48.12; registry 1.104.2. Phase 80, the four pipeline bodies, is next.
+
+## Phase 79 — 2026-11-26 (The Format Brought to the Six Items of Run 4)
+
+- **The checker reads documents more exactly.** A comment left over from a template in a neutral document is now a finding, one per file; a value shaped like an address inside a code span is data and no reference.
+- **The pack and the templates say what the concept now says**: the containment line excepts component keys used as names; every template says a document keeps none of its comments; no external need is `- none`, a unit with no name writes `Defines: —`, the task stage splits binding units, `Produces` names every consuming task, and the writing table names the runtime.
+- **Records:** harness 491; engine 3.0.179. **Specifications:** `l2-sdd-document-set-engine` 1.5.1, `l2-engine-templates` 1.3.9, `l2-test-suite` 1.48.11; registry 1.104.1. Phase 70, the pipeline on a 4.0 workspace, is next.
+
 ## Phase 78 — 2026-11-25 (The Forward Gate, Run 4)
 
 - **The gate was run a fourth time.** Fourteen fresh agents wrote a set of 71 addresses, reviewed it across stacks in two rewrites, planned the whole product as the first milestone, wrote five tasks and built them from packs: 147 tests (146 pass, 1 skipped), both product uses of the milestone hold, the built files hold no address of the documents.

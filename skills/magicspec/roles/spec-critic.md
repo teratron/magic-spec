@@ -38,6 +38,8 @@ Audit specs after creation or update, starting with their coherence with every o
 9. **Sync Check:** `check-prerequisites` status.
 10. Emit PASS or FAIL with itemized issues. FAIL returns control to `spec.md` for revision. PASS is never emitted without step 1 having run (CH-6).
 
+On a 4.0 workspace the review reads units and changes: the `check-docs` report first, then each unit against the form its template in `templates/set/` states, and each change against the three steps of `workflows/spec.md` (record, place, build).
+
 ## Anti-patterns
 
 - Permitting implementation code in an L1 spec because "it clarifies the concept".

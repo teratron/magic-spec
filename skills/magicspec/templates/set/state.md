@@ -1,6 +1,6 @@
 # State
 
-<!-- Where the build is. A finished milestone is named `- Done: M{n} — {outcome}`. -->
+<!-- A document written from this template keeps none of its comments. Where the build is. A finished milestone is named `- Done: M{n} — {outcome}`. -->
 
 - Now: {task address}
 - Done: {task address} — {one-line outcome}

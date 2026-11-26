@@ -1,6 +1,6 @@
 # Engine Templates
 
-**Version:** 1.3.8
+**Version:** 1.3.9
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -117,6 +117,7 @@ Rewriting the rows and the overview that already exist in a workspace is a task 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.9 | 2026-11-26 | As built in Phase 79, Stable retained: every template of the set opens its first comment saying that a document written from it keeps none of its comments; `product.md` (what every stack provides by itself; no external need as `- none`), `bind.md` (`Defines: —`; the manifest on the component the first milestone's use enters through), `tasks.md` (the task stage splits a binding unit a milestone needs in part or one too large; `Produces` names every consuming task) and `spec.md` (a value shaped like an address inside a code span) carry the guidance of the concept's fourth amendment, and `neutral-writing.md` gains the table's row on the runtime. |
 | 1.3.8 | 2026-11-25 | As built in Phase 77, Stable retained: five templates of the set carry the guidance of the concept's third amendment — `bind.md` (a unit that realizes nothing, one visibility per unit, a unit built by one task, the manifest pinned by a unit of the first milestone's component), `plan.md` (the first milestone observed by running the product, `Needs` naming direct dependencies only), `tasks.md` (one task per binding unit), `product.md` (what an external need is) and `profile.md` (how a vocabulary word matches, stated in the top comment because the Vocabulary section is read as words). |
 | 1.3.7 | 2026-11-25 | Agent \| As built in Phase 75, Stable retained: seven templates of the set carry the guidance of the concept's second amendment (a file a later task extends of any kind, which rules a task lists, a neutral `Observed by` mapped by the profile, the runtime in the profile and what the library list pins, empty lists as `- none`, bare names in `Defines`, the optional-integration mark, where a mark sits), and `neutral-writing.md` gains the repeated review. |
 | 1.3.6 | 2026-11-25 | Agent \| As built in Phase 73, Stable retained: the folder of the set holds a fourteenth file, `neutral-writing.md`, and five of its templates carry the guidance lines of the amended concept (the rule's `From` written by the plan stage, `Realizes: —` and the profile reaching no pack, `Closes` of components only and the empty backlog, `Produces: —`, an extended test file and the exit status). |

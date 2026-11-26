@@ -1,6 +1,6 @@
 # Rules
 
-<!-- How work is done here, on any stack. A rule names no technology of a stack; a stack rule that realizes it lives in the stack layer. A component named in backticks under Checked by is closed by the From milestone or by one it needs or is observed after. The plan stage writes From: a rule written before a plan exists has no From line, and the stage that writes the milestones adds one to every rule. -->
+<!-- A document written from this template keeps none of its comments. How work is done here, on any stack. A rule names no technology of a stack; a stack rule that realizes it lives in the stack layer. A component named in backticks under Checked by is closed by the From milestone or by one it needs or is observed after. The plan stage writes From: a rule written before a plan exists has no From line, and the stage that writes the milestones adds one to every rule. -->
 
 ## R{n} — {short title}
 

@@ -1,6 +1,6 @@
 # Planning Command: Plan and Replan
 
-**Version:** 2.0.1
+**Version:** 2.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -87,6 +87,10 @@ graph LR
 | `task "{decomposition directive}"` | Guided decomposition of the active phase |
 | `task update` | Kept as an alias of `plan`; it ends naming `task`, like `plan` (PS-1) |
 
+### 5.4 A 4.0 Workspace `[ADDED]`
+
+On a workspace in the 4.0 document-set format ([l1-sdd-document-set.md](l1-sdd-document-set.md) §6 declares the supersession, [l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.4 the realization) the split stands and its objects change: `plan` writes the milestones of `plan.md` — the first plan, and for each change that waits for one a milestone appended at the end — and `task` writes the task file of a milestone. A done milestone is never edited, a set whose documents hold a finding planning does not close is sent to `spec`, and there is no phase plan, backlog disposition or recorded registry version. The invariants above that name `PLAN.md`, phases or the registry hold for 3.x workspaces.
+
 ## 6. Implementation Notes
 
 1. A new workflow body for `plan`, built from the steps §5.1 assigns to it; `task.md` keeps the rest, gains PL-4 and PL-8 (the stale-plan stop and the replan directive), and loses the in-body planning pass.
@@ -116,6 +120,7 @@ graph LR
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.0.2 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: §5.4 states planning on a 4.0 workspace as the document-set concept declares it (milestones in `plan.md`); the 3.x contract unchanged. |
 | 2.0.1 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). **Where the directive lives and when it retires:** the finding of PL-8 is a section `## Replan Directive` of the task ledger (`TASKS.md`) with `**Plan version:**` (the version of `PLAN.md` at that moment) and `**Directive:**` (what, where and the change it suggests); it is pending only while the plan's version equals the recorded one, so a rewritten plan retires it on its own and `plan` never writes the file; a decomposition that completes without a finding removes a stale section; the next-step computation of `finalize` reads a pending one as `/magicspec plan {workspace} "{directive}"` for every originating workflow. **The guard map of the bodies:** the planning guards (Circular Guard, C6 selection, the Guided Planning Filter with the `[Stabilize]` marker, the Bootstrap Exception, Pre-Planning Stabilization, the Planning Audit, the cross-workspace parity, the quarantine and demotion decisions) are in `plan.md` once and in `task.md` nowhere; the decomposition guards (the Plan Gate, atomic tasks, the verify line, the `stabilizes:` flag derived from the plan's marker, the Bootstrap exemption, blocking and releasing, the Stalled Plan report) are in `task.md` once. **The Plan Gate reads a missing plan mechanically:** `check-prerequisites --require-plan` reports `PLAN.md` in `missing_required`, so the stop does not depend on the reader noticing the absence. `update` stays an unquoted keyword of `task` that runs `plan` and says so; the template of the plan records `Based on RULES` beside `Based on`, and the constitution's version is part of the staleness test. |
 | 2.0.0 | 2026-11-11 | Agent | **A real boundary** (origin `user-stated`: the owner's list of commands of 2026-11-11 — stages split so that models can be switched between them). Breaking: PL-4 no longer runs `plan` inside `task`; a missing or stale plan ends `task` with `/magicspec plan` as the next step. PL-5: handoffs are named and recorded, never started by the stage that names them. New PL-8 (decomposition findings go back to `plan` as a directive) and PL-9 (each stage's output is complete for the next one). `task update` becomes an alias of `plan`. The forecast of §2 is reversed; its former winner is the runner-up. Amendment Rule: `Stable → RFC`. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

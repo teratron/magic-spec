@@ -17,6 +17,7 @@ Universal process for managing project specifications in `.magicspec/specificati
 - Specification Layers
 - Status Lifecycle
 - Workflow Steps
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Templates
 - Handoffs
@@ -360,6 +361,25 @@ Compares specs vs. project filesystem and engine integrity.
 | **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
 | Config Sync | Project configuration files match declared spec metadata? |
 | **Engine Integrity** | This skill folder matches `.checksums`? → C15 Filter (`init.md §1`) → **HALT** only if in-scope mismatches. (In `/magicspec analyze` Mode C this self-check is non-halting / audit-only.) Hint: use `init` or `update-engine-meta`. |
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+The registry, the specification layers, the status lifecycle and the Post-Update Review do not apply (step 5 reviews instead): a set has no `INDEX.md` entries and no statuses. Each document is written from its template in `templates/set/`, whose comments state its form and are not copied into the document.
+
+1. **Intake**: the Input Pass, the Defect Report Test, Step 0, Step 0.5 (E6) and the Consequence Forecast apply as written above. A premise only the requester can confirm is recorded on its unit as `- Assumption: {premise} — if wrong: {what changes}`; a question left open is an `- Open: {question}` line, in place of a TBD marker.
+2. **First version** (the workspace holds no `product.md`):
+   1. **Neutral layer**: write `product.md`, `rules.md` (no `From` line: the plan stage writes it) and one `spec/{key}.md` per component that has behaviour to state. They state needs, never the mechanisms of a stack (`templates/set/neutral-writing.md`).
+   2. **Cross-stack review**: a reader who knows only another stack — a fresh subagent where the host has one, otherwise a separate pass in that stance — reads the neutral documents and lists every concept that stack does not have. Rewrite each by the table of `templates/set/neutral-writing.md`, then have a fresh reader of the same stack read again. The review ends when a reading lists none of the leaks the readings before it listed; after three rewrites a leak still listed stays on its unit as `- Open: {the leak}`.
+   3. **Stack layer**, when the input, the repository or the rules name the stack: `profile.md`, `rules.md` (from `stack-rules.md`) and `deps.md` in `stack/{stack}/`, and `bind/{key}.md` there per component. A stack not yet named is left to a later input that names it; that input writes this layer and is no change.
+3. **Every other later input**, `amend {file} "{change}"` included, is a change, never an edit in place:
+   - **Record** it in `changes.md`. First compare the end state the input names with the present units: one that already states it makes the change `satisfied`, with the stating units as its `Evidence` and no unit edited — never assume the code differs from a unit that states the contrary. Otherwise write the change `open` before touching any unit. An input that fits several places, or names none (`Evidence: none found`), stays `open` with an `- Open:` question that lists the candidates, and nothing is placed.
+   - **Place** it: first read every unit that names the same state or operation, those a governing rule covers included. Keep stated behaviour the input does not mention (a sentence that excepts a governing rule is withdrawn whole when the input calls the documented behaviour wrong); "replace X by Y" withdraws the unit that is X and moves what it stated to its caller; name a reused helper's initialisations as authoritative, and the sibling flow whose order is followed. Then edit the units at a new revision with the marks `templates/set/changes.md` lists, add and withdraw units, name a repository text no unit pins `asset:{path}`, and set the change `placed`. `/magicspec plan` appends its milestone and `/magicspec task` writes its tasks.
+   - **Build** belongs to `/magicspec run`, where `mark-built` sets the change `built`. A `clarification` — the code already does what the new text says — is `built` at once: `memory/map.md` takes the new revisions and no `Was` line is kept.
+4. **Check**: run `node scripts/executor.js check-docs --workspace={active-workspace}` after the neutral layer, after the review, after the stack layer, and after each of Record and Place; correct what it reports before going on. A placed change waits for its milestone and tasks, so the findings that only a missing milestone or task causes (a change without its milestone, a component or scope item no milestone covers, a new rule without `From`, a stale unit no task builds) may remain; no other may.
+5. **Review**: `@role:spec-critic` reviews the units and changes written; a finding is corrected and checked again as in step 4.
+6. **Handoff**: name `/magicspec plan {workspace}` when what was written waits for milestones (a first version with its stack layer, or a placed change), and `/magicspec spec` with what is missing when the stack or the answer to an open question is. A change that is `satisfied` or already `built` leaves nothing to name.
 
 ## Finalization Protocol (Mandatory)
 

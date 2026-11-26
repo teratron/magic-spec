@@ -21,7 +21,14 @@ const { normalizePath } = require('../utils');
  * and would otherwise surface in the output of a script that must stay silent
  * when there is nothing to report.
  */
-const QUIET = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
+const QUIET = {
+    encoding: 'utf8',
+    stdio: [
+        'ignore',
+        'pipe',
+        'ignore',
+    ],
+};
 
 // ───────────────────────────────────────────────────────────────────────────
 // Repo Detection
@@ -35,7 +42,10 @@ const QUIET = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
  */
 function isGitRepo(cwd) {
     try {
-        execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
+        execSync('git rev-parse --is-inside-work-tree', {
+            cwd,
+            stdio: 'ignore',
+        });
         return true;
     } catch {
         return false;
@@ -50,7 +60,10 @@ function isGitRepo(cwd) {
  */
 function headSha(cwd) {
     try {
-        return execSync('git rev-parse --short=8 HEAD', { cwd, ...QUIET }).trim();
+        return execSync('git rev-parse --short=8 HEAD', {
+            cwd,
+            ...QUIET,
+        }).trim();
     } catch {
         return null;
     }
@@ -70,17 +83,26 @@ function headSha(cwd) {
 function changedPaths(cwd) {
     let tracked = '';
     try {
-        tracked = execSync('git diff --name-only HEAD', { cwd, ...QUIET });
+        tracked = execSync('git diff --name-only HEAD', {
+            cwd,
+            ...QUIET,
+        });
     } catch {
         try {
-            tracked = execSync('git ls-files', { cwd, ...QUIET });
+            tracked = execSync('git ls-files', {
+                cwd,
+                ...QUIET,
+            });
         } catch {
             tracked = '';
         }
     }
     let untracked = '';
     try {
-        untracked = execSync('git ls-files --others --exclude-standard', { cwd, ...QUIET });
+        untracked = execSync('git ls-files --others --exclude-standard', {
+            cwd,
+            ...QUIET,
+        });
     } catch {
         untracked = '';
     }
@@ -100,15 +122,35 @@ function changedPaths(cwd) {
  */
 function fileNumstat(cwd, relPath) {
     try {
-        const out = execFileSync('git', ['diff', '--numstat', 'HEAD', '--', relPath], {
-            cwd,
-            ...QUIET,
-        }).trim();
-        if (!out) return { added: 0, deleted: 0 };
+        const out = execFileSync(
+            'git',
+            [
+                'diff',
+                '--numstat',
+                'HEAD',
+                '--',
+                relPath,
+            ],
+            {
+                cwd,
+                ...QUIET,
+            },
+        ).trim();
+        if (!out)
+            return {
+                added: 0,
+                deleted: 0,
+            };
         const [a, d] = out.split(/\s+/);
-        return { added: parseInt(a, 10) || 0, deleted: parseInt(d, 10) || 0 };
+        return {
+            added: parseInt(a, 10) || 0,
+            deleted: parseInt(d, 10) || 0,
+        };
     } catch {
-        return { added: 0, deleted: 0 };
+        return {
+            added: 0,
+            deleted: 0,
+        };
     }
 }
 
@@ -122,10 +164,19 @@ function fileNumstat(cwd, relPath) {
  */
 function fileStatus(cwd, relPath) {
     try {
-        const out = execFileSync('git', ['status', '--porcelain', '--', relPath], {
-            cwd,
-            ...QUIET,
-        }).trim();
+        const out = execFileSync(
+            'git',
+            [
+                'status',
+                '--porcelain',
+                '--',
+                relPath,
+            ],
+            {
+                cwd,
+                ...QUIET,
+            },
+        ).trim();
         if (!out) return 'unknown';
         const code = out.slice(0, 2);
         if (code === '??' || code.includes('A')) return 'added';
@@ -148,6 +199,50 @@ function isNewFile(cwd, relPath) {
     return fileStatus(cwd, relPath) === 'added';
 }
 
+/**
+ * Every committed version of one file, oldest first, read by argument list (no shell). A file
+ * git does not track, or a folder outside a repository, gives an empty list.
+ *
+ * @param {string} cwd
+ * @param {string} relPath - The file, relative to `cwd`.
+ * @returns {string[]}
+ */
+function fileVersions(cwd, relPath) {
+    try {
+        const hashes = execFileSync(
+            'git',
+            [
+                'log',
+                '--reverse',
+                '--format=%H',
+                '--',
+                relPath,
+            ],
+            {
+                cwd,
+                ...QUIET,
+            },
+        )
+            .split('\n')
+            .filter(Boolean);
+        return hashes.map((h) =>
+            execFileSync(
+                'git',
+                [
+                    'show',
+                    `${h}:./${relPath}`,
+                ],
+                {
+                    cwd,
+                    ...QUIET,
+                },
+            ),
+        );
+    } catch {
+        return [];
+    }
+}
+
 module.exports = {
     isGitRepo,
     headSha,
@@ -155,4 +250,5 @@ module.exports = {
     fileNumstat,
     fileStatus,
     isNewFile,
+    fileVersions,
 };

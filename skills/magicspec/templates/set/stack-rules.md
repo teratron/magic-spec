@@ -1,6 +1,6 @@
 # Stack rules: {stack}
 
-<!-- The rules of this stack. Each realizes neutral rules, or is a convention only this stack has (Realizes: —), such as a line every source file starts with. A rule reaches a pack only through a task's Context, so every task it governs lists it there; no task copies a rule's text. -->
+<!-- A document written from this template keeps none of its comments. The rules of this stack. Each realizes neutral rules, or is a convention only this stack has (Realizes: —), such as a line every source file starts with. A rule reaches a pack only through a task's Context, so every task it governs lists it there; no task copies a rule's text. -->
 
 ## S{n} — {short title}
 

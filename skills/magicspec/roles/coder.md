@@ -38,6 +38,8 @@ Write the smallest diff that satisfies the current `Todo` task, its `Verify` cri
 8. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
 9. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
 
+On a 4.0 workspace the builder reads its task's pack and the files of the workspace, and nothing of the documents beyond the pack.
+
 ## Anti-patterns
 
 - Self-approving the diff (skipping Code-reviewer and Test-engineer gates).

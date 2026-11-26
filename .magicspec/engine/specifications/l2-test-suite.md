@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.10
+**Version:** 1.48.13
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -209,6 +209,9 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.13 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `document-set` module grows from 33 to 41 cases — the three role-card lines held by card and mirror, the 4.0 section of each of the four bodies (place, Contents, opening paragraph, script calls, role), the builder's inputs in `run`, the map row naming files only, and the next step at each stage of a set; each new case under mutation control. `artifact-index` has drifted from the formatter and stays unformatted: formatted it passes the line bound of HL-7 (3,436 lines), so it waits for a split. |
+| 1.48.12 | 2026-11-26 | Agent | As built in Phase 70, Stable retained, no requirement changed: the `document-set` module grows from 28 to 33 cases — `mark-built` (a milestone with a revised unit and a placed change recorded, a second run writing nothing, an unknown milestone refused), `check-log` (an ordered history and one that goes back, in a disposable git repository), and the 4.0 branches of `check-prerequisites` (checker findings in place of the registry, even beside a leftover registry), `resume-state` and `finalize` — each under mutation control; the 3.x cases of the three subcommands unchanged. |
+| 1.48.11 | 2026-11-26 | Agent | As built in Phase 79, Stable retained, no requirement changed: the `document-set` module grows from 26 to 28 cases — a comment left in a neutral file is one finding for that file and none in a stack file; a value shaped like an address is a literal inside a code span and a reference when bare, a backticked key of an `Observed by` still checked — each under mutation control; the table case counts nineteen rows and the containment constant carries the component-key exception. |
 | 1.48.10 | 2026-11-25 | Agent | As built in Phase 77, Stable retained, no requirement changed: the `document-set` module grows from 23 to 26 cases — a pack carries the tools of its stack after the first line and outside its computed units, and none when the profile has none; a pack holds the interface of the binding of the component it builds; a stack word matches whole and in any letter case, and a component key never — each under mutation control. |
 | 1.48.9 | 2026-11-25 | Agent | As built in Phase 75, Stable retained, no requirement changed: the `document-set` module grows from 21 to 23 cases — every pack opens with the containment line outside its computed units, and an empty library list and a profile with no stack component write `- none` — the pack order case asserts the line first, and the table case compares every paragraph after the table, the shipped file dropping the concept's change markers and section pointers. |
 | 1.48.8 | 2026-11-25 | Agent | As built in Phase 73, Stable retained, no requirement changed: the `document-set` module grows from 17 to 21 cases — a rule without `From` before a milestone is no finding and beside one is one finding per rule, a stack rule with `Realizes: —` needs no neutral rule, and the shipped neutral writing table equals the concept's, word for word; the template case expects the thirteen templates and the table file and no other; the `good` fixture's rule names `From: M1` and the recorded findings of `bad` and `bad4` gain one line each. |
