@@ -113,4 +113,4 @@ The goal and its criteria are written to the workspace's live memory after every
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-19 (v3.0.159).
+Synchronized with engine workflows on 2026-11-26 (v3.0.224).

@@ -78,7 +78,7 @@ Skip Step 0 entirely on any of:
 
 ## Workspace Resolution Chain
 
-Every command that acts on one workspace's artifacts — `spec`, `task`, `run`, `rule`, `analyze`, `status` — chooses it through the chain below (WI-11). The engine computes the chain, so identical input routes identically. Run
+Every command that acts on one workspace's artifacts — `spec`, `task`, `run`, `rule`, `analyze`, `status`, `migrate --to 4` — chooses it through the chain below (WI-11). The engine computes the chain, so identical input routes identically. Run
 
 `node scripts/executor.js resolve-workspace --command {command} --text "{request}"`
 

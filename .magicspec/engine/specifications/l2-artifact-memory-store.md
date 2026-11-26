@@ -1,6 +1,6 @@
 # Artifact Memory Store (SQLite)
 
-**Version:** 1.3.1
+**Version:** 1.3.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-artifact-memory.md
@@ -146,10 +146,13 @@ An optional `apiKeyEnv` names the environment variable that holds a bearer key; 
 | `[GRAPH-CACHE]` | `skills/magicspec/scripts/graph-cache.js` | The extraction cache beside which the index lives. |
 | `[FILE-LOCK]` | `skills/magicspec/scripts/lib/file-lock.js` | Serializes concurrent indexers. |
 
+**The tree of a move** `[ADDED]`. `lib/memory-sections.js` walks the state folder and skips, besides the derived folders, `next/` directly under a workspace: the set being written for a move to 4.0 ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5) is no artifact until it is moved into place. A folder of that name deeper down is read.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.2 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the index skips `next/` directly under a workspace, the tree a move to 4.0 writes; a folder of that name deeper down is read. |
 | 1.3.1 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: §5.3 states the kinds of a 4.0 set's documents; `KINDS` unchanged. |
 | 1.3.0 | 2026-11-13 | Agent | **As built in Phase 58, Stable retained.** §5.4 records what the build fixed: the history count absent under `--kind` as well as `--history`, the page past the end, the vector-mode first line, the size as the section's text, and the JSON `total` as the pool's size with `byMeaning`; §6 item 4 (f) records the fixed fused pool that replaced the per-call bound; item 5 moves from "to deploy" to "as built" with the decisions of the build (the file lines, `count` on both backends, the credential check in `embed()`, the query-time address check, the harness and the mutation list). No requirement changed. |
 | 1.2.0 | 2026-11-13 | Agent | **Follows `l1-artifact-memory.md` 1.1.0** (second reference-mining pass). §4 rows AM-2, AM-3, AM-7 and the new AM-9; §5.2 adds `line_start`/`line_end` (schema version 2, one rebuild); §5.4 adds the lines, the size estimate, the counts of a cut list and `--offset` for the next page (`--k` stays capped at 50), in text and JSON; §5.5 adds the missing-credential rule and the vector identity (`url` with `model` and `dimensions`); §6 item 5 records the four reproduced gaps and the shipped text that changes with them; §7 records the content-keyed vector store as not taken now. Specification only; deployment through `/magicspec plan`. |

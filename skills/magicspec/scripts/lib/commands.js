@@ -379,11 +379,16 @@ const COMMANDS = {
         },
     },
     migrate: {
-        summary: 'Migrate a 2.x project to the current layout (a dry run unless --apply is given).',
+        summary:
+            'Migrate a 2.x project to the current layout, or with --to 4 one 3.x workspace to the 4.0 document set (a dry run unless --apply is given).',
         options: {
             '--apply': {
                 kind: 'bool',
                 help: 'Execute the plan',
+            },
+            '--to': {
+                kind: 'value',
+                help: 'The format to move one workspace to: 4',
             },
             '--host': {
                 kind: 'value',

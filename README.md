@@ -200,7 +200,7 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | `/magicspec analyze` (alias `audit`) | Audit project health and detect drift | optional: a workspace or a focus |
 | `/magicspec graph` | Build and analyze the specification knowledge graph | optional: `visualize` |
 | `/magicspec status` | Resume briefing: position, progress, blockers, next command (read-only) | optional: a workspace |
-| `/magicspec migrate` | Move a 2.x project to this layout | none |
+| `/magicspec migrate` | Move a 2.x project to this layout, or with `--to 4` one workspace to the 4.0 document set | optional: `--to 4` and a workspace |
 | `/magicspec sync` | Bring derived state up to date: registry counts, rule copies, graph, version anchors, registered doc blocks | optional: an area, a workspace or `--dry-run` |
 | `/magicspec help` | List the commands, explain one, offer to run it | optional: a command, a language |
 

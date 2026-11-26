@@ -155,4 +155,4 @@ After every execution cycle, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-18 (v3.0.144).
+Synchronized with engine workflows on 2026-11-26 (v3.0.224).

@@ -425,6 +425,8 @@ module.exports = () => {
             rule: 1,
             analyze: 3,
             status: 1,
+            // The move to 4.0 acts on one workspace; the move from the 2.x layout on none.
+            migrate: 1,
         };
         for (const [command, count] of Object.entries(checklists)) {
             const text = read(command);
@@ -442,7 +444,6 @@ module.exports = () => {
         for (const command of [
             'graph',
             'help',
-            'migrate',
         ]) {
             assert.ok(
                 !read(command).includes('resolve-workspace --command'),

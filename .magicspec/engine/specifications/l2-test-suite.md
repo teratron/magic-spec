@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.16
+**Version:** 1.48.17
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -60,6 +60,8 @@ Both suites outgrew a single file: the harness is 27,000 lines in one `describe`
 ## Script-Level Regression Harness
 
 `tests/engine.js` is the deterministic (non-cognitive) regression harness — Node's `node:test` runner exercising engine scripts against synthetic fixtures. It complements the cognitive suite: cognitive tests evaluate workflow *logic*, the harness pins script *behavior*.
+
+**The move to 4.0** `[ADDED]`. The module `migrate-to-4` runs `migrate --to 4` through the executor on copies of `tests/engine/fixtures/migrate-to-4/` (a 3.x workspace whose `next/` is the `good` set): the preview, the refusals, the apply step and its resumption in each half, the stop of a move in flight, the readers that skip `next/`, and the shipped row, body and rule lines.
 
 **Finalize-pipeline coverage (mandatory):** because `scripts/finalize.js` is the single choke point for session-continuity (SC-2 of `l1-session-continuity.md`; SC-3 retired 2026-08-27), the harness MUST cover its non-trivial branches — any change to the finalize pipeline ships with a corresponding harness test:
 
@@ -209,6 +211,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.17 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the harness gains the module `migrate-to-4` (13 cases over the fixture `tests/engine/fixtures/migrate-to-4/`), 536 cases in all. |
 | 1.48.16 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: the `document-set` module grows from 56 to 59 cases — the map compared with the files of the scope, the containment classes of a 4.0 workspace and the `analyze` body's section, with the auditor line in the role-card case — each under mutation control; the earlier 4.0 coverage case follows the new output, the 3.x cases are unedited. |
 | 1.48.15 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: the `document-set` module grows from 47 to 56 cases — the goal file of a 4.0 workspace written, read, refused and removed, and the 4.0 section of each of the eight remaining bodies at its place with its scripts, its role and the phrases of its row — each under mutation control; the four earlier body cases keep their names. |
 | 1.48.14 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: the `document-set` module grows from 41 to 47 cases — the graph, the wiki, the index, coverage, `sync` and the three writers on a 4.0 workspace — each under mutation control; the 3.x cases of those subcommands unchanged. |

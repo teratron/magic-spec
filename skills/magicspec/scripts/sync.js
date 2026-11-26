@@ -6,9 +6,9 @@ require('./lib/commands').guardArgv('sync', module);
 
 const fs = require('fs');
 const path = require('path');
-const { resolveProjectRoot, STATE_DIR_NAME } = require('./utils');
+const { resolveProjectRoot, executorHint, STATE_DIR_NAME } = require('./utils');
 const { createReport, formatReport, routerCommandOf } = require('./lib/sync-report');
-const { isDocSetWorkspace } = require('./lib/doc-set-state');
+const { isDocSetWorkspace, moveInFlight, moveStopLine } = require('./lib/doc-set-state');
 const { readSyncConfig } = require('./lib/sync-config');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -164,6 +164,17 @@ function main() {
         return 1;
     }
     const inScope = scope.only ? registered.filter((w) => w.name === scope.only) : registered;
+    // Sync writes into every workspace it reaches, so it never reaches one half way to 4.0.
+    const moving = inScope.find((w) => moveInFlight(w.dir, w.name));
+    if (moving) {
+        console.error(
+            moveStopLine(moving.name, {
+                executor: executorHint(),
+                isDefault: false,
+            }),
+        );
+        return 1;
+    }
     const report = createReport({
         dryRun: scope.dryRun,
         projectRoot,

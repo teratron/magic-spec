@@ -1,6 +1,6 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
-**Version:** 1.1.6
+**Version:** 1.1.7
 **Status:** Stable
 **Layer:** concept
 
@@ -120,6 +120,8 @@ In the engine's repository the product is the engine, and its user is a develope
 
    **As built (Phase 81), the 4.0 branch, no requirement changed for 3.x.** On a workspace in the 4.0 document-set format the scenarios stay in `simulations/` of the workspace, are written from the scope items and the `Accept` lines of the units, cite them by address and name their milestone on a `**Milestone:**` line, so SM-3's listing is per milestone ([l1-sdd-document-set.md](l1-sdd-document-set.md) §6); a failed step goes to `fix`, which records a change. The engine's own files then held seventeen scenarios and sixty-one steps, numbered across the files: S-15 is the pipeline of a 4.0 workspace (until now it repeated the identifier S-4 of `intake`), S-16 (`routing`) a goal of milestones, S-17 (`quality`) a defect becoming a change. Phase 82 added S-18 (`pipeline`, a set written from existing code) and S-19 (`quality`, an audit of a 4.0 workspace): nineteen scenarios and seventy steps.
 
+   **As built (Phase 85).** `[ADDED]` `session` gains S-20, `migrate --to 4` previewing, asking once and moving a 3.x workspace, or leaving it on 3.x with the findings it cannot close; traced, its `Last run` stays `never`.
+
 ## 7. Drawbacks & Alternatives
 
 - **Scenario upkeep cost.** Bounded by SM-4 (updated in the task that changes the behaviour, when the context is fresh).
@@ -138,6 +140,7 @@ In the engine's repository the product is the engine, and its user is a develope
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.7 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the engine's scenarios gain S-20 (`session`, the move of a 3.x workspace to 4.0). |
 | 1.1.6 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: §6 records S-18 and S-19, nineteen scenarios and seventy steps. |
 | 1.1.5 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: §6 states the 4.0 branch and the engine's scenarios as they stand — S-16 and S-17 added, the repeated identifier of the 4.0 pipeline scenario now S-15. |
 | 1.1.4 | 2026-11-19 | Agent | As built in Phase 67, Stable retained, no requirement changed. The set of the engine's own scenarios grew by S-14 (`quality`, a bare `goal` runs the active phase and does not read a finished goal back) and one step of S-12 (a premise the forecast accepted appears under `Assumptions` in the one report): fourteen scenarios and forty-seven steps; `Last run` stays `never` in both. |

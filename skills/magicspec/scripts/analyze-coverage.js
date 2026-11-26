@@ -19,7 +19,7 @@ const {
     BUILD_NOISE_DIRS,
 } = require('./utils');
 const { parseCanonicalRefs } = require('./lib/canonical-refs');
-const { isDocSetWorkspace } = require('./lib/doc-set-state');
+const { isDocSetWorkspace, isMoveTree } = require('./lib/doc-set-state');
 const { setCoverage } = require('./lib/doc-set-coverage');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -170,7 +170,7 @@ function scanProjectFiles(rootDir, isIgnored) {
             const relPath = normalizePath(path.relative(rootDir, fullPath));
 
             if (isSkippedDir(SKIP_DIRS, entry.name, relPath)) continue;
-            if (isIgnored(relPath)) continue;
+            if (isIgnored(relPath) || isMoveTree(relPath)) continue;
 
             // A link is judged where its target lives: following it would count the target twice,
             // and a link to a directory would otherwise be reported as one file.

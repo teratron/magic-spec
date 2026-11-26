@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.9.4
+**Version:** 1.9.5
 **Status:** Stable
 **Layer:** concept
 
@@ -15,6 +15,8 @@ To ensure a stable and predictable environment for specification-driven developm
 ## Architecture
 
 The engine consists of Markdown-based workflows (`skills/magicspec/workflows/*.md`) and a supporting automation layer, shipped as one folder, `skills/magicspec/` — the release kernel. A host reaches it through the router `SKILL.md`; whatever a host needs outside the folder (the always-on rule, the command entries, the skill link) is generated from it and marked ([l1-skill-packaging.md](l1-skill-packaging.md) SP-1, SP-6).
+
+**Two workspace layouts** `[ADDED]`. What follows describes a workspace in the 3.x layout. A workspace whose entry in `workspace.json` carries `"format": "4"` holds the document set of [l1-sdd-document-set.md](l1-sdd-document-set.md) in place of the registry, the specifications, the plan, the ledger and the recorded state, with the templates of `templates/set/`; the same commands act on both layouts, and `migrate --to 4` moves one workspace from the first to the second ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.4, §5.5).
 
 ### Core Workflows
 
@@ -162,6 +164,7 @@ The two causes §1 step 2 collapses together are not equivalent in what they imp
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.9.5 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: §Architecture states the 4.0 workspace beside the 3.x one, as the supersession [l1-sdd-document-set.md](l1-sdd-document-set.md) §6 declares; the 3.x architecture is unchanged. |
 | 1.9.4 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). The pipeline is four stages, `spec` → `plan` → `task` → `run`, one per invocation ([l1-pipeline-stages.md](l1-pipeline-stages.md) PS-1). RE-2 names the Sync step as two halves — `plan.md` decides the demotion, the quarantine and their release, `task.md` applies them to the tasks — and the Stalled Plan report as the end of a decomposition run that sends the user back to `/magicspec plan`; RE-T71 and RE-T74 follow the pre-flight and the sub-delegation to the body that holds them now (`plan.md`, with `task.md` for the intent), the table of the engine's files lists `plan.md`, and the cost of closing an L2 requirement reads `/magicspec plan` → `/magicspec task` → `/magicspec run`. No requirement is added to this concept. |
 | 1.9.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.9.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

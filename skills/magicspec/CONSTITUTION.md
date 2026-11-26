@@ -58,7 +58,7 @@ releases routinely carry behavior-affecting changes.
 - `/magicspec analyze` itself (would recurse).
 - `/magicspec status` — read-only briefing; shows drift as an informational line, never a prompt.
 - `/magicspec help` — read-only list of the commands; a drift line before it would answer a question nobody asked.
-- `/magicspec migrate` — runs before the project is on the layout the engine reads, so there is no snapshot to compare.
+- `/magicspec migrate` — runs before the project is on the layout the engine reads, so there is no snapshot to compare; before the one-time move of `--to 4` a drift line would answer nothing.
 - `/magicspec sync` — its report already lists a stale projection or a failed integrity check.
 - Missing or unreadable `.version` → skip silently, do not block work.
 - `MAGIC_DRIFT_CHECK=0` env var disables this rule entirely.

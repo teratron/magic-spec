@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 85 — 2026-11-26 (The Migration to 4.0)
+
+- **A 3.x workspace can be moved to 4.0.** `/magicspec migrate --to 4` previews where each file goes and what the new set still lacks, asks once, and moves the old files into `archives/3x/` and the new set into place, setting the format last. The set itself is written into `next/` by `/magicspec analyze first-time`.
+- **An interrupted move is finished by running the command again.** Until then every other command on that workspace stops and names it.
+- **Nothing reads the set being written** until it is moved into place. A bare `migrate` and every workspace not being moved behave as before.
+- **Records:** harness 536; engine 3.0.229. **Specifications:** `l2-sdd-document-set-engine` 1.7.2, `l1-command-surface` 2.5.1, `l1-engine-core` 1.9.5, `l2-skill-distribution` 2.1.2, `l2-artifact-memory-store` 1.3.2, `l2-engine-automation` 1.33.6, `l2-test-suite` 1.48.17, `l1-product-simulation` 1.1.7; registry 1.107.2. Phase 83, the documentation and the release 4.0.0, is next.
+
 ## Phase 82 — 2026-11-26 (The Analysis on a 4.0 Workspace)
 
 - **`analyze` works on a 4.0 workspace.** The audit checks the document set, compares its map with the code and looks for the set's addresses in product files, and changes no document of the set; `analyze first-time` writes a set from existing code and records a milestone built only when its checks hold on that code.

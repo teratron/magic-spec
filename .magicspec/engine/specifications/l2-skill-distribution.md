@@ -1,6 +1,6 @@
 # Skill Distribution: Rule, Command Surface, Installation & Migration
 
-**Version:** 2.1.1
+**Version:** 2.1.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
@@ -140,6 +140,8 @@ Because the new tree is installed and verified before the old is removed, the pr
 
 **As built** (Phase 47). `[ADDED]` The executor's stop on an unmigrated project says to run /magicspec migrate and gives the script form in brackets (by script: the executor's `migrate`), and the `migrate` command asks one consent question before it applies (`workflows/migrate.md`). `init` prints `Removed (command entry of an earlier installation)` for each entry it retires, `update-engine-meta` prints `Removed retired command entry`, and the pre-flight reports `PROJECTION_RETIRED` with `init --host=<name>` as its remedy for every marked entry it finds in a host's command folder; an emptied `magicspec/` command folder goes with its entries and a file of the project's own keeps it. `remove` deletes a leftover entry by its marker like any projection. The README's install prompt carries the seven steps of the contract above, the release archive's address pattern (`https://github.com/teratron/magic-spec/releases/download/v{version}/magic-spec-v{version}.zip`, the version read from the releases API) for a POSIX shell and for PowerShell, and the clone of the current branch.
 
+**The other mode** `[ADDED]`. `migrate --to 4` is not part of this migration: it moves one 3.x workspace of a project the engine already reads to the 4.0 document set, with its own dry run, consent and apply step ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5). The steps and arguments above are those of a bare `migrate`, which behaves as before.
+
 ### 5.7 State Folder Rename
 
 The name is the single constant of `l2-skill-layout.md` §5.3. At the rename step: the constant changes; the shipped text is edited in one pass guarded by a residue search that must find no occurrence of the old name outside the migration's own detection code and the history; `workspace.json` entries equal to the old name are rewritten by the migration; and an engine that finds both folders stops with one recommended path (finish or revert the migration) instead of choosing. The rename is a filesystem rename in the same volume, atomic per project.
@@ -174,6 +176,7 @@ The name is the single constant of `l2-skill-layout.md` §5.3. At the rename ste
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.1.2 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: §5.6 names the move to 4.0 as the other mode of `migrate`. |
 | 2.1.1 | 2026-10-30 | Agent | **Host observation recorded** (origin `user-stated`: the owner's observation of 2026-10-30): on Qwen Code the text after `/magicspec` reaches the skill; the open marker of §5.2 is resolved. No requirement changed. |
 | 2.1.0 | 2026-10-30 | Agent | **As built** (Phase 47): the migration gains its vocabulary-sweep step (§5.6 step 7), the unmigrated stop and the retirement messages are recorded as printed, and the install prompt as written. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.0 | 2026-10-30 | Agent | **One command surface** (origin `user-stated`: the owner's decision of 2026-10-30 to remove the wrappers): S2 (host command entries) and S3 (the plugin) are retired, S1 the router is the only surface; §5.2 records why no entry is needed per host and what choice form each host has for the interactive help; §5.1 reports an entry left by an earlier install as `PROJECTION_RETIRED`, and `init` removes it; §5.3, §5.5 and §5.6 write no entry; the forms printed are `/magicspec <command>`. Two forecasts: the plugin is retired with the entries; the dotted names stay retired. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |

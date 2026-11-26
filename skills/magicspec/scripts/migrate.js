@@ -33,12 +33,23 @@ const sweep = require('./lib/vocabulary-sweep');
 //   node <skill folder>/scripts/executor.js migrate              (the plan; nothing changes)
 //   node <skill folder>/scripts/executor.js migrate --apply      (do it)
 //   node <skill folder>/scripts/executor.js migrate --apply --host=claude,codex
+//
+// `--to 4` is the other move this subcommand makes, one 3.x workspace to the document set; it
+// lives in `lib/migrate-to-4.js` and nothing below it applies.
 
 /** The engine folder of the 2.x layout. */
 const OLD_ENGINE_DIR = '.magic';
 
 /** The commands the 2.x layout shipped wrappers for. */
-const OLD_COMMANDS = ['analyze', 'graph', 'rule', 'run', 'spec', 'status', 'task'];
+const OLD_COMMANDS = [
+    'analyze',
+    'graph',
+    'rule',
+    'run',
+    'spec',
+    'status',
+    'task',
+];
 
 /** Folders (relative to the project) in which 2.x wrappers and copies of them were placed. */
 const WRAPPER_BASES = [
@@ -54,7 +65,11 @@ const WRAPPER_BASES = [
 ];
 
 /** Names the command folders carried in the hosts of the 2.x layout. */
-const COMMAND_FOLDERS = ['workflows', 'commands', 'prompts'];
+const COMMAND_FOLDERS = [
+    'workflows',
+    'commands',
+    'prompts',
+];
 
 /** Host folder (relative to the project) → host name of the host table. */
 const HOST_FOLDERS = {
@@ -204,7 +219,10 @@ function classify(root, state) {
             removable.push(normalizePath(path.join(OLD_ENGINE_DIR, rel)));
         else modified.push(normalizePath(path.join(OLD_ENGINE_DIR, rel)));
     }
-    return { removable, modified };
+    return {
+        removable,
+        modified,
+    };
 }
 
 /**
@@ -229,7 +247,9 @@ function backUp(root, rels) {
         const from = path.join(root, rel);
         if (!exists(from)) continue;
         const to = path.join(dest, rel);
-        fs.mkdirSync(path.dirname(to), { recursive: true });
+        fs.mkdirSync(path.dirname(to), {
+            recursive: true,
+        });
         fs.copyFileSync(from, to);
         n++;
     }
@@ -289,16 +309,30 @@ function runEngine(root, script, args = []) {
     try {
         const out = execFileSync(
             process.execPath,
-            [path.join(__dirname, 'executor.js'), script, ...args],
+            [
+                path.join(__dirname, 'executor.js'),
+                script,
+                ...args,
+            ],
             {
                 cwd: root,
                 encoding: 'utf8',
-                stdio: ['ignore', 'pipe', 'pipe'],
+                stdio: [
+                    'ignore',
+                    'pipe',
+                    'pipe',
+                ],
             },
         );
-        return { ok: true, out };
+        return {
+            ok: true,
+            out,
+        };
     } catch (err) {
-        return { ok: false, out: `${err.stdout || ''}${err.stderr || ''}` };
+        return {
+            ok: false,
+            out: `${err.stdout || ''}${err.stderr || ''}`,
+        };
     }
 }
 
@@ -315,7 +349,9 @@ function runEngine(root, script, args = []) {
  * @returns {void}
  */
 function reportSweep(root, removing) {
-    const plan = sweep.planSweep(root, path.join(root, STATE_DIR_NAME), { exclude: removing });
+    const plan = sweep.planSweep(root, path.join(root, STATE_DIR_NAME), {
+        exclude: removing,
+    });
     if (plan.edits.length > 0) {
         backUp(
             root,
@@ -376,30 +412,70 @@ function entriesOf(dir) {
 }
 
 /**
+ * Reads the invocation through the shared grammar: `--host=x` and `--host x` mean the same, a
+ * value-less option is an error, and an unknown host or target stops the run before anything is
+ * written.
+ *
+ * @param {string[]} argv - Arguments after the subcommand name.
+ * @returns {{error: string} | {apply: boolean, hostArg: string|null, target: string|null}}
+ */
+function readInvocation(argv) {
+    const parsed = parseFlags(argv, {
+        boolFlags: [
+            '--apply',
+        ],
+        valueFlags: [
+            '--host',
+            '--to',
+        ],
+    });
+    if (parsed.errors.length > 0)
+        return {
+            error: `HALT: ${parsed.errors[0]}`,
+        };
+    const apply = Boolean(parsed.flags['--apply']);
+    const hostArg = parsed.values['--host'] || null;
+    const target = parsed.values['--to'] || null;
+    if (target !== null) {
+        if (target !== '4')
+            return {
+                error: '[migrate] --to takes 4.',
+            };
+        if (hostArg)
+            return {
+                error: 'HALT: --host belongs to the move from the 2.x layout; leave it out.',
+            };
+    } else if (hostArg) {
+        const { unknown } = hosts.parseHosts(hostArg);
+        if (unknown.length > 0)
+            return {
+                error: `HALT: Unknown host '${unknown.join("', '")}'. Known hosts: ${Object.keys(hosts.HOSTS).join(', ')}.`,
+            };
+    }
+    return {
+        apply,
+        hostArg,
+        target,
+    };
+}
+
+/**
  * Runs the migration.
  *
  * @param {string[]} argv - Arguments after the subcommand name.
  * @returns {number} Exit code.
  */
 function main(argv) {
-    // The shared grammar: `--host=x` and `--host x` mean the same, a value-less `--host` is an
-    // error, and an unknown host stops the run at the plan, before anything is written.
-    const parsed = parseFlags(argv, { boolFlags: ['--apply'], valueFlags: ['--host'] });
-    if (parsed.errors.length > 0) {
-        console.error(`HALT: ${parsed.errors[0]}`);
+    const invocation = readInvocation(argv);
+    if ('error' in invocation) {
+        console.error(invocation.error);
         return 1;
     }
-    const apply = Boolean(parsed.flags['--apply']);
-    const hostArg = parsed.values['--host'] || null;
-    if (hostArg) {
-        const checked = hosts.parseHosts(hostArg);
-        if (checked.unknown.length > 0) {
-            console.error(
-                `HALT: Unknown host '${checked.unknown.join("', '")}'. Known hosts: ${Object.keys(hosts.HOSTS).join(', ')}.`,
-            );
-            return 1;
-        }
-    }
+    const { apply, hostArg, target } = invocation;
+    if (target !== null)
+        return require('./lib/migrate-to-4').moveTo4({
+            apply,
+        });
     const root = resolveProjectRoot();
     const state = detect(root);
     let stepNo = 0;
@@ -439,7 +515,10 @@ function main(argv) {
         const { removable, modified } = classify(root, state);
         const wrapperFiles = state.wrappers;
         // Without a manifest nothing of the engine folder is named, so only the wrappers are listed.
-        const toRemove = [...removable, ...wrapperFiles];
+        const toRemove = [
+            ...removable,
+            ...wrapperFiles,
+        ];
         const manifestless = state.oldEngine && !state.manifest;
         const hostList = hostArg ? hosts.parseHosts(hostArg).hosts : state.hostNames;
 
@@ -465,7 +544,9 @@ function main(argv) {
         const sweepPlan = sweep.planSweep(
             root,
             path.join(root, state.oldState ? LEGACY_STATE_DIR_NAME : STATE_DIR_NAME),
-            { exclude: toRemove },
+            {
+                exclude: toRemove,
+            },
         );
 
         console.log(
@@ -538,13 +619,18 @@ function main(argv) {
 
         step(8);
         for (const rel of toRemove) removeFile(root, rel);
-        for (const rel of ['.magic/.checksums', '.magic/.version']) {
+        for (const rel of [
+            '.magic/.checksums',
+            '.magic/.version',
+        ]) {
             if (!manifestless && modified.length === 0) removeFile(root, rel);
         }
         console.log(`Removed ${toRemove.length} file(s) of the old engine.`);
 
         step(9);
-        const check = runEngine(root, 'check-prerequisites', ['--json']);
+        const check = runEngine(root, 'check-prerequisites', [
+            '--json',
+        ]);
         let ok = false;
         try {
             ok = JSON.parse(check.out).ok === true;
@@ -574,4 +660,10 @@ function main(argv) {
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
 
-module.exports = { detect, classify, main, OLD_ENGINE_DIR, OLD_COMMANDS };
+module.exports = {
+    detect,
+    classify,
+    main,
+    OLD_ENGINE_DIR,
+    OLD_COMMANDS,
+};

@@ -39,7 +39,7 @@ Performs a deep "Ventilation" scan: spec/code drift, missing coverage, engine me
 - `{workspace}` — scoped analysis with structural integrity checks
 - `"text"` — focused analysis on a specific area/concern
 - `{workspace} "text"` — focused analysis within a workspace
-- `first-time` — first-time analysis of an existing codebase (Mode A); Mode C recommends it when the registry is empty
+- `first-time` — first-time analysis of an existing codebase (Mode A); Mode C recommends it when the registry is empty. On a workspace being moved to 4.0 (its folder holds `next/`) it is The Reverse Mode of §On a 4.0 Workspace
 
 Examples: `/magicspec analyze`, `/magicspec analyze {workspace}`, `/magicspec analyze "check API"`, `/magicspec analyze docs "focus on examples"`.
 
@@ -423,6 +423,8 @@ The audit writes no document of the set. A workspace with no `product.md` has no
 ### The Reverse Mode
 
 `/magicspec analyze first-time` on a workspace with code and no `product.md` writes the set from the code, then replays its build against the code that exists. A workspace that holds `product.md` is not written this way (a change is `/magicspec spec`), and a workspace with no code has nothing to read: say which in one line and name `/magicspec spec {workspace}`. Depth Control applies. No product file is changed.
+
+**During a move to 4.0**: a 3.x workspace whose folder holds `next/` is being moved (`workflows/migrate.md` §The Move to 4.0), and this mode is taken on it although the workspace is not yet in the 4.0 format. It writes into `next/` of that workspace, with the 3.x specifications of the workspace as a source beside the code (what the code does decides). `next/` is checked by `node scripts/executor.js migrate --to 4 --workspace={active-workspace}`, whose last lines are the checker's findings on it, wherever these steps run `check-docs`; no `pack`, `analyze-coverage`, wiki refresh or `mark-built` runs there before the apply step has moved the set into place, so step 5 waits for it. The report ends naming `/magicspec migrate --to 4 {workspace}`, or, while findings remain, this command again.
 
 1. **Documents**: write the neutral layer, its cross-stack review and the stack layer by step 2 of `workflows/spec.md` §On a 4.0 Workspace, with the code as the source: a unit states what the code does, a premise only the requester can confirm is an `Assumption`, and behaviour the code leaves in doubt or that no check can observe is an `- Open:` line.
 2. **Memory**: write the missing files of `memory/` from `templates/set/` without their comments and placeholder entries (`map.md` keeps its table header and no row); `mark-built` records into them and is the map's one writer.

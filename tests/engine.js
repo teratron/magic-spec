@@ -31,6 +31,7 @@ describe('Magic Engine Scripts', () => {
     require('./engine/skill-folder')();
     require('./engine/hardening')();
     require('./engine/migrate')();
+    require('./engine/migrate-to-4')();
     require('./engine/release-archive')();
     require('./engine/command-line-contract')();
     require('./engine/document-set')();

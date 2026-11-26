@@ -18,7 +18,7 @@ const { collectInFlight } = require('./lib/in-flight');
 const { isGitRepo, headSha, changedPaths } = require('./lib/git-utils');
 const diagnostics = require('./lib/diagnostics');
 const { GOAL_FILE, countCriteria, describeScope, parseGoalSection } = require('./lib/goal-block');
-const { isDocSetWorkspace } = require('./lib/doc-set-state');
+const { isDocSetWorkspace, moveInFlight } = require('./lib/doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RESUME STATE (Shared Resume-Detection Predicate)
@@ -128,7 +128,9 @@ function listWorkspaces(designAbs, request) {
               ]
             : [];
     }
-    if (request.all && registry !== null) return registry.names.map(at);
+    // A workspace half way to 4.0 is not read: the commands on it stop and name the move.
+    if (request.all && registry !== null)
+        return registry.names.map(at).filter((w) => !moveInFlight(w.dir, w.name));
 
     const resolved = workspaceFromEnv(designAbs) || registry?.defaultName;
     if (resolved)

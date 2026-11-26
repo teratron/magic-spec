@@ -1,0 +1,12 @@
+{
+  "default": "docs",
+  "workspaces": {
+    "docs": {
+      "description": "The greeting command.",
+      "scope": [
+        "src",
+        ".magicspec"
+      ]
+    }
+  }
+}

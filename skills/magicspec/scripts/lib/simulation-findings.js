@@ -26,6 +26,19 @@ const STEP_FINDING_RE = /^- Step (\d+): (fail|inconclusive) · (live|traced)(?: 
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
+ * The lines of a scenario file as they are recognised: fenced blocks, code spans and HTML
+ * comments blanked, so a layout shown in a template or quoted in prose is never read as a
+ * scenario or a step. Line numbers are those of the text.
+ *
+ * @param {string} text - The content of a scenario file, newlines already normalized.
+ * @returns {string[]}
+ */
+function recognisedLines(text) {
+    const blanked = text.replace(/<!--[\s\S]*?-->/g, (match) => match.replace(/[^\n]/g, ''));
+    return stripQuoted(blanked).split('\n');
+}
+
+/**
  * The open findings of one scenario file: every step line of a scenario that says `fail` or
  * `inconclusive`. Fenced blocks, code spans and HTML comments are blanked before the lines are
  * recognised, so a layout shown in a template or quoted in prose is never read as a finding; the
@@ -40,13 +53,13 @@ function findingsOfFile(text, area) {
     const findings = [];
     let scenario = null;
     const original = text.replace(/\r\n/g, '\n').split('\n');
-    const blankComments = (source) =>
-        source.replace(/<!--[\s\S]*?-->/g, (match) => match.replace(/[^\n]/g, ''));
-    const recognised = stripQuoted(blankComments(original.join('\n'))).split('\n');
-    for (const [index, line] of recognised.entries()) {
+    for (const [index, line] of recognisedLines(original.join('\n')).entries()) {
         const heading = SCENARIO_HEADING_RE.exec(line);
         if (heading) {
-            scenario = { id: heading[1], title: heading[2].trim() };
+            scenario = {
+                id: heading[1],
+                title: heading[2].trim(),
+            };
             continue;
         }
         const step = STEP_FINDING_RE.exec(line);
@@ -97,4 +110,10 @@ function readSimulationFindings(wsDir) {
     return findings;
 }
 
-module.exports = { SIMULATIONS_DIR, findingsOfFile, readSimulationFindings };
+module.exports = {
+    SIMULATIONS_DIR,
+    SCENARIO_HEADING_RE,
+    recognisedLines,
+    findingsOfFile,
+    readSimulationFindings,
+};

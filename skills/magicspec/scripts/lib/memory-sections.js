@@ -522,7 +522,10 @@ function listArtifacts(designAbs) {
         })) {
             const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
             if (entry.isDirectory()) {
-                if (!SKIPPED_DIRS.includes(entry.name)) walk(path.join(dir, entry.name), rel);
+                // Directly under a workspace, `next/` is the set a move to 4.0 is writing.
+                const moveTree = entry.name === 'next' && rel.split('/').length === 2;
+                if (!SKIPPED_DIRS.includes(entry.name) && !moveTree)
+                    walk(path.join(dir, entry.name), rel);
             } else if (entry.name.endsWith('.md') && !SKIPPED_FILES.includes(entry.name)) {
                 (kindOf(rel) === null ? unkinded : files).push(rel);
             }

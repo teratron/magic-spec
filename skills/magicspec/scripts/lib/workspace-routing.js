@@ -14,6 +14,7 @@ const {
     unknownWorkspaceMessage,
 } = require('../utils');
 const { collectInFlight } = require('./in-flight');
+const { isMoveTree } = require('./doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WORKSPACE ROUTING (Shared Library)
@@ -49,7 +50,10 @@ const FILE_SHAPE = /^[^/\s]*[A-Za-z0-9_-]\.[A-Za-z][A-Za-z0-9]{0,7}$/;
 const DOTFILE_SHAPE = /^\.[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 /** Abbreviations that have the shape of a file name. */
-const NOT_FILES = new Set(['e.g', 'i.e']);
+const NOT_FILES = new Set([
+    'e.g',
+    'i.e',
+]);
 
 /**
  * Turns one candidate into a project-relative, forward-slash path.
@@ -111,7 +115,9 @@ function cleanPaths(candidates, root) {
         const relative = toProjectRelative(candidate, root);
         if (relative !== null) seen.add(relative);
     }
-    return [...seen];
+    return [
+        ...seen,
+    ];
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -142,7 +148,12 @@ function specificity(entry) {
  * @returns {{matched: Record<string, string[]>, unmatched: string[]}}
  */
 function matchPaths(names, scopes, paths) {
-    const matched = Object.fromEntries(names.map((name) => [name, []]));
+    const matched = Object.fromEntries(
+        names.map((name) => [
+            name,
+            [],
+        ]),
+    );
     const unmatched = [];
     for (const file of paths) {
         let best = -1;
@@ -155,7 +166,9 @@ function matchPaths(names, scopes, paths) {
             if (top < 0) continue;
             if (top > best) {
                 best = top;
-                owners = [name];
+                owners = [
+                    name,
+                ];
             } else if (top === best) {
                 owners.push(name);
             }
@@ -163,7 +176,10 @@ function matchPaths(names, scopes, paths) {
         if (owners.length === 0) unmatched.push(file);
         for (const name of owners) matched[name].push(file);
     }
-    return { matched, unmatched };
+    return {
+        matched,
+        unmatched,
+    };
 }
 
 /**
@@ -200,7 +216,9 @@ function words(text) {
     const found = String(text || '')
         .toLowerCase()
         .match(/[\p{L}\p{N}]+/gu);
-    return [...new Set((found || []).filter((w) => w.length >= 3 && !STOPWORDS.has(w)))];
+    return [
+        ...new Set((found || []).filter((w) => w.length >= 3 && !STOPWORDS.has(w))),
+    ];
 }
 
 /**
@@ -213,7 +231,16 @@ function words(text) {
  */
 function sameTopic(a, b) {
     if (a === b) return true;
-    const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+    const [shorter, longer] =
+        a.length <= b.length
+            ? [
+                  a,
+                  b,
+              ]
+            : [
+                  b,
+                  a,
+              ];
     if (shorter.length >= 4 && longer.startsWith(shorter)) return true;
     let common = 0;
     while (common < shorter.length && shorter[common] === longer[common]) common++;
@@ -269,7 +296,9 @@ function lexicon(designAbs, name, entry) {
         add(file.replace(/\.md$/, '').replace(/^l\d+-/, ''));
         add(firstHeading(path.join(specsDir, file)));
     }
-    return [...found];
+    return [
+        ...found,
+    ];
 }
 
 /**
@@ -324,7 +353,9 @@ function scopeCoverage(root, names, scopes) {
     const walk = (dir) => {
         let entries;
         try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
+            entries = fs.readdirSync(dir, {
+                withFileTypes: true,
+            });
         } catch {
             return;
         }
@@ -335,6 +366,7 @@ function scopeCoverage(root, names, scopes) {
             const relative = normalizePath(path.relative(root, full));
             if (isSkippedDir(BUILD_NOISE_DIRS, entry.name, relative) || isIgnored(relative))
                 continue;
+            if (isMoveTree(relative)) continue;
             if (entry.isSymbolicLink()) continue;
             if (entry.isDirectory()) walk(full);
             else files.push(relative);
@@ -384,7 +416,9 @@ function runnerUp(chosen, names, matched, scores) {
  */
 function narration(result, names, command, pathCount) {
     if (names.length < 2 || result.workspace === null) return null;
-    const labels = { 'work-in-flight': 'work in flight' };
+    const labels = {
+        'work-in-flight': 'work in flight',
+    };
     let detail = '';
     if (result.signal === 'location') {
         detail = `: ${result.matched[result.workspace].length} of ${pathCount} paths`;
@@ -451,7 +485,13 @@ function resolveWorkspace(input) {
         ]),
     );
     const written = extractPaths(text);
-    const named = cleanPaths([...written, ...paths], root);
+    const named = cleanPaths(
+        [
+            ...written,
+            ...paths,
+        ],
+        root,
+    );
     const { matched, unmatched } = matchPaths(names, scopes, named);
     // The topic signal reads what the request says, not where it points: a path is the location
     // signal's business, and its words would score the workspace the path already chose.

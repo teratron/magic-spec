@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.95.0
+**Version:** 1.96.0
 **Generated:** 2026-11-26
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.99.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.100.0
 **Based on RULES:** .magicspec/RULES.md v2.0.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,7 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 85](tasks/phase-85.md) | The Migration to 4.0 (4.0 Step 4, Part 4) — `migrate --to 4` moves a 3.x workspace to the 4.0 document set: a dry run that writes nothing, the set written by `analyze` into `next/`, one consent question, an apply step that moves the files only on a clean check, sets the format last and resumes after an interruption; a move in flight stops every other command, and no 3.x reader reads `next/`; a fixture, harness cases, one scenario and the specifications as built; 11 tasks in seven tracks (F, M, G, W, H, Y, S/T) | `Todo` |
+| [Phase 83](tasks/phase-83.md) | 4.0.0 (4.0 Step 4, Part 5) — the graph, the wiki and the artifact index leave out a workspace whose move to 4.0 is in flight, and the global registry row of a 4.0 workspace links no registry; a page on the 4.0 document set, the move from 3.x in the migration page, the README and the distribution page; the specifications as built; `SECURITY.md`, the version file at 4.0.0 and the `[4.0.0]` section; the release plan behind one consent question; 10 tasks in eight tracks (G, H, Y, D, S, T, V, R) | `Todo` |
+| [Phase 85](archives/tasks/phase-85.md) | The Migration to 4.0 (4.0 Step 4, Part 4) — `migrate --to 4` moves a 3.x workspace to the 4.0 document set: a dry run that writes nothing, the set written by `analyze` into `next/`, one consent question, an apply step that moves the files only on a clean check, sets the format last and resumes after an interruption; a move in flight stops every other command, and no 3.x reader reads `next/`; a fixture, harness cases, one scenario and the specifications as built; 11 tasks in seven tracks (F, M, G, W, H, Y, S/T) | `Done (Archived)` |
 | [Phase 82](archives/tasks/phase-82.md) | The Analysis on a 4.0 Workspace (4.0 Step 4, Part 3) — on a 4.0 workspace `analyze` audits the set against the code (the checker, the map compared with the code by `analyze-coverage`, the product scanned for the addresses and paths of the set) and writes a set from existing code by the lab's method, replaying each task's `Observe` on that code and recording each milestone with `mark-built`; the containment classes and the auditor card of a 4.0 workspace; two scenarios; harness cases and the specifications as built; 8 tasks in six tracks (C, R, W, H, Y, S/T) | `Done (Archived)` |
 | [Phase 84](archives/tasks/phase-84.md) | Maintenance: The Finalization's Git Probes Print Nothing of Git's — `finalize` no longer shows git's `fatal:` lines in a repository with no commit yet, or its line-ending warnings; 1 task | `Done (Archived)` |
 | [Phase 81](archives/tasks/phase-81.md) | The Remaining Command Bodies on a 4.0 Workspace (4.0 Step 4, Part 2) — a goal on a 4.0 workspace is recorded in `memory/goal.md` by `update-state` and resumed from it by `resume-state`; `goal`, `fix`, `simulate`, `status`, `rule`, `graph`, `sync` and `help` each gain an *On a 4.0 Workspace* section, their 3.x text unchanged; two scenarios; harness cases and the specifications as built; 10 tasks in six tracks (M, W, H, Y, S, T) | `Done (Archived)` |

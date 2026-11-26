@@ -21,9 +21,11 @@ const fs = require('fs');
 const ENGINE_FOLDER = path.resolve(__dirname, '..');
 let utils;
 let commands;
+let docSet;
 try {
     utils = require('./utils');
     commands = require('./lib/commands');
+    docSet = require('./lib/doc-set-state');
 } catch (err) {
     if (err && err.code === 'MODULE_NOT_FOUND') {
         console.error(
@@ -70,7 +72,13 @@ if (!scriptName) {
 // A request for the command list, or for the help of one command, is answered here, from the
 // command table, before the project is looked at and before any script starts: nothing that
 // asks what a command does can reach code that writes.
-if (['--help', '-h', 'help'].includes(scriptName)) {
+if (
+    [
+        '--help',
+        '-h',
+        'help',
+    ].includes(scriptName)
+) {
     console.log(commands.listText(executorHint()));
     process.exit(0);
 }
@@ -115,7 +123,10 @@ const {
     rest: passThroughArgs,
     errors: flagErrors,
 } = parseFlags(args, {
-    valueFlags: ['--workspace', '--root'],
+    valueFlags: [
+        '--workspace',
+        '--root',
+    ],
 });
 
 if (flagErrors.length > 0) {
@@ -136,7 +147,9 @@ if (argErrors.length > 0) {
 
 let projectRoot;
 try {
-    projectRoot = resolveProjectRoot({ root: flagValues['--root'] });
+    projectRoot = resolveProjectRoot({
+        root: flagValues['--root'],
+    });
 } catch (err) {
     console.error(`HALT: ${err.message}`);
     process.exit(1);
@@ -146,7 +159,11 @@ try {
 // itself (and the removal of the engine) would create a second, empty state folder beside it, so
 // every other command stops with the one path forward.
 // Scripts that never read the state folder, so they may run before it is renamed.
-const MIGRATION_SAFE = new Set(['migrate', 'remove', 'install-hooks']);
+const MIGRATION_SAFE = new Set([
+    'migrate',
+    'remove',
+    'install-hooks',
+]);
 const legacyState = path.join(projectRoot, LEGACY_STATE_DIR_NAME);
 const hasLegacyState =
     fs.existsSync(path.join(legacyState, 'workspace.json')) ||
@@ -217,7 +234,9 @@ if (fs.existsSync(workspaceJsonPath)) {
                             path.join(targetPath, 'archives', 'tasks'),
                         ];
                         for (const dir of subtree) {
-                            fs.mkdirSync(dir, { recursive: true });
+                            fs.mkdirSync(dir, {
+                                recursive: true,
+                            });
                         }
                         console.error(
                             `Note: Provisioned missing workspace directory '${STATE_DIR_NAME}/${workspaceName}/' (WI-9 auto-mkdir).`,
@@ -243,6 +262,28 @@ if (fs.existsSync(workspaceJsonPath)) {
     // Flag or env var provided but no workspace.json
     console.error(
         `HALT: Workspace '${workspaceName}' provided, but ${STATE_DIR_NAME}/workspace.json does not exist.`,
+    );
+    process.exit(1);
+}
+
+// A workspace whose move to 4.0 was started and not finished holds two layouts at once, so
+// nothing but the move reads it. The router's workspace choice, which the move itself needs,
+// and the scripts that never read a workspace run as always.
+const MOVE_SAFE = new Set([
+    ...MIGRATION_SAFE,
+    'resolve-workspace',
+]);
+if (
+    workspaceData &&
+    workspaceName &&
+    !MOVE_SAFE.has(scriptName) &&
+    docSet.moveInFlight(path.join(projectRoot, STATE_DIR_NAME, workspaceName), workspaceName)
+) {
+    console.error(
+        docSet.moveStopLine(workspaceName, {
+            executor: executorHint(),
+            isDefault: workspaceName === workspaceData.default,
+        }),
     );
     process.exit(1);
 }
@@ -277,7 +318,9 @@ function missingEngineFiles(entry) {
     const rel = (p) => path.relative(ENGINE_FOLDER, p).split(path.sep).join('/');
     const seen = new Set();
     const missing = [];
-    const queue = [entry];
+    const queue = [
+        entry,
+    ];
     while (queue.length > 0) {
         const current = queue.pop();
         if (seen.has(current)) continue;
@@ -291,10 +334,17 @@ function missingEngineFiles(entry) {
         const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
         for (const match of code.matchAll(/require\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g)) {
             const base = path.resolve(path.dirname(current), match[1]);
-            const found = [base, `${base}.js`, `${base}.json`, path.join(base, 'index.js')].find(
-                (p) => fs.existsSync(p) && fs.statSync(p).isFile(),
-            );
-            if (!found) missing.push({ file: rel(base), by: rel(current) });
+            const found = [
+                base,
+                `${base}.js`,
+                `${base}.json`,
+                path.join(base, 'index.js'),
+            ].find((p) => fs.existsSync(p) && fs.statSync(p).isFile());
+            if (!found)
+                missing.push({
+                    file: rel(base),
+                    by: rel(current),
+                });
             else if (found.endsWith('.js') && found.startsWith(ENGINE_FOLDER)) queue.push(found);
         }
     }
@@ -329,15 +379,28 @@ if (absent.length > 0) {
 if (fs.existsSync(jsPath)) {
     // The runtime that started this process, not the first node on PATH: one invocation runs on one runtime.
     command = process.execPath;
-    cmdArgs = [...commands.runtimeFlags(commandEntry), jsPath, ...args];
+    cmdArgs = [
+        ...commands.runtimeFlags(commandEntry),
+        jsPath,
+        ...args,
+    ];
 } else {
     const scriptPath = shellPath;
     if (isWindows) {
         command = 'powershell.exe';
-        cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
+        cmdArgs = [
+            '-ExecutionPolicy',
+            'Bypass',
+            '-File',
+            scriptPath,
+            ...args,
+        ];
     } else {
         command = 'bash';
-        cmdArgs = [scriptPath, ...args];
+        cmdArgs = [
+            scriptPath,
+            ...args,
+        ];
     }
 }
 

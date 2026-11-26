@@ -102,4 +102,4 @@ The next step is `/magicspec fix` while any scenario still records a failed or i
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-18 (v3.0.144).
+Synchronized with engine workflows on 2026-11-26 (v3.0.224).

@@ -15,6 +15,7 @@ const {
     BUILD_NOISE_DIRS,
     isSkippedDir,
 } = require('./utils');
+const { isMoveTree } = require('./lib/doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMMUNITY DETECTION — Workspace Discovery via Label Propagation
@@ -72,9 +73,14 @@ const designAbs = resolveDesignRoot(rootDir).designAbs;
  * `.magicspec` and the engine folder are deliberately NOT excluded — spec artifacts and
  * engine sources are the very nodes this graph clusters into communities.
  */
-const SKIP_DIRS = new Set([...BUILD_NOISE_DIRS, '.references']);
+const SKIP_DIRS = new Set([
+    ...BUILD_NOISE_DIRS,
+    '.references',
+]);
 
-const SKIP_PATH_FRAGMENTS = ['/.agents/'];
+const SKIP_PATH_FRAGMENTS = [
+    '/.agents/',
+];
 
 /**
  * Gitignore predicate over root-relative POSIX paths (Invariant 7 parity).
@@ -95,6 +101,8 @@ function shouldSkip(absPath) {
     if (parts.some((p, i) => isSkippedDir(SKIP_DIRS, p, parts.slice(0, i + 1).join('/'))))
         return true;
     if (SKIP_PATH_FRAGMENTS.some((f) => rel.includes(f))) return true;
+    // The tree a move to 4.0 writes (the first three parts name it): no 3.x reader reads it.
+    if (isMoveTree(parts.slice(0, 3).join('/'))) return true;
     if (isGitignored(rel)) return true;
 
     return false;
@@ -104,7 +112,11 @@ function shouldSkip(absPath) {
 // FILE SCANNER
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SCAN_EXTENSIONS = new Set(['.js', '.py', '.md']);
+const SCAN_EXTENSIONS = new Set([
+    '.js',
+    '.py',
+    '.md',
+]);
 
 /**
  * Recursively collects all scannable files from a directory.
@@ -149,9 +161,15 @@ function extractJsDeps(absPath) {
 
     const dir = path.dirname(absPath);
     const deps = new Set();
-    const exts = ['.js', ''];
+    const exts = [
+        '.js',
+        '',
+    ];
 
-    for (const re of [JS_REQUIRE_RE, JS_IMPORT_RE]) {
+    for (const re of [
+        JS_REQUIRE_RE,
+        JS_IMPORT_RE,
+    ]) {
         for (const m of content.matchAll(re)) {
             const raw = m[1];
             let resolved = null;
@@ -168,7 +186,9 @@ function extractJsDeps(absPath) {
         }
     }
 
-    return [...deps];
+    return [
+        ...deps,
+    ];
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -238,7 +258,10 @@ function extractPyDeps(absPath) {
             if (!mod.startsWith(prefix)) continue;
             const sub = mod.slice(prefix.length).replace(/^\./, '').replace(/\./g, '/');
             const base = path.join(rootDir, prefix.replace(/\./g, '/'));
-            const candidates = [path.join(base, sub + '.py'), path.join(base, sub, '__init__.py')];
+            const candidates = [
+                path.join(base, sub + '.py'),
+                path.join(base, sub, '__init__.py'),
+            ];
             for (const c of candidates) {
                 if (fs.existsSync(c) && !shouldSkip(c)) {
                     deps.add(normalizePath(path.relative(rootDir, c)));
@@ -248,7 +271,9 @@ function extractPyDeps(absPath) {
         }
     }
 
-    return [...deps];
+    return [
+        ...deps,
+    ];
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -289,7 +314,9 @@ function extractMdDeps(absPath) {
         }
     }
 
-    return [...deps];
+    return [
+        ...deps,
+    ];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -339,10 +366,14 @@ function runLabelPropagation() {
 
     for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
         let changed = false;
-        const order = [...adjacency.keys()].sort();
+        const order = [
+            ...adjacency.keys(),
+        ].sort();
 
         for (const node of order) {
-            const neighbors = [...(adjacency.get(node) || [])];
+            const neighbors = [
+                ...(adjacency.get(node) || []),
+            ];
             if (neighbors.length === 0) continue;
 
             // Count label frequencies among neighbors
@@ -469,7 +500,12 @@ function computeModularity(communities) {
  */
 function loadWorkspaces() {
     const wsPath = path.join(designAbs, 'workspace.json');
-    if (!fs.existsSync(wsPath)) return { workspaces: {}, wholeProject: [], raw: {} };
+    if (!fs.existsSync(wsPath))
+        return {
+            workspaces: {},
+            wholeProject: [],
+            raw: {},
+        };
 
     const raw = JSON.parse(fs.readFileSync(wsPath, 'utf8'));
     const workspaces = raw.workspaces || {};
@@ -499,7 +535,11 @@ function loadWorkspaces() {
         result[name] = fileSet;
     }
 
-    return { workspaces: result, wholeProject, raw };
+    return {
+        workspaces: result,
+        wholeProject,
+        raw,
+    };
 }
 
 /**
@@ -543,7 +583,10 @@ function alignCommunities(communities, workspaces) {
             }
         }
 
-        alignments.set(label, { workspace: bestWs, score: bestScore });
+        alignments.set(label, {
+            workspace: bestWs,
+            score: bestScore,
+        });
     }
 
     return alignments;
@@ -568,7 +611,9 @@ function bfsPartition(members) {
         if (visited.has(start)) continue;
 
         const cluster = [];
-        const queue = [start];
+        const queue = [
+            start,
+        ];
         visited.add(start);
 
         while (queue.length) {
@@ -610,7 +655,9 @@ function generateSplitSuggestions(communities, totalNodes) {
                 const dir = node.split('/')[0];
                 dirCount.set(dir, (dirCount.get(dir) || 0) + 1);
             }
-            const sorted = [...dirCount.entries()].sort((a, b) => b[1] - a[1]);
+            const sorted = [
+                ...dirCount.entries(),
+            ].sort((a, b) => b[1] - a[1]);
             return sorted[0] ? sorted[0][0] : '(root)';
         });
 
@@ -759,7 +806,10 @@ function main() {
     }
 
     const totalNodes = adjacency.size;
-    const totalEdges = [...adjacency.values()].reduce((s, n) => s + n.size, 0) / 2;
+    const totalEdges =
+        [
+            ...adjacency.values(),
+        ].reduce((s, n) => s + n.size, 0) / 2;
 
     // 3. Run Label Propagation
     const labels = runLabelPropagation();
@@ -768,11 +818,15 @@ function main() {
     // 4. Analyze communities
     const modMap = computeModularity(rawCommunities);
 
-    const communities = [...rawCommunities.entries()]
+    const communities = [
+        ...rawCommunities.entries(),
+    ]
         .map(([label, members]) => ({
             label,
             size: members.size,
-            members: [...members].sort(),
+            members: [
+                ...members,
+            ].sort(),
             cohesion: cohesionScore(members),
             modularity: modMap.get(label) || 0,
         }))
@@ -781,14 +835,21 @@ function main() {
 
     // 5. Load workspaces and align
     const { workspaces, wholeProject } = loadWorkspaces();
-    const workspaceNames = [...Object.keys(workspaces), ...wholeProject];
+    const workspaceNames = [
+        ...Object.keys(workspaces),
+        ...wholeProject,
+    ];
     const alignments = alignCommunities(rawCommunities, workspaces);
 
     // 6. Generate split suggestions
     const suggestions = generateSplitSuggestions(rawCommunities, totalNodes);
 
     const report = {
-        graph: { total_files: allFiles.length, nodes: totalNodes, edges: Math.round(totalEdges) },
+        graph: {
+            total_files: allFiles.length,
+            nodes: totalNodes,
+            edges: Math.round(totalEdges),
+        },
         communities,
         alignments,
         modularity: modMap,

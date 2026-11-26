@@ -3,6 +3,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { STATE_DIR_NAME } = require('../utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DOC SET STATE (the recorded state of a 4.0 workspace, memory/state.md)
@@ -11,6 +12,12 @@ const path = require('node:path');
 // A workspace in the 4.0 format keeps its state in `memory/state.md` (`Now`, `Done`, `Next`,
 // `Open`), not in `STATE.md`. The scripts that read or write recorded state — `resume-state`,
 // `finalize` — tell the two formats apart and compute the next ready task from here.
+
+/** The folder of a 3.x workspace that holds the set written for its move to 4.0. */
+const NEXT_TREE = 'next';
+
+/** The folder of a workspace the move to 4.0 puts the 3.x files into. */
+const MOVED_FILES = 'archives/3x';
 
 /** The order of priorities, highest first (concept §5.4). */
 const PRIORITY = [
@@ -35,6 +42,61 @@ function isDocSetWorkspace(dir, name = path.basename(dir)) {
     } catch {
         return false;
     }
+}
+
+/**
+ * @param {string} dir
+ * @returns {boolean} True when the folder holds a file at any depth.
+ */
+function holdsFile(dir) {
+    try {
+        return fs
+            .readdirSync(dir, {
+                withFileTypes: true,
+            })
+            .some((e) => !e.isDirectory() || holdsFile(path.join(dir, e.name)));
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Whether a move to 4.0 is in flight: the workspace is not in the 4.0 format and files of it
+ * already lie where the move puts the 3.x files. Read from the files, never from a log.
+ *
+ * @param {string} dir - The folder of the workspace.
+ * @param {string} [name] - Its name; the folder's own name by default.
+ * @returns {boolean}
+ */
+function moveInFlight(dir, name = path.basename(dir)) {
+    return !isDocSetWorkspace(dir, name) && holdsFile(path.join(dir, MOVED_FILES));
+}
+
+/**
+ * The line every command but the move prints on a workspace whose move is in flight. The
+ * workspace is named in the commands only when it is not the one they would take by default.
+ *
+ * @param {string} workspace
+ * @param {{ executor: string, isDefault: boolean }} at - How the executor is started, and
+ *   whether the workspace is the registry's default.
+ * @returns {string}
+ */
+function moveStopLine(workspace, { executor, isDefault }) {
+    const argument = isDefault ? '' : ` ${workspace}`;
+    const flag = isDefault ? '' : ` --workspace ${workspace}`;
+    return `HALT: The move of ${workspace} to 4.0 was started and not finished. Run \`/magicspec migrate --to 4${argument}\` (by script: \`${executor} migrate --to 4 --apply${flag}\`) to finish it.`;
+}
+
+/**
+ * Whether a project folder is the tree a move writes the new set into (`next/` directly under
+ * a workspace). No 3.x reader reads it; a folder of that name deeper down is ordinary.
+ *
+ * @param {string} rel - Path relative to the project root, forward slashes.
+ * @returns {boolean}
+ */
+function isMoveTree(rel) {
+    const parts = rel.split('/');
+    return parts.length === 3 && parts[0] === STATE_DIR_NAME && parts[2] === NEXT_TREE;
 }
 
 /**
@@ -146,7 +208,12 @@ function withNextLine(text, next) {
 }
 
 module.exports = {
+    NEXT_TREE,
+    MOVED_FILES,
     isDocSetWorkspace,
+    moveInFlight,
+    moveStopLine,
+    isMoveTree,
     nothingWritten,
     doneAddresses,
     nextReadyTask,

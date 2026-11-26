@@ -34,3 +34,25 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** the person follows the recommendation and types `/magicspec analyze` → expect: the audit runs; typing it is the person's override and not the answer to a question, because no question was put to the person before it (composed).
 
 **Last run:** never
+
+## S-20: `migrate --to 4` previews, asks once and moves a 3.x workspace, or leaves it on 3.x with the findings it cannot close
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l1-command-surface.md §3 CS-6, l1-command-surface.md §3 CS-8, l2-sdd-document-set-engine.md §5.5 Migration, l1-skill-packaging.md §3 SP-10
+**Preconditions:** a disposable project with one workspace on the 3.x layout (a registry, two specifications, a plan, a ledger with an open phase, `STATE.md`, workspace rules, an archived phase and a scenario file citing a specification), code beside it, no folder `next/`, and every file committed.
+
+**Steps:**
+
+1. Take a digest of every file of the project, names and contents → expect: a baseline to compare against (printed).
+2. `/magicspec migrate --to 4` → expect: the dry run is shown as printed: each file of the workspace with its place, a `split by the reverse mode` line for each specification, a `scenario to rewrite` line for the scenario and `next/: absent — write it with /magicspec analyze first-time` (printed); a folder `next/` is created and the run ends naming `/magicspec analyze first-time {workspace}` with its demand, with no question (composed); the digest of every file is unchanged (printed).
+3. `/magicspec analyze first-time {workspace}` → expect: the set is written into `next/` from the code, with the 3.x specifications as a source beside it; a requirement the analysis cannot observe is an `- Open:` line; no `mark-built` runs, and the report ends naming `/magicspec migrate --to 4 {workspace}` (composed); no file outside `next/` changes but the engine snapshot of the global registry (printed).
+4. `/magicspec migrate --to 4` while an open question remains in `next/` → expect: the dry run reports `next/: {n} findings` with each finding (printed); nothing is asked and the workspace stays on 3.x with both trees in place (composed).
+5. The question is answered, the set is brought to a clean check, and `/magicspec migrate --to 4` is run again → expect: `next/: clean` (printed), then exactly one question with the move marked as recommended and *Not now* beside it (composed).
+6. Choose *Not now* → expect: nothing changes and both trees stay (printed).
+7. Run the command again and say yes → expect: `[migrate] {workspace} is a 4.0 workspace.`; the 3.x files are under `archives/3x/`, the earlier archives and the scenario file are where they were, `next/` is gone, the workspace's entry in `workspace.json` carries `"format": "4"` and `check-docs` reports no finding (printed).
+8. Read the report → expect: each milestone whose observation holds on the code is recorded built, the scenarios to rewrite are named, and the one next step is `/magicspec status {workspace}` (composed).
+9. `/magicspec migrate --to 4` once more → expect: `[migrate] {workspace} is already a 4.0 workspace; nothing to do.` and no question (printed).
+
+**Variants:** the apply step is interrupted after its first move → `/magicspec run` on the workspace stops with `HALT: The move of {workspace} to 4.0 was started and not finished.` naming `/magicspec migrate --to 4`, writing nothing (printed), and that command shows the move under way, asks once and finishes it in the same tree (printed). A bare `/magicspec migrate` in the same project is the move from the earlier layout and answers that there is nothing to migrate, offering no move to 4.0 (printed).
+
+**Last run:** never

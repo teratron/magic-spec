@@ -680,8 +680,8 @@ module.exports = () => {
         );
         const executor = fs.readFileSync(path.join(scriptsDir, 'executor.js'), 'utf8');
         assert.ok(
-            executor.includes(
-                'cmdArgs = [...commands.runtimeFlags(commandEntry), jsPath, ...args];',
+            /cmdArgs = \[\s*\.\.\.commands\.runtimeFlags\(commandEntry\),\s*jsPath,\s*\.\.\.args,?\s*\];/.test(
+                executor,
             ),
             'the executor applies it to the script it starts',
         );
