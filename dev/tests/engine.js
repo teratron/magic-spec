@@ -10920,6 +10920,50 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test("finalize prints no line of git's in a repository with no commit yet, or one git warns about line endings in", () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { designDir, wsDir, finalizePath } = createFinalizeFixture(tempDir);
+            const rules = path.join(designDir, 'RULES.md');
+            fs.writeFileSync(rules, '# Rules\n');
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '# Tasks\n\n- [x] [T-1A01] Done\n');
+            // The ledger alone is not a change of `run` before a commit exists; live memory is.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), resumeStateText('Active', 'Go on'));
+            const git = (command) => execSync(`git ${command}`, { cwd: tempDir, stdio: 'ignore' });
+            const quiet = (workflow, when) => {
+                const run = spawnSync(
+                    process.execPath,
+                    [finalizePath, `--workflow=${workflow}`, '--workspace=main'],
+                    { cwd: tempDir, encoding: 'utf8' },
+                );
+                assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+                assert.match(run.stdout, /Finalization complete/, `${when}: the change is seen`);
+                assert.doesNotMatch(
+                    run.stderr,
+                    /^(fatal|warning):|Use '--' to separate/m,
+                    `${when}: git's own diagnostics must not reach the output of finalize`,
+                );
+            };
+
+            git('init -b master');
+            git('config user.email "test@example.com"');
+            git('config user.name "Test User"');
+            git('config core.autocrlf false');
+            // `run` reads the diff of the ledger; both read the status and line counts of a file.
+            quiet('run', 'no commit yet');
+            quiet('rule', 'no commit yet');
+
+            commitFixture(tempDir);
+            git('config core.autocrlf true');
+            fs.appendFileSync(rules, '\nA line that ends in a line feed.\n');
+            fs.appendFileSync(path.join(wsDir, 'TASKS.md'), '- [x] [T-1A02] Done\n');
+            quiet('run', 'a line-ending warning');
+            quiet('rule', 'a line-ending warning');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('resume-state writes nothing on a clean run and records exactly one finding for an unreadable STATE.md (read-only, DG-1, H6)', () => {
         const tempDir = createTempWorkspace();
         try {

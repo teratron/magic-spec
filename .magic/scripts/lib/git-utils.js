@@ -19,7 +19,7 @@ const { normalizePath } = require('../utils');
  * fails says so through its return value; git's own diagnostics (`fatal:` on a
  * repository with no commit yet, line-ending warnings) are not engine findings,
  * and would otherwise surface in the output of a script that must stay silent
- * when there is nothing to report.
+ * when there is nothing to report. The probes of `significance.js` take these too.
  */
 const QUIET = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
 
@@ -143,6 +143,7 @@ function isNewFile(cwd, relPath) {
 }
 
 module.exports = {
+    QUIET,
     isGitRepo,
     headSha,
     changedPaths,

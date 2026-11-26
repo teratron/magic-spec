@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { hashFileSafe, normalizePath } = require('../utils');
+const { QUIET } = require('./git-utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SIGNIFICANCE DETECTOR (Whitelist × Git Diff)
@@ -142,18 +143,18 @@ function gitChangedPaths(cwd) {
     try {
         // `git diff --name-only HEAD` covers staged + unstaged vs HEAD; on a
         // brand-new repo without HEAD, this throws — handle below.
-        tracked = execSync('git diff --name-only HEAD', { cwd, encoding: 'utf8' });
+        tracked = execSync('git diff --name-only HEAD', { cwd, ...QUIET });
     } catch {
         // No HEAD yet (initial commit not made) — fall back to all tracked
         // and untracked as "changed".
         try {
-            tracked = execSync('git ls-files', { cwd, encoding: 'utf8' });
+            tracked = execSync('git ls-files', { cwd, ...QUIET });
         } catch (e) {
             return { available: false, paths: [], error: e.message };
         }
     }
     try {
-        untracked = execSync('git ls-files --others --exclude-standard', { cwd, encoding: 'utf8' });
+        untracked = execSync('git ls-files --others --exclude-standard', { cwd, ...QUIET });
     } catch {
         // Non-fatal — proceed with tracked only.
     }
@@ -179,7 +180,7 @@ function gitFileStatus(cwd, relPath) {
     try {
         const out = execSync(`git status --porcelain -- "${relPath}"`, {
             cwd,
-            encoding: 'utf8',
+            ...QUIET,
         }).trim();
         if (!out) return 'unknown';
         const code = out.slice(0, 2);
@@ -201,7 +202,7 @@ function gitFileStatus(cwd, relPath) {
  */
 function gitFileDiff(cwd, relPath) {
     try {
-        return execSync(`git diff --unified=0 HEAD -- "${relPath}"`, { cwd, encoding: 'utf8' });
+        return execSync(`git diff --unified=0 HEAD -- "${relPath}"`, { cwd, ...QUIET });
     } catch {
         return '';
     }
@@ -218,7 +219,7 @@ function gitFileNumstat(cwd, relPath) {
     try {
         const out = execSync(`git diff --numstat HEAD -- "${relPath}"`, {
             cwd,
-            encoding: 'utf8',
+            ...QUIET,
         }).trim();
         if (!out) return { added: 0, deleted: 0 };
         const [addStr, delStr] = out.split(/\s+/);
