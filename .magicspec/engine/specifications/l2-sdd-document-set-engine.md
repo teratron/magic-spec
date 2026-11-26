@@ -1,6 +1,6 @@
 # SDD Document Set — Engine Realization (4.0)
 
-**Version:** 1.5.4
+**Version:** 1.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-sdd-document-set.md
@@ -68,7 +68,8 @@ Not applicable; see the concept's invariants I1 to I13.
     ├── stack/{stack}/profile.md  rules.md  deps.md
     ├── stack/{stack}/bind/{key}.md
     ├── stack/{stack}/tasks/M{n}.md
-    ├── memory/state.md  decisions.md  map.md
+    ├── memory/state.md  decisions.md  map.md  goal.md
+    ├── simulations/{area}.md
     └── archives/            # retrospectives and simulation reports, as in 3.x
 ```
 
@@ -81,6 +82,8 @@ Not applicable; see the concept's invariants I1 to I13.
 | `PLAN.md` phases | `plan.md` milestones |
 | `TASKS.md`, `tasks/phase-{n}.md` | `stack/{stack}/tasks/M{n}.md` |
 | `STATE.md` | `memory/state.md` |
+| `STATE.md` `## Goal` (the record of `goal`) | `memory/goal.md` `[ADDED]` |
+| `simulations/{area}.md` | the same folder, each scenario naming its milestone `[ADDED]` |
 | Document History, amendment versions | `changes.md` and unit revisions |
 
 ### 5.2 Scripts
@@ -98,7 +101,7 @@ Existing subcommands adapt: `check-prerequisites` on a 4.0 workspace reports the
 
 ### 5.3 Templates
 
-New templates in `skills/magicspec/templates/set/` (the 3.x templates stay in `templates/`, and five of the names are theirs): `product.md`, `rules.md`, `plan.md` (milestone block), `spec.md` (component behaviour), `profile.md`, `stack-rules.md`, `deps.md`, `bind.md`, `tasks.md` (milestone tasks), `state.md`, `decisions.md`, `map.md`, `changes.md`; each holds the field lines of the concept verbatim and no example content. The 3.x templates stay for 3.x workspaces until the line ends.
+New templates in `skills/magicspec/templates/set/` (the 3.x templates stay in `templates/`, and five of the names are theirs): `product.md`, `rules.md`, `plan.md` (milestone block), `spec.md` (component behaviour), `profile.md`, `stack-rules.md`, `deps.md`, `bind.md`, `tasks.md` (milestone tasks), `state.md`, `decisions.md`, `map.md`, `changes.md`; each holds the field lines of the concept verbatim and no example content. `[ADDED]` `memory/goal.md` has no template: the engine writes it, as `update-state` writes the goal section of a 3.x `STATE.md`, and no person or agent writes it by hand. The 3.x templates stay for 3.x workspaces until the line ends.
 
 Beside them, `neutral-writing.md` holds the neutral writing table of concept §5.3 word for word, with the review sentence that follows it: guidance for whoever writes or reviews a neutral layer, no field lines, the one file of the folder that is not a template of a document. The templates carry the guidance lines of concept 1.1.0 in their comments and field lines: `rules.md` — `From` is added by the plan stage, and a rule written before the plan has none; `stack-rules.md` — `Realizes: {R addresses, or — for a convention only this stack has}`, such a rule listed in the Context of the tasks it governs; `profile.md` — the profile reaches no pack, so a convention a builder must follow is a stack rule; `plan.md` — `Closes: {component keys}`, `Needs: —` for none, a backlog with nothing waiting as `- none`; `tasks.md` — `Produces: —` for work no later task of the milestone uses, a test file a later task extends named as `{file} (extends M{n}.T{k})`, the exit status in the expected result of a command.
 
@@ -158,6 +161,7 @@ The roles keep their cards; `spec-critic` reviews units and changes, `planner` m
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-11-26 | Agent | **Realizing concept 1.6.0** (origin `user-stated`: the owner's amendment of 2026-11-26, after `/magicspec plan engine` found that Phase 81 had no place on a 4.0 workspace for the goal's record or for the scenario files): §5.1 names `memory/goal.md` and `simulations/` in the tree and maps the 3.x goal section and scenarios to them; §5.3 says the goal file has no template, the engine writing it. Phase 81 builds them. Amended, RFC, reviewed, Stable. |
 | 1.5.4 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: §5.2 states the forms the remaining adapted subcommands were built with (the graph's unit nodes and reference edges, the wiki's document articles, the index's kinds, coverage's three states, `sync`'s derived state, the one line of the three writers); §5.6 marks the scripts of step 4 built. |
 | 1.5.3 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: §5.4 states the four bodies and the three card lines as built, with the split of the three steps of a change across `spec`, `plan` and `task`; §5.2 states the next step `finalize` names and that `mark-built` takes no task address for a file; §5.6 marks step 3 built. Two defects of Phase 70 found by the traced scenario are repaired there (the map row, the next step). |
 | 1.5.2 | 2026-11-26 | Agent | As built in Phase 70, Stable retained, no requirement changed: §5.2 states the forms `mark-built`, `check-log` and the three adapted subcommands were built with; §6 item 3's open question is settled as the concept states (whole files in Done before this task) and its marker removed. Step 3, part 1 is built; Phase 80 builds the four bodies on it. |

@@ -4,31 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-26 10:43
-**Phase:** 71 — The Scripts of the Remaining Commands on a 4.0 Workspace
+**Updated:** 2026-11-26 10:54
+**Phase:** 81 — The Remaining Command Bodies on a 4.0 Workspace
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-71T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine once the amendment Phase 81 needs is made (goal record and scenario folder on 4.0)
+- **Next Action:** Execute T-81M01 `update-state` writes and removes the goal file of a 4.0 workspace via /magicspec run engine
 
 ## Progress
 
 ```
-Overall: [80/80] ████████ 100%
+Phase 81: [0/10] ░░░░░░░░ 0%
+Overall: [80/81] ████████ 99%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-26 **Decision:** Concept and realization 1.6.0: memory/goal.md holds the goal record, scenarios stay in simulations/. PLAN 1.95.0: Phase 81 (remaining bodies and the goal file) planned in full; analyze moved to Phase 82 with migrate; Phase 83 the release
 - 2026-11-26 **Decision:** Phase 71 complete. Provides: graph, wiki, index, coverage, sync and the three writers on a 4.0 workspace, harness 510, engine 3.0.206; Phase 81 waits for a spec amendment on goal's record on 4.0
 - 2026-11-26 **Decision:** Constitution 2.0.0: status rules (§2), C6 and C12 scoped to 3.x workspaces. PLAN 1.94.0: step 4 split — Phase 71 scripts (planned in full), 81 remaining bodies, 82 migration and 4.0.0; goal's record on 4.0 needs a spec amend before 81
 - 2026-11-26 **Decision:** Phase 80 complete. Provides: the 4.0 sections of spec, plan, task and run, the three card lines, pipeline S-4, the 4.0 next step repaired, harness 504, engine 3.0.191; the plan is behind registry 1.104.3, then the owner's narrowing of the lifecycle rule precedes Phase 71
 - 2026-11-26 **Decision:** Phase 70 complete. Provides: mark-built, check-log, the 4.0 branches of check-prerequisites, resume-state and finalize, harness 496, engine 3.0.186; Phase 80 (the four pipeline bodies) is next
-- 2026-11-26 **Decision:** Phase 79 complete. Provides: the containment line with the component-key exception, the comment finding and the code-span literal in check-docs, the templates and neutral-writing.md at 1.5.0, harness 491, engine 3.0.179; Phase 70 (the pipeline on 4.0) is next
 
 ## Blockers
 
