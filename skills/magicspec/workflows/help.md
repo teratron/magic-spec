@@ -11,6 +11,7 @@ Read-only. Renders the command list from the router's table, explains a single c
 - Entry
 - Core Invariants (Mandatory)
 - Steps
+- On a 4.0 Workspace
 - Help Completion Checklist
 - Handoffs
 
@@ -107,6 +108,16 @@ For a command chosen in the picker that takes an argument, and for a command who
 ### 5. Hand Over
 
 Read `workflows/{command}.md` in full and follow it with the argument as entered. The command's own steps — its finalization, its checklist — take over; this workflow ends here. A command that was only explained (`help {command}`) and not chosen ends the run with no further question.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+Steps 1 to 5 above apply as written, except for these three points.
+
+1. **Live memory**: `memory/state.md` and, for a recorded goal, `memory/goal.md` take the place of `STATE.md`. The recommended command of Step 1 is the Next of `workflows/status.md` §On a 4.0 Workspace; where that names none, `spec`.
+2. **Next line** of the list: `/magicspec goal` while a recorded goal has a criterion not `met`, else `/magicspec run {workspace}` while the `Now` or `Next` line of `memory/state.md` names a task, else omitted.
+3. **`help goal`** shows the milestone forms of the command in place of the phase forms: `M{n}`, `M{n}..M{m}`, `plan`, `{N} tasks` and a statement, as `workflows/goal.md` §On a 4.0 Workspace states them.
 
 ## Help Completion Checklist
 

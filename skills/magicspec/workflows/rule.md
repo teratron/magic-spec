@@ -12,6 +12,7 @@ Manages project conventions across a two-tier rules system:
 - Missing Rule Text
 - Rule Tier Routing
 - Workflow: Convention Management
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Rule Completion Checklist
 - Handoffs
@@ -189,6 +190,17 @@ Practical conflict found → **HALT** before notifying user. Report: *"C24 Const
 
 - **Notify**: inform user if the plan is now stale.
 - **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magicspec plan {workspace}` (propagate the rule into the plan); choose `/magicspec spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+The global constitution `.magicspec/RULES.md` is unchanged: a global-tier rule is written there as above. A workspace-tier rule is a unit of the set instead of an entry of a workspace `RULES.md`, which a set does not have. Tier Routing, Admission, the guards (duplication checked across the constitution and the set's rule units), `@role:constitutional-reviewer` before and after the write, the wording review and the one confirmation of Remove apply as written; the set's files carry no version and no Document History.
+
+1. **Write** the rule as the unit `R{n}` of `rules.md` of the workspace, at the next free number, in the form of `templates/set/rules.md`; an absent file is created from that template without its comment and placeholder unit. The unit gets no `From` line: the plan stage writes it. A convention only one stack has is `S{n}` of `stack/{stack}/rules.md` (`templates/set/stack-rules.md`), with `Realizes: —`.
+2. **After the first version** (the workspace holds `product.md`) an added, amended or removed rule is also a change in `changes.md`, recorded and placed as step 3 of `workflows/spec.md` §On a 4.0 Workspace states: an amendment raises the unit's revision and keeps its `Was` line, a removal marks the unit `Withdrawn`. After the first version no unit is deleted, and an address is never reused.
+3. **Check**: `node scripts/executor.js check-docs --workspace={active-workspace}`, correcting what it reports for what was written; findings that only a missing milestone or task causes may remain. Then `node scripts/executor.js export-wiki`.
+4. **Handoff**: `/magicspec plan {workspace}` when the plan has milestones and the rule waits for its `From` or a change for its milestone; otherwise the command the finalization names.
 
 ## Finalization Protocol (Mandatory)
 

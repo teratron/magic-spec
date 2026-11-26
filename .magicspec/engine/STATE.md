@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-26 10:54
-**Phase:** 81 — The Remaining Command Bodies on a 4.0 Workspace
+**Updated:** 2026-11-26 11:59
+**Phase:** 82 — The Analysis on a 4.0 Workspace
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-71T01 Validation
+- **Task:** T-84F01 The probes of the finalization discard git's standard error
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Execute T-81M01 `update-state` writes and removes the goal file of a 4.0 workspace via /magicspec run engine
+- **Next Action:** Run /magicspec task engine to decompose Phase 85
 
 ## Progress
 
 ```
-Phase 81: [0/10] ░░░░░░░░ 0%
-Overall: [80/81] ████████ 99%
+Phase 82: [0/8] ░░░░░░░░ 0%
+Overall: [82/83] ████████ 99%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-26 **Decision:** PLAN 1.98.0 on registry 1.107.0: Phase 85 (migrate --to 4: the subcommand, the in-flight stop, next/ skipped by 3.x readers, the bodies) planned in full; Phase 82 unchanged and decomposed; Phase 83 the release
+- 2026-11-26 **Decision:** PLAN 1.97.0: Phase 82 = analyze on a 4.0 workspace (audit with the map compared with the code, reverse mode by the lab's method), planned in full; the migration split out as Phase 85, waiting for /magicspec spec on migrate's argument (l1-command-surface CS-6) and the case-insensitive tree collision (l2 §5.5); Phase 83 the release
+- 2026-11-26 **Decision:** Phase 84 complete (maintenance, feedback note n7): finalize prints no line of git's; engine 3.0.217, ported to v2.1 as 2.1.150 (local commit, no push)
+- 2026-11-26 **Decision:** Phase 81 complete. Provides: the goal file of a 4.0 workspace, the 4.0 sections of goal, fix, simulate, status, rule, graph, sync and help, scenarios S-16 and S-17, harness 519, engine 3.0.213; Phase 82 (analyze and migrate) needs its plan
 - 2026-11-26 **Decision:** Concept and realization 1.6.0: memory/goal.md holds the goal record, scenarios stay in simulations/. PLAN 1.95.0: Phase 81 (remaining bodies and the goal file) planned in full; analyze moved to Phase 82 with migrate; Phase 83 the release
-- 2026-11-26 **Decision:** Phase 71 complete. Provides: graph, wiki, index, coverage, sync and the three writers on a 4.0 workspace, harness 510, engine 3.0.206; Phase 81 waits for a spec amendment on goal's record on 4.0
-- 2026-11-26 **Decision:** Constitution 2.0.0: status rules (§2), C6 and C12 scoped to 3.x workspaces. PLAN 1.94.0: step 4 split — Phase 71 scripts (planned in full), 81 remaining bodies, 82 migration and 4.0.0; goal's record on 4.0 needs a spec amend before 81
-- 2026-11-26 **Decision:** Phase 80 complete. Provides: the 4.0 sections of spec, plan, task and run, the three card lines, pipeline S-4, the 4.0 next step repaired, harness 504, engine 3.0.191; the plan is behind registry 1.104.3, then the owner's narrowing of the lifecycle rule precedes Phase 71
-- 2026-11-26 **Decision:** Phase 70 complete. Provides: mark-built, check-log, the 4.0 branches of check-prerequisites, resume-state and finalize, harness 496, engine 3.0.186; Phase 80 (the four pipeline bodies) is next
 
 ## Blockers
 

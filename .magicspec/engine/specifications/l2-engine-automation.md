@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.33.3
+**Version:** 1.33.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -21,6 +21,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **sync.js** with **lib/sync-config.js**, **lib/sync-report.js**, **lib/sync-registry.js**, **lib/sync-state.js**, **lib/sync-projections.js**, **lib/sync-graph.js**, **lib/sync-versions.js**, **lib/sync-docs.js** and **lib/sync-markers.js**: the `sync` command ([l1-sync-command.md](l1-sync-command.md)); it writes only what differs from what is stored, reaches the wiki through `export-wiki --out` and the live-memory counters through `update-state`, and the extraction cache of the graph build honors `MAGIC_DRY_RUN` so a preview writes nothing.
 - **lib/file-lock.js**: An exclusive lock file for a read-modify-write (`update-state` takes it around its STATE.md write).
 - **resolve-workspace.js** with **lib/workspace-routing.js**: Computes the workspace a command acts on — argument, environment, sole workspace, location, topic, work in flight, default, coverage — writes nothing and prints `Workspace:`, `Signal:` and the `Narration:` line (`l1-workspace-intent-routing.md` §5.1).
+- **lib/goal-block.js**: the one renderer, parser and check of the goal record — a section of `STATE.md`, on a 4.0 workspace the file `memory/goal.md` — shared by `update-state` and `resume-state`; it also names that path and spells a scope in phases or milestones.
 - **lib/in-flight.js**: The one predicate for "a task is `In Progress`", read by `resume-state` and by `resolve-workspace`.
 - **lib/simulation-findings.js**: The failed and inconclusive steps the last runs of a workspace's scenarios recorded, read from the scenario files for the next-step computation of `finalize` and the argument form of `fix` — it keeps no store, ignores a layout shown in a comment or a code block and fails open ([l1-product-simulation.md](l1-product-simulation.md) SM-7).
 - **feedback.js** with **lib/feedback.js**, **lib/feedback-draft.js** and **lib/feedback-submit.js**: The engine feedback channel — `note`, `list`, `draft`, `submit`, `keep` and `discard` (the record and its limits are in [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11). Always exits 0; submission goes through the person's own `gh` client only.
@@ -348,7 +349,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 
 | Script | Applies the check | Why |
 | --- | --- | --- |
-| `update-state.js` | before its lock file, in the library and in the command | writes the workspace's `STATE.md` |
+| `update-state.js` | before its lock file, in the library and in the command | writes the workspace's `STATE.md`; on a 4.0 workspace its `memory/goal.md` alone |
 | `finalize.js` | after the folder is resolved, before any write | writes the workspace's state, changelog and archives |
 | `archive-phases.js`, `generate-context.js` | before any write | write into the workspace folder |
 | `create-workspace.js`, `init.js`, the executor's provisioning | creators: they register first | the folder they make is the one they register |
@@ -397,6 +398,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.33.4 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: the Components list gains `lib/goal-block.js`, and the table of writers states that on a 4.0 workspace `update-state` writes the goal file alone. |
 | 1.33.3 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: the Components list gains the readers of a 4.0 set the remaining subcommands use. |
 | 1.33.2 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: `lib/doc-set-state.js` also holds the next step of a 4.0 workspace; `lib/created-files.js` leaves task addresses out. |
 | 1.33.1 | 2026-11-26 | Agent | As built in Phase 70, Stable retained, no requirement changed: the Components list gains `mark-built.js` and `check-log.js` (the milestone record and the change-history check of a 4.0 workspace), `lib/doc-set-state.js` (the 4.0 test and the next ready task, shared by `finalize` and `resume-state`) and `lib/created-files.js` (the file names of a task's Creates, shared by `pack` and `mark-built`). |

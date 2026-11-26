@@ -16,6 +16,15 @@
 /** The heading that opens the section; absent from a STATE.md that records no goal. */
 const GOAL_HEADING = '## Goal';
 
+/**
+ * Where a 4.0 workspace keeps its goal, as path segments under the workspace folder. The file
+ * holds exactly the section a 3.x `STATE.md` holds, and exists only while a goal is recorded.
+ */
+const GOAL_FILE = Object.freeze([
+    'memory',
+    'goal.md',
+]);
+
 /** Most lines the section may hold, heading and comment included. */
 const MAX_GOAL_LINES = 28;
 
@@ -23,7 +32,11 @@ const MAX_GOAL_LINES = 28;
 const MAX_TEXT = 300;
 
 /** The states a criterion is in. */
-const CRITERION_STATES = Object.freeze(['open', 'met', 'blocked']);
+const CRITERION_STATES = Object.freeze([
+    'open',
+    'met',
+    'blocked',
+]);
 
 /** The keys a goal object may carry; anything else is refused. */
 const GOAL_KEYS = Object.freeze([
@@ -191,7 +204,11 @@ function normalizeGoal(input) {
         const text = oneLine(item.text, `${at}.text`);
         if (text === '') throw new GoalError(`${at}.text must not be empty.`);
         const check = item.check === undefined ? '' : oneLine(item.check, `${at}.check`);
-        return { state: item.state, text, check };
+        return {
+            state: item.state,
+            text,
+            check,
+        };
     });
     const consents = readList(input.consents, 'consents', (item, at) => {
         const action = oneLine(item.action, `${at}.action`);
@@ -199,7 +216,10 @@ function normalizeGoal(input) {
         if (action === '' || reason === '') {
             throw new GoalError(`${at} needs an action and a reason.`);
         }
-        return { action, reason };
+        return {
+            action,
+            reason,
+        };
     });
     const premises = readList(input.premises, 'premises', (item, at) => {
         const premise = oneLine(item.premise, `${at}.premise`);
@@ -246,7 +266,12 @@ function normalizeGoal(input) {
  * @throws {GoalError} When the section would be longer than the bound.
  */
 function renderGoalSection(goal) {
-    const lines = [GOAL_HEADING, '', SECTION_COMMENT, ''];
+    const lines = [
+        GOAL_HEADING,
+        '',
+        SECTION_COMMENT,
+        '',
+    ];
     if (goal.statement !== null) lines.push(`- **Goal:** ${goal.statement}`);
     if (goal.phase !== null) {
         const range = goal.phaseTo === null ? '' : `..${goal.phaseTo}`;
@@ -315,7 +340,15 @@ function fitPremises(premises, dropped, room) {
  */
 function splitAtSeparator(rest) {
     const at = rest.indexOf(' — ');
-    return at === -1 ? [rest.trim(), ''] : [rest.slice(0, at).trim(), rest.slice(at + 3).trim()];
+    return at === -1
+        ? [
+              rest.trim(),
+              '',
+          ]
+        : [
+              rest.slice(0, at).trim(),
+              rest.slice(at + 3).trim(),
+          ];
 }
 
 /**
@@ -482,23 +515,41 @@ function parseGoalSection(stateText) {
  * @returns {{met: number, open: number, blocked: number}}
  */
 function countCriteria(goal) {
-    const counts = { met: 0, open: 0, blocked: 0 };
+    const counts = {
+        met: 0,
+        open: 0,
+        blocked: 0,
+    };
     for (const { state } of goal.criteria) counts[state] += 1;
     return counts;
 }
 
 /**
  * Names the scope of a goal in the words the commands use: the statement, `phase-N`,
- * `phase-N..M`, `N tasks`, or the statement or phases with their task limit.
+ * `phase-N..M`, `N tasks`, or the statement or phases with their task limit. On a 4.0
+ * workspace the numbers of a goal are those of its milestones, spelled `M{n}` and
+ * `M{n}..M{m}`.
  *
  * @param {ReturnType<typeof normalizeGoal>} goal - A goal.
+ * @param {string|null} [format] - The workspace's format, `'4'` for a document set.
  * @returns {string}
  */
-function describeScope(goal) {
+function describeScope(goal, format = null) {
     const parts = [];
     if (goal.statement !== null) parts.push(`"${goal.statement}"`);
     if (goal.phase !== null) {
-        parts.push(`phase-${goal.phase}${goal.phaseTo === null ? '' : `..${goal.phaseTo}`}`);
+        const [first, again] =
+            format === '4'
+                ? [
+                      'M',
+                      'M',
+                  ]
+                : [
+                      'phase-',
+                      '',
+                  ];
+        const range = goal.phaseTo === null ? '' : `..${again}${goal.phaseTo}`;
+        parts.push(`${first}${goal.phase}${range}`);
     }
     if (goal.taskLimit !== null) parts.push(`${goal.taskLimit} tasks`);
     return parts.join(' ');
@@ -506,6 +557,7 @@ function describeScope(goal) {
 
 module.exports = {
     GOAL_HEADING,
+    GOAL_FILE,
     MAX_GOAL_LINES,
     MAX_TEXT,
     CRITERION_STATES,

@@ -8,6 +8,13 @@ description: Builds, analyzes and visualizes the specification knowledge graph o
 
 **HTML triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*, *"Generate graph visualization"*.
 
+**Contents:**
+
+- Steps
+- On a 4.0 Workspace
+- Graph Completion Checklist
+- Handoffs
+
 **Trigger:** `/magicspec graph [argument]`. Arguments:
 
 - *(empty)* — the analysis (Steps 1, 2 and 4)
@@ -73,6 +80,17 @@ Produce a consolidated graph advisory with 🟢/🟡/🔴 signal:
 - 🟢 **Green**: 0 orphaned files, 0 missing Implements, all communities Jaccard ≥ 0.5.
 - 🟡 **Yellow**: 1–3 orphaned files OR 1–2 missing Implements OR any community Jaccard 0.3–0.5.
 - 🔴 **Red**: god node without spec, bridge specs, community Jaccard < 0.3, or oversized community with split suggestion.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+`graph` builds one graph of every workspace and resolves none: these steps apply to each registered workspace in the 4.0 format, and the steps above to the others.
+
+1. **Build**: `node scripts/executor.js build-spec-graph`. Every unit of a set is a node `unit:{workspace}:{address}`, contained by its workspace, with a `references` edge to each unit it names. Report the graph size, the count of units and the god nodes. A set has no specification status and no specification coverage: `PRIORITY_SPEC`, orphaned files, missing `Implements` and bridge specs do not apply to it.
+2. **Wiki**: `node scripts/executor.js export-wiki` writes an article per document of a set, with the references each of its units makes and receives.
+3. **Communities and page**: Steps 2 and 3 above, as written.
+4. **Advisory**: the signal of Step 4, in which a set adds no orphaned file and no missing `Implements`. Whether a set's references resolve is the report of `check-docs`, not of the graph.
 
 ## Graph Completion Checklist
 

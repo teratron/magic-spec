@@ -5,7 +5,7 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 ## S-1: An idea becomes a running task, one stage per command
 
 **Actor:** a developer working in a project where the engine is installed
-**Verifies:** l1-pipeline-stages.md §3 PS-1, l1-pipeline-stages.md §3 PS-7, l1-pipeline-stages.md §5.4 Handoff Line, l1-plan-command.md §3 PL-5
+**Verifies:** l1-pipeline-stages.md §3 PS-1, l1-pipeline-stages.md §3 PS-7, l1-pipeline-stages.md §5.4 Handoff Line, l1-plan-command.md §3 PL-5, l2-engine-finalization.md §13 Git Probes
 **Preconditions:** a disposable project: a scratch directory outside this repository, holding its own copy of the engine folder, initialised there, with one workspace, an empty registry and no product code.
 
 **Steps:**
@@ -15,7 +15,7 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 3. `/magicspec task` → expect: the phase is decomposed into tasks, each citing a section of that specification and carrying a verify line, in the task ledger and a phase workbook (composed); no product file has been written (printed); the invocation ends with `Next: /magicspec run {workspace} — standard reasoning` (printed).
 4. `/magicspec run` → expect: the tasks of the phase are executed as the workbook states them and each is recorded there as done or blocked (composed); nothing is asked and nothing waits at the end of the invocation (composed); the invocation ends with a handoff line that names `/magicspec run {workspace} — standard reasoning` while a task remains, and otherwise the step the recorded state computes (printed).
 
-**Variants:** a request whose own words ask for the following stage too ("specify this and plan it") runs both stages, says in one line that the request asked for the second, and still ends after it with that stage's own handoff line, naming `task` (composed).
+**Variants:** a request whose own words ask for the following stage too ("specify this and plan it") runs both stages, says in one line that the request asked for the second, and still ends after it with that stage's own handoff line, naming `task` (composed). The project is a git repository with no commit yet → the stages run the same way and no finalization prints a line of git's, neither a `fatal:` line nor a line-ending warning (printed; l2-engine-finalization.md §13).
 
 **Last run:** never
 
@@ -52,7 +52,7 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 
 **Last run:** never
 
-## S-4: An idea on a 4.0 workspace reaches a built first milestone
+## S-15: An idea on a 4.0 workspace reaches a built first milestone
 
 **Actor:** a developer working in a project where the engine is installed
 **Verifies:** l2-sdd-document-set-engine.md §5.4 rows `spec`, `plan`, `task`, `run`, l2-sdd-document-set-engine.md §5.2 (`check-docs`, `pack`, `mark-built`, `finalize`), l1-pipeline-stages.md §5.4 Handoff Line

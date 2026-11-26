@@ -33,3 +33,20 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** the same name given through the environment instead of the argument stops the same way and writes nothing (printed); the one command that may create a workspace is `/magicspec spec` — asked to open a new workspace `mobile` it creates it, and afterwards `/magicspec task mobile` is accepted (composed).
 
 **Last run:** never
+
+## S-16: `goal M3..M5` on a 4.0 workspace records its goal in `memory/goal.md` and stops when the milestones are built
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l1-goal-mode.md §3 GM-3, l1-goal-mode.md §3 GM-4, l1-goal-mode.md §3 GM-6, l1-goal-mode.md §3 GM-8, l2-sdd-document-set-engine.md §5.4 row `goal`, l1-sdd-document-set.md §5.7 Memory, l1-sdd-document-set.md §6 Implementation Notes
+**Preconditions:** a disposable project with the engine installed, one registered workspace whose entry in `workspace.json` carries `"format": "4"`, holding a document set with its stack layer and a plan of five milestones, of which `M1` and `M2` are built and recorded done in `memory/state.md`, with no goal recorded.
+
+**Steps:**
+
+1. `/magicspec goal M3..M5` → expect: nothing is asked; the goal is recorded with the one criterion `M3..M5 are done` (composed; `goal.md` §On a 4.0 Workspace, steps 1 and 3), `update-state` prints `[update-state] memory/goal.md written` and `memory/goal.md` holds the target `3..5`; no `STATE.md` exists in the workspace (printed; l1-sdd-document-set.md §5.7).
+2. End the session at a stage boundary and ask a new one where the project stands → expect: one line `▶ Resume [{workspace}]: goal M3..M5 — 0 met, 1 open, 0 blocked. Next: /magicspec goal` (printed; l1-goal-mode.md §3 GM-3); the briefing names `/magicspec goal` (composed; `status.md` §On a 4.0 Workspace, step 3).
+3. `/magicspec goal` → expect: one `Continuing:` line with the scope `M3..M5`; the tasks of `M3` are written and built through the sections of `task` and `run`, each stage finalizing as itself and none waiting for input (composed; `goal.md` §On a 4.0 Workspace, steps 4 and 5); while a milestone has no task file the finalization names `/magicspec task {workspace}` (printed; l2-sdd-document-set-engine.md §5.2, `finalize`).
+4. Wait for the mode to stop → expect: `memory/state.md` holds a `- Done:` line for `M3`, `M4` and `M5`, and the finalization states that nothing is pending (printed; l2-sdd-document-set-engine.md §5.2, `finalize`); one report is printed once, stopped on done, with one `Work:` line per milestone (composed; l1-goal-mode.md §3 GM-8, `goal.md` §On a 4.0 Workspace, step 6).
+
+**Variants:** `/magicspec goal M9` names a milestone the plan lacks → one line lists the milestones, nothing runs and no `memory/goal.md` is written (composed; `goal.md` §On a 4.0 Workspace, step 1).
+
+**Last run:** never

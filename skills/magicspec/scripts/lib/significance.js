@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync, execFileSync } = require('child_process');
 const { hashFileSafe, normalizePath, STATE_DIR_NAME } = require('../utils');
+const { QUIET, fileStatus, fileNumstat: gitFileNumstat } = require('./git-utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SIGNIFICANCE DETECTOR (Whitelist × Git Diff)
@@ -39,8 +40,13 @@ const WHITELIST = {
         `${STATE_DIR_NAME}/RULES.md`,
         `${STATE_DIR_NAME}/{ws}/RULES.md`,
     ],
-    'magic.plan': [`${STATE_DIR_NAME}/{ws}/PLAN.md`],
-    'magic.task': [`${STATE_DIR_NAME}/{ws}/TASKS.md`, `${STATE_DIR_NAME}/{ws}/tasks/**/*.md`],
+    'magic.plan': [
+        `${STATE_DIR_NAME}/{ws}/PLAN.md`,
+    ],
+    'magic.task': [
+        `${STATE_DIR_NAME}/{ws}/TASKS.md`,
+        `${STATE_DIR_NAME}/{ws}/tasks/**/*.md`,
+    ],
     'magic.run': [
         `${STATE_DIR_NAME}/{ws}/TASKS.md`,
         `${STATE_DIR_NAME}/{ws}/STATE.md`,
@@ -57,9 +63,14 @@ const WHITELIST = {
         `${STATE_DIR_NAME}/{ws}/specifications/**/*.md`,
         `${STATE_DIR_NAME}/{ws}/INDEX.md`,
     ],
-    'magic.rule': [`${STATE_DIR_NAME}/RULES.md`, `${STATE_DIR_NAME}/{ws}/RULES.md`],
+    'magic.rule': [
+        `${STATE_DIR_NAME}/RULES.md`,
+        `${STATE_DIR_NAME}/{ws}/RULES.md`,
+    ],
     // A simulation writes the `Last run` record of the scenario files and nothing else.
-    'magic.simulate': [`${STATE_DIR_NAME}/{ws}/simulations/**/*.md`],
+    'magic.simulate': [
+        `${STATE_DIR_NAME}/{ws}/simulations/**/*.md`,
+    ],
 };
 
 /**
@@ -132,7 +143,10 @@ function matchAny(relPath, compiled) {
 function resolveWhitelist(workflow, workspace) {
     const patterns = (WHITELIST[workflow] || []).map((p) => p.replace(/\{ws\}/g, workspace));
     const compiled = patterns.map(compileGlob);
-    return { patterns, compiled };
+    return {
+        patterns,
+        compiled,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -149,9 +163,16 @@ function resolveWhitelist(workflow, workspace) {
  */
 function gitChangedPaths(cwd) {
     try {
-        execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
+        execSync('git rev-parse --is-inside-work-tree', {
+            cwd,
+            stdio: 'ignore',
+        });
     } catch {
-        return { available: false, paths: [], error: 'not-a-git-repo' };
+        return {
+            available: false,
+            paths: [],
+            error: 'not-a-git-repo',
+        };
     }
 
     let tracked = '';
@@ -159,18 +180,31 @@ function gitChangedPaths(cwd) {
     try {
         // `git diff --name-only HEAD` covers staged + unstaged vs HEAD; on a
         // brand-new repo without HEAD, this throws — handle below.
-        tracked = execSync('git diff --name-only HEAD', { cwd, encoding: 'utf8' });
+        tracked = execSync('git diff --name-only HEAD', {
+            cwd,
+            ...QUIET,
+        });
     } catch {
         // No HEAD yet (initial commit not made) — fall back to all tracked
         // and untracked as "changed".
         try {
-            tracked = execSync('git ls-files', { cwd, encoding: 'utf8' });
+            tracked = execSync('git ls-files', {
+                cwd,
+                ...QUIET,
+            });
         } catch (e) {
-            return { available: false, paths: [], error: e.message };
+            return {
+                available: false,
+                paths: [],
+                error: e.message,
+            };
         }
     }
     try {
-        untracked = execSync('git ls-files --others --exclude-standard', { cwd, encoding: 'utf8' });
+        untracked = execSync('git ls-files --others --exclude-standard', {
+            cwd,
+            ...QUIET,
+        });
     } catch {
         // Non-fatal — proceed with tracked only.
     }
@@ -181,7 +215,10 @@ function gitChangedPaths(cwd) {
         .filter(Boolean)
         .map(normalizePath);
 
-    return { available: true, paths: Array.from(new Set(all)) };
+    return {
+        available: true,
+        paths: Array.from(new Set(all)),
+    };
 }
 
 /**
@@ -193,19 +230,9 @@ function gitChangedPaths(cwd) {
  * @returns {string}
  */
 function gitFileStatus(cwd, relPath) {
-    try {
-        const out = execFileSync('git', ['status', '--porcelain', '--', relPath], {
-            cwd,
-            encoding: 'utf8',
-        }).trim();
-        if (!out) return 'unknown';
-        const code = out.slice(0, 2);
-        if (code.includes('A') || code === '??') return 'added';
-        if (code.includes('D')) return 'deleted';
-        return 'modified';
-    } catch {
-        return 'unknown';
-    }
+    const status = fileStatus(cwd, relPath);
+    // A renamed file is a modified one here: the changelog has no category of its own for it.
+    return status === 'renamed' ? 'modified' : status;
 }
 
 /**
@@ -218,36 +245,22 @@ function gitFileStatus(cwd, relPath) {
  */
 function gitFileDiff(cwd, relPath) {
     try {
-        return execFileSync('git', ['diff', '--unified=0', 'HEAD', '--', relPath], {
-            cwd,
-            encoding: 'utf8',
-        });
+        return execFileSync(
+            'git',
+            [
+                'diff',
+                '--unified=0',
+                'HEAD',
+                '--',
+                relPath,
+            ],
+            {
+                cwd,
+                ...QUIET,
+            },
+        );
     } catch {
         return '';
-    }
-}
-
-/**
- * Returns line-add/line-del counts for a file (vs HEAD). Best-effort.
- *
- * @param {string} cwd
- * @param {string} relPath
- * @returns {{added: number, deleted: number}}
- */
-function gitFileNumstat(cwd, relPath) {
-    try {
-        const out = execFileSync('git', ['diff', '--numstat', 'HEAD', '--', relPath], {
-            cwd,
-            encoding: 'utf8',
-        }).trim();
-        if (!out) return { added: 0, deleted: 0 };
-        const [addStr, delStr] = out.split(/\s+/);
-        return {
-            added: parseInt(addStr, 10) || 0,
-            deleted: parseInt(delStr, 10) || 0,
-        };
-    } catch {
-        return { added: 0, deleted: 0 };
     }
 }
 
@@ -298,7 +311,10 @@ function snapshotHashes(rootDir, relPaths) {
  * @returns {string[]}
  */
 function diffSnapshots(prev, next) {
-    const keys = new Set([...Object.keys(prev || {}), ...Object.keys(next || {})]);
+    const keys = new Set([
+        ...Object.keys(prev || {}),
+        ...Object.keys(next || {}),
+    ]);
     const out = [];
     for (const k of keys) {
         if (prev?.[k] !== next?.[k]) out.push(k);
@@ -382,7 +398,12 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
     const files = candidates.map((p) => ({
         path: p,
         status: probe.available ? gitFileStatus(cwd, p) : 'unknown',
-        ...(probe.available ? gitFileNumstat(cwd, p) : { added: 0, deleted: 0 }),
+        ...(probe.available
+            ? gitFileNumstat(cwd, p)
+            : {
+                  added: 0,
+                  deleted: 0,
+              }),
     }));
 
     const significant = files.length > 0;

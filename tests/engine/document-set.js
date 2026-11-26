@@ -74,39 +74,144 @@ const linesOf = (text) => text.split('\n').filter(Boolean);
 const SECTION_OPENING =
     'Taken when the resolved workspace\'s entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.';
 
-// What each pipeline body's 4.0 section runs, and the role it hands the work to.
+// The headings a body's 4.0 section stands right before.
+const FINALIZATION = 'Finalization Protocol (Mandatory)';
+const checklist = (/** @type {string} */ name) => `${name} Completion Checklist`;
+// The argument every script of one workspace is given.
+const HERE = '--workspace={active-workspace}';
+
+// What each body's 4.0 section runs and names, the role it hands the work to, and where it stands.
+/** @type {{ body: string, calls: string[], names?: string[], role?: string, place?: string }[]} */
 const BODY_SECTIONS = [
     {
         body: 'spec',
         calls: [
-            'check-docs',
+            `check-docs ${HERE}`,
         ],
         role: 'spec-critic',
     },
     {
         body: 'plan',
         calls: [
-            'check-docs',
+            `check-docs ${HERE}`,
         ],
         role: 'planner',
     },
     {
         body: 'task',
         calls: [
-            'check-docs',
-            'pack {task}',
+            `check-docs ${HERE}`,
+            `pack {task} ${HERE}`,
         ],
         role: 'planner',
     },
     {
         body: 'run',
         calls: [
-            'check-docs',
-            'pack {task}',
-            'mark-built M{n}',
-            'check-log',
+            `check-docs ${HERE}`,
+            `pack {task} ${HERE}`,
+            `mark-built M{n} ${HERE}`,
+            `check-log ${HERE}`,
         ],
         role: 'coder',
+    },
+    {
+        body: 'goal',
+        calls: [
+            `check-prerequisites --json ${HERE}`,
+            `update-state ${HERE} --goal-file {path-to-the-json}`,
+        ],
+        names: [
+            '`M{n}..M{m}`',
+            '`{N} tasks`',
+            '`memory/goal.md`',
+            '`--goal-clear`',
+            'the command the last finalization named',
+        ],
+        place: checklist('Goal'),
+    },
+    {
+        body: 'fix',
+        calls: [
+            `check-docs ${HERE}`,
+        ],
+        names: [
+            'a change of kind `fix` in `changes.md`',
+            'is `satisfied`',
+            'the `Observe` of the task that builds the change',
+        ],
+        role: 'spec-critic',
+    },
+    {
+        body: 'simulate',
+        calls: [
+            `check-prerequisites --json ${HERE}`,
+        ],
+        names: [
+            '`simulations/{area}.md`',
+            'the scope items of `product.md` and the `Accept` lines',
+            '`**Milestone:** M{n}`',
+            'handed to `fix`',
+        ],
+        role: 'simulator-tester',
+    },
+    {
+        body: 'status',
+        calls: [
+            `check-docs ${HERE}`,
+            `resume-state ${HERE}`,
+        ],
+        names: [
+            '`memory/state.md`',
+            '`memory/goal.md`',
+            'read-only',
+        ],
+        place: checklist('Status'),
+    },
+    {
+        body: 'rule',
+        calls: [
+            `check-docs ${HERE}`,
+            'export-wiki',
+        ],
+        names: [
+            'global constitution `.magicspec/RULES.md` is unchanged',
+            'the unit `R{n}` of `rules.md`',
+            '`templates/set/rules.md`',
+            'no `From` line: the plan stage writes it',
+        ],
+        role: 'constitutional-reviewer',
+    },
+    {
+        body: 'graph',
+        calls: [
+            'build-spec-graph',
+            'export-wiki',
+        ],
+        names: [
+            '`unit:{workspace}:{address}`',
+        ],
+        place: checklist('Graph'),
+    },
+    {
+        body: 'sync',
+        calls: [
+            'sync [{area} | {workspace}] [--dry-run]',
+        ],
+        names: [
+            'the `Next` line of its `memory/state.md`',
+            '`registry` area skips it',
+        ],
+        place: checklist('Sync'),
+    },
+    {
+        body: 'help',
+        calls: [],
+        names: [
+            '`help goal`',
+            '`M{n}..M{m}`',
+        ],
+        place: checklist('Help'),
     },
 ];
 
@@ -115,29 +220,27 @@ const repoText = (/** @type {string[]} */ ...parts) =>
     fs.readFileSync(path.join(TESTS_DIR, '..', ...parts), 'utf8');
 
 module.exports = () => {
-    for (const { body, calls, role } of BODY_SECTIONS) {
-        test(`document set: the ${body} body takes its 4.0 section before the finalization and names its scripts and its role`, () => {
+    for (const { body, calls, names = [], role, place = FINALIZATION } of BODY_SECTIONS) {
+        const before = place === FINALIZATION ? 'the finalization' : 'its checklist';
+        test(`document set: the ${body} body takes its 4.0 section before ${before} and names its scripts${role ? ' and its role' : ''}`, () => {
             const text = repoText('skills', 'magicspec', 'workflows', `${body}.md`);
             const parts = text.split('\n## On a 4.0 Workspace\n');
             assert.strictEqual(parts.length, 2, 'one 4.0 section');
             const [section, ...after] = parts[1].split('\n## ');
             assert.ok(
-                after[0]?.startsWith('Finalization Protocol (Mandatory)\n'),
-                'the section stands right before the finalization',
+                after[0]?.startsWith(`${place}\n`),
+                `the section stands right before ${before}`,
             );
-            assert.ok(
-                text.includes('\n- On a 4.0 Workspace\n- Finalization Protocol (Mandatory)\n'),
-                'the contents list names it at the same place',
-            );
+            if (text.includes('\n**Contents:**\n'))
+                assert.ok(
+                    text.includes(`\n- On a 4.0 Workspace\n- ${place}\n`),
+                    'the contents list names it at the same place',
+                );
             assert.strictEqual(linesOf(section)[0], SECTION_OPENING);
             for (const call of calls)
-                assert.ok(
-                    section.includes(
-                        `node scripts/executor.js ${call} --workspace={active-workspace}`,
-                    ),
-                    `runs ${call}`,
-                );
-            assert.ok(section.includes(`@role:${role}`), `hands the work to ${role}`);
+                assert.ok(section.includes(`node scripts/executor.js ${call}`), `runs ${call}`);
+            for (const name of names) assert.ok(section.includes(name), `names ${name}`);
+            if (role) assert.ok(section.includes(`@role:${role}`), `hands the work to ${role}`);
         });
     }
 
@@ -1372,6 +1475,86 @@ module.exports = () => {
             }
             assert.strictEqual(runGood(dir, 'archive-phases', '--check').trim(), '');
             assert.ok(sameTree(before, treeHashes(dir)), 'a script wrote into the set');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: update-state records the goal of a 4.0 workspace in memory/goal.md, resume-state reads it, and a refused goal writes nothing', () => {
+        const dir = makeSetProject('good');
+        try {
+            const goal = {
+                phase: 2,
+                phaseTo: 3,
+                criteria: [
+                    {
+                        state: 'open',
+                        text: 'M2..M3 are done',
+                        check: 'the Done lines',
+                    },
+                ],
+            };
+            writeIn(dir, 'goal.json', JSON.stringify(goal));
+            writeIn(dir, 'refused.json', '{"phase": 2, "unknown": true}');
+            const state = () => readDocs(dir, 'memory/state.md');
+            const recorded = state();
+            const write = (/** @type {string[]} */ ...args) =>
+                runGood(dir, 'update-state', ...args)
+                    .trim()
+                    .split('\n');
+            const resume = () => runGood(dir, 'resume-state', '--all').trim();
+
+            const refused = simExec(dir, [
+                'update-state',
+                '--goal-file=refused.json',
+                '--decision=x',
+            ]);
+            assert.strictEqual(refused.status, 1, refused.stdout);
+            assert.match(refused.stderr, /the goal was refused — Unknown goal field 'unknown'/);
+            assert.strictEqual(refused.stdout.trim(), '');
+            assert.ok(!fs.existsSync(docsFile(dir, 'memory/goal.md')));
+            assert.deepStrictEqual(write('--goal-clear'), [
+                '[update-state] memory/goal.md absent; nothing removed',
+            ]);
+
+            assert.deepStrictEqual(write('--goal-file=goal.json'), [
+                '[update-state] memory/goal.md written',
+            ]);
+            const file = readDocs(dir, 'memory/goal.md');
+            assert.match(file, /^## Goal\n\n<!-- Written by update-state only;/);
+            assert.match(file, /^- \*\*Target phase:\*\* 2\.\.3$/m);
+            assert.ok(file.endsWith('- [open] M2..M3 are done — the Done lines\n'));
+            const named = 'goal M2..M3 — 0 met, 1 open, 0 blocked';
+            assert.strictEqual(
+                resume(),
+                `▶ Resume [docs]: Now M2.T1 · Next M2.T1 · Open 0; ${named}`,
+            );
+            const json = JSON.parse(runGood(dir, 'resume-state', '--all', '--json'));
+            assert.strictEqual(json.workspaces[0].goal.scope, 'M2..M3');
+
+            // With no task being built the goal's command is the step, state file or not.
+            writeIn(dir, '.magicspec/docs/memory/state.md', '# State\n\n- Next: M2.T1\n');
+            assert.strictEqual(resume(), `▶ Resume [docs]: ${named}. Next: /magicspec goal`);
+            writeIn(dir, '.magicspec/docs/memory/state.md', '- Open: a question\n', true);
+            assert.strictEqual(
+                resume(),
+                `▶ Resume [docs]: Open 1; ${named}. Next: /magicspec goal`,
+            );
+            fs.rmSync(docsFile(dir, 'memory/state.md'));
+            assert.strictEqual(resume(), `▶ Resume [docs]: ${named}. Next: /magicspec goal`);
+            writeIn(dir, '.magicspec/docs/memory/state.md', recorded);
+
+            // A goal beside another flag: the goal is recorded, the rest answered by one line.
+            assert.deepStrictEqual(write('--goal-file=goal.json', '--next-action=x'), [
+                '[update-state] memory/goal.md written',
+                '[update-state] docs is a 4.0 workspace: its state is memory/state.md; nothing written.',
+            ]);
+            assert.deepStrictEqual(write('--goal-clear'), [
+                '[update-state] memory/goal.md removed',
+            ]);
+            assert.ok(!fs.existsSync(docsFile(dir, 'memory/goal.md')));
+            assert.strictEqual(state(), recorded);
+            assert.ok(!fs.existsSync(docsFile(dir, 'STATE.md')));
         } finally {
             cleanup(dir);
         }

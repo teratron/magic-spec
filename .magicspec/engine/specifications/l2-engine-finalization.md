@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.10.2
+**Version:** 3.11.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -218,6 +218,14 @@ A fixture of a repair that finished a maintenance phase (archived, a `Fixed` ent
 
 A fixture with two open findings (the next action, the handoff line, the version bump, the `Changed` entry) and one with none (the plan-state step); the reader field for field, with a comment and a code block ignored; the bullet, the category and the whitelist; the accepted-workflow list in the refusal and in the help; the kernel and the rule module naming the workflow.
 
+## 13. Git Probes Print Nothing of Git's `[ADDED]`
+
+The finalization reads the working tree through git: the change set against `HEAD`, and the status, the line counts and the diff of a file. Each of these probes captures what git writes to standard output and discards what it writes to standard error. A probe git cannot answer says so through its result — in a repository with no commit yet there is nothing to compare with `HEAD`, so the change set is the tracked and untracked files and a file's counts are zero. No line of git's, a `fatal:` line or a line-ending warning, reaches the output of the command: it is no finding of the engine, and the agent shows that output to the person. The options of a probe are defined once, in `git-utils.js`, and the probes of `significance.js` take them from there.
+
+### 13.1 Regression Coverage
+
+One harness case runs `finalize` for two workflows in a repository with no commit yet and in one whose line endings git warns about, and asserts that standard error holds no line of git's; it is under mutation control.
+
 ## Canonical References
 
 | Path | Role |
@@ -237,6 +245,7 @@ A fixture with two open findings (the next action, the handoff line, the version
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.11.0 | 2026-11-26 | Agent | **A git probe of the finalization prints nothing of git's** (new §13; a specification gap closed by `/magicspec-dev fix`, feedback note n7, Phase 84): in a repository with no commit yet `finalize` printed git's `fatal:` lines on standard error, and under a line-ending conversion its warnings, while the helpers other scripts use already discarded them and no specification said which was meant. Amendment Rule round trip: RFC, Post-Update Review (coherence: 4 artifacts compared — `l2-session-checkpoint.md`, `l1-engine-diagnostics.md`, `l2-finalize-output-contract.md`, `l2-engine-diagnostics.md` — 0 findings; spec-critic PASS; prompt-engineer PASS), Stable. |
 | 3.10.2 | 2026-11-26 | Agent | Defect repaired, Stable retained: the 4.0 next step ignored the stage the set waited for and named `task` after the spec stage and after the last milestone, against the handoff line of the pipeline; §5.1 states the repaired computation. The 3.x contract unchanged. |
 | 3.10.1 | 2026-11-26 | Agent | As built in Phase 70, Stable retained, no requirement changed: §5.1 states the 4.0 branch of the state step the document-set concept declares (the `Next` line of `memory/state.md`, no `STATE.md`, no archival); the 3.x contract unchanged. |
 | 3.10.0 | 2026-11-18 | Agent | **A finished ledger is not re-synced after a plan** (a specification defect closed by `/magicspec-dev fix`, Phase 64, owner's report after `/magicspec plan engine` named `/magicspec task` for a ledger whose only difference was the plan version in its header): §5.1 prescribed the re-sync of a ledger behind the plan for every plan, which contradicts PL-5 (`plan` names `task` only when it changed what the active or next phase holds) when no phase is open — the task command's Sync step touches only tasks that are not Done, so there is nothing to apply. §5.1 now names the re-sync only while a phase of the ledger is open; with every phase terminal the plan state decides (SC-2.1(d)). The step after a plan keeps the undecomposed phase first and the planning step first on a stale plan (3.9.2). Amendment Rule round trip: RFC, Post-Update Review (coherence: 6 artifacts compared — `l1-plan-command.md` PL-5, `l1-session-continuity.md` SC-2.1(d) and (d1), `l2-test-suite.md` SC-2.1 coverage, `workflows/plan.md` Handoffs, `workflows/task.md` Plan Gate, `docs/task.md` — 1 finding, the coverage bullet of `l2-test-suite.md`, patched in its 1.48.4; spec-critic PASS; prompt-engineer PASS), Stable. |

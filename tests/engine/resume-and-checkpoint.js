@@ -28,7 +28,10 @@ module.exports = () => {
                 'resume-state',
                 ...args,
             ],
-            { cwd: tempDir, encoding: 'utf8' },
+            {
+                cwd: tempDir,
+                encoding: 'utf8',
+            },
         );
 
     test('resume-state stays silent when nothing is recorded in flight, even beside a stale handoff file or a hand-set Paused (SC-9(b), SC-9(g), H1)', () => {
@@ -49,7 +52,9 @@ module.exports = () => {
                 'fixture precondition: the stale snapshot is on disk',
             );
 
-            const quiet = runResumeState(tempDir, ['--workspace=engine']);
+            const quiet = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(quiet.status, 0);
             assert.strictEqual(
                 quiet.stdout,
@@ -62,7 +67,9 @@ module.exports = () => {
                 path.join(tempDir, '.magicspec', 'engine', 'STATE.md'),
                 resumeStateText('Paused', 'Pick up T-1A02'),
             );
-            const paused = runResumeState(tempDir, ['--workspace=engine']);
+            const paused = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(paused.status, 0);
             assert.strictEqual(
                 paused.stdout,
@@ -76,11 +83,15 @@ module.exports = () => {
                 engine: {
                     status: 'Paused',
                     staleHandoff: true,
-                    entries: [trackingEntry('T-1A02', 'Later', 'In Progress')],
+                    entries: [
+                        trackingEntry('T-1A02', 'Later', 'In Progress'),
+                    ],
                 },
             });
             assert.match(
-                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]).stdout,
                 /^▶ Resume \[engine\]: T-1A02 Later in flight — 0 dead end\(s\) recorded\. Next: /,
             );
         } finally {
@@ -90,7 +101,10 @@ module.exports = () => {
 
     test('resume-state names one in-flight task with its dead ends and the modified-file count, identically for LF and CRLF (SC-9(d), (e), H2, H4)', () => {
         const printed = {};
-        for (const eol of ['\n', '\r\n']) {
+        for (const eol of [
+            '\n',
+            '\r\n',
+        ]) {
             const tempDir = createTempWorkspace(true);
             try {
                 // Both the title and the Next Action carry a code span: stripping
@@ -111,7 +125,9 @@ module.exports = () => {
                             ],
                         },
                     },
-                    { eol },
+                    {
+                        eol,
+                    },
                 );
                 commitFixture(tempDir);
 
@@ -119,14 +135,18 @@ module.exports = () => {
                 // workbook edit is bookkeeping the line already reports, so it must
                 // not be counted.
                 fs.appendFileSync(path.join(tempDir, 'README.md'), 'edit\n');
-                fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
+                fs.mkdirSync(path.join(tempDir, 'src'), {
+                    recursive: true,
+                });
                 fs.writeFileSync(path.join(tempDir, 'src', 'feature.js'), '// new\n');
                 fs.appendFileSync(
                     path.join(tempDir, '.magicspec', 'engine', 'tasks', 'phase-1.md'),
                     'edited\n',
                 );
 
-                const result = runResumeState(tempDir, ['--workspace=engine']);
+                const result = runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]);
                 assert.strictEqual(result.status, 0);
                 printed[eol] = result.stdout;
             } finally {
@@ -152,10 +172,17 @@ module.exports = () => {
         try {
             const inFlight = (id, title) => trackingEntry(id, title, 'In Progress');
             writeResumeFixture(tempDir, {
-                engine: { entries: [inFlight('T-1A01', 'One'), inFlight('T-1B01', 'Two')] },
+                engine: {
+                    entries: [
+                        inFlight('T-1A01', 'One'),
+                        inFlight('T-1B01', 'Two'),
+                    ],
+                },
             });
             assert.match(
-                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]).stdout,
                 /^▶ Resume \[engine\]: T-1A01 One; T-1B01 Two in flight — 0 dead end\(s\) recorded\. Next: /,
                 'two tasks in flight: both named',
             );
@@ -171,15 +198,24 @@ module.exports = () => {
                 },
             });
             assert.match(
-                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]).stdout,
                 /^▶ Resume \[engine\]: T-1A01 One; T-1B01 Two; T-1C01 Three \+1 more in flight — /,
                 'four tasks in flight: three named, one counted',
             );
 
             writeResumeFixture(tempDir, {
-                engine: { status: 'Paused', entries: [inFlight('T-1A01', 'One')] },
+                engine: {
+                    status: 'Paused',
+                    entries: [
+                        inFlight('T-1A01', 'One'),
+                    ],
+                },
             });
-            const withPaused = runResumeState(tempDir, ['--workspace=engine']).stdout;
+            const withPaused = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]).stdout;
             assert.match(
                 withPaused,
                 /^▶ Resume \[engine\]: T-1A01 One in flight — 0 dead end\(s\) recorded\. Next: /,
@@ -187,10 +223,17 @@ module.exports = () => {
             );
             assert.doesNotMatch(withPaused, /paused|snapshot/i);
             writeResumeFixture(tempDir, {
-                engine: { status: 'Active', entries: [inFlight('T-1A01', 'One')] },
+                engine: {
+                    status: 'Active',
+                    entries: [
+                        inFlight('T-1A01', 'One'),
+                    ],
+                },
             });
             assert.strictEqual(
-                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]).stdout,
                 withPaused,
                 'the line does not depend on the Status value',
             );
@@ -203,10 +246,16 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             writeResumeFixture(tempDir, {
-                engine: { entries: [trackingEntry('T-1A01', 'Only', 'In Progress')] },
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Only', 'In Progress'),
+                    ],
+                },
             });
 
-            const outside = runResumeState(tempDir, ['--workspace=engine']);
+            const outside = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(outside.status, 0);
             assert.match(
                 outside.stdout,
@@ -224,8 +273,13 @@ module.exports = () => {
             );
 
             // A repository whose first commit has not happened yet: "changed since HEAD" has no meaning.
-            execSync('git init -b master', { cwd: tempDir, stdio: 'ignore' });
-            const uncommitted = runResumeState(tempDir, ['--workspace=engine']);
+            execSync('git init -b master', {
+                cwd: tempDir,
+                stdio: 'ignore',
+            });
+            const uncommitted = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(uncommitted.status, 0);
             assert.doesNotMatch(
                 uncommitted.stdout,
@@ -242,15 +296,76 @@ module.exports = () => {
         }
     });
 
+    test("finalize prints no line of git's in a repository with no commit yet, or one git warns about line endings in", () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { designDir, wsDir, finalizePath } = createFinalizeFixture(tempDir);
+            const rules = path.join(designDir, 'RULES.md');
+            fs.writeFileSync(rules, '# Rules\n');
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '# Tasks\n\n- [x] [T-1A01] Done\n');
+            // The ledger alone is not a change of `run` before a commit exists; live memory is.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), resumeStateText('Active', 'Go on'));
+            const git = (/** @type {string} */ command) =>
+                execSync(`git ${command}`, {
+                    cwd: tempDir,
+                    stdio: 'ignore',
+                });
+            const quiet = (/** @type {string} */ workflow, /** @type {string} */ when) => {
+                const run = spawnSync(
+                    process.execPath,
+                    [
+                        finalizePath,
+                        `--workflow=${workflow}`,
+                        '--workspace=main',
+                    ],
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
+                );
+                assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+                assert.match(run.stdout, /Finalization complete/, `${when}: the change is seen`);
+                assert.doesNotMatch(
+                    run.stderr,
+                    /^(fatal|warning):|Use '--' to separate/m,
+                    `${when}: git's own diagnostics must not reach the output of finalize`,
+                );
+            };
+
+            git('init -b master');
+            git('config user.email "test@example.com"');
+            git('config user.name "Test User"');
+            git('config core.autocrlf false');
+            // `run` reads the diff of the ledger; both read the status and line counts of a file.
+            quiet('run', 'no commit yet');
+            quiet('rule', 'no commit yet');
+
+            commitFixture(tempDir);
+            git('config core.autocrlf true');
+            fs.appendFileSync(rules, '\nA line that ends in a line feed.\n');
+            fs.appendFileSync(path.join(wsDir, 'TASKS.md'), '- [x] [T-1A02] Done\n');
+            quiet('run', 'a line-ending warning');
+            quiet('rule', 'a line-ending warning');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('resume-state writes nothing on a clean run and records exactly one finding for an unreadable STATE.md (read-only, DG-1, H6)', () => {
         const tempDir = createTempWorkspace();
         try {
             writeResumeFixture(tempDir, {
-                engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] },
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Only', 'Done'),
+                    ],
+                },
             });
 
             const before = treeDigest(tempDir);
-            const clean = runResumeState(tempDir, ['--workspace=engine']);
+            const clean = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(clean.status, 0);
             assert.strictEqual(clean.stdout, '');
             assert.deepStrictEqual(
@@ -269,7 +384,9 @@ module.exports = () => {
             fs.mkdirSync(statePath);
             const beforeFault = treeDigest(tempDir);
 
-            const faulty = runResumeState(tempDir, ['--workspace=engine']);
+            const faulty = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(
                 faulty.status,
                 0,
@@ -310,7 +427,9 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
-            writeResumeFixture(tempDir, { engine: {} });
+            writeResumeFixture(tempDir, {
+                engine: {},
+            });
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
 
             const workbook = (entries) =>
@@ -358,11 +477,15 @@ module.exports = () => {
 
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), workbook(plain));
             const nextPlain = finalize.computeNextAction('run', 'engine', wsDir);
-            const linePlain = runResumeState(tempDir, ['--workspace=engine']).stdout;
+            const linePlain = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]).stdout;
 
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), workbook(quoting));
             const nextQuoting = finalize.computeNextAction('run', 'engine', wsDir);
-            const lineQuoting = runResumeState(tempDir, ['--workspace=engine']).stdout;
+            const lineQuoting = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]).stdout;
 
             assert.match(
                 nextPlain,
@@ -394,7 +517,9 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             const inFlight = (title) => ({
-                entries: [trackingEntry('T-1A01', title, 'In Progress')],
+                entries: [
+                    trackingEntry('T-1A01', title, 'In Progress'),
+                ],
             });
             writeResumeFixture(
                 tempDir,
@@ -403,9 +528,15 @@ module.exports = () => {
                     beta: inFlight('Beta task'),
                     gamma: inFlight('Gamma task'),
                     delta: inFlight('Delta task'),
-                    quiet: { entries: [trackingEntry('T-1A01', 'Quiet task', 'Done')] },
+                    quiet: {
+                        entries: [
+                            trackingEntry('T-1A01', 'Quiet task', 'Done'),
+                        ],
+                    },
                 },
-                { defaultWorkspace: 'alpha' },
+                {
+                    defaultWorkspace: 'alpha',
+                },
             );
 
             // executor.js consumes --workspace and substitutes the registry
@@ -415,11 +546,19 @@ module.exports = () => {
             assert.strictEqual(byDefault.length, 1, 'no flag: exactly the default workspace');
             assert.match(byDefault[0], /^▶ Resume \[alpha\]: /);
 
-            const beta = runResumeState(tempDir, ['--workspace=beta']).stdout.trim().split('\n');
+            const beta = runResumeState(tempDir, [
+                '--workspace=beta',
+            ])
+                .stdout.trim()
+                .split('\n');
             assert.strictEqual(beta.length, 1, '--workspace: exactly that workspace');
             assert.match(beta[0], /^▶ Resume \[beta\]: /);
 
-            const all = runResumeState(tempDir, ['--all']).stdout.trim().split('\n');
+            const all = runResumeState(tempDir, [
+                '--all',
+            ])
+                .stdout.trim()
+                .split('\n');
             assert.strictEqual(all.length, 4, 'three workspace lines and one overflow line');
             assert.match(all[3], /^▶ Resume: \+1 more workspace\(s\) with work in flight$/);
             assert.doesNotMatch(
@@ -437,15 +576,28 @@ module.exports = () => {
                         path.join(tempDir, 'skills', 'magicspec', 'scripts', 'resume-state.js'),
                         ...args,
                     ],
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 );
-            for (const args of [['--workspace=nope'], ['--workspace']]) {
+            for (const args of [
+                [
+                    '--workspace=nope',
+                ],
+                [
+                    '--workspace',
+                ],
+            ]) {
                 const result = direct(args);
                 assert.strictEqual(result.status, 0, `${args.join(' ')}: never a non-zero exit`);
                 assert.strictEqual(result.stdout, '', `${args.join(' ')}: silence`);
             }
             assert.match(
-                direct(['--all', '--workspace=gamma']).stdout,
+                direct([
+                    '--all',
+                    '--workspace=gamma',
+                ]).stdout,
                 /^▶ Resume \[gamma\]: .*\n$/,
             );
         } finally {
@@ -467,7 +619,10 @@ module.exports = () => {
                 },
             });
             const parsed = JSON.parse(
-                runResumeState(tempDir, ['--workspace=engine', '--json']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                    '--json',
+                ]).stdout,
             );
             assert.strictEqual(parsed.in_flight, true);
             assert.strictEqual(parsed.workspaces.length, 1);
@@ -480,16 +635,34 @@ module.exports = () => {
                 'workspace',
             ]);
             assert.strictEqual(entry.source, 'in-progress');
-            assert.deepStrictEqual(entry.tasks, [{ id: 'T-1A01', title: 'Only', attempts: 1 }]);
+            assert.deepStrictEqual(entry.tasks, [
+                {
+                    id: 'T-1A01',
+                    title: 'Only',
+                    attempts: 1,
+                },
+            ]);
             assert.strictEqual(entry.changed_files, null, 'not a repository: null, not zero');
             assert.strictEqual(entry.next_action, 'Execute T-1A01 Thing via /magicspec run engine');
 
             writeResumeFixture(tempDir, {
-                engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] },
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Only', 'Done'),
+                    ],
+                },
             });
             assert.deepStrictEqual(
-                JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout),
-                { in_flight: false, workspaces: [] },
+                JSON.parse(
+                    runResumeState(tempDir, [
+                        '--workspace=engine',
+                        '--json',
+                    ]).stdout,
+                ),
+                {
+                    in_flight: false,
+                    workspaces: [],
+                },
             );
         } finally {
             cleanup(tempDir);
@@ -499,12 +672,33 @@ module.exports = () => {
     const RESUME_GOAL = {
         statement: 'the import works',
         criteria: [
-            { state: 'met', text: 'CSV round-trips', check: 'scenario S-1' },
-            { state: 'open', text: 'JSON round-trips', check: 'scenario S-2' },
-            { state: 'open', text: 'XML round-trips', check: 'scenario S-3' },
-            { state: 'blocked', text: 'Excel round-trips', check: 'a decision' },
+            {
+                state: 'met',
+                text: 'CSV round-trips',
+                check: 'scenario S-1',
+            },
+            {
+                state: 'open',
+                text: 'JSON round-trips',
+                check: 'scenario S-2',
+            },
+            {
+                state: 'open',
+                text: 'XML round-trips',
+                check: 'scenario S-3',
+            },
+            {
+                state: 'blocked',
+                text: 'Excel round-trips',
+                check: 'a decision',
+            },
         ],
-        consents: [{ action: 'delete the old importer', reason: 'a destructive action' }],
+        consents: [
+            {
+                action: 'delete the old importer',
+                reason: 'a destructive action',
+            },
+        ],
     };
     const RESUME_GOAL_COUNTS = '1 met, 2 open, 1 blocked, 1 consent(s) queued';
 
@@ -512,9 +706,16 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             writeResumeFixture(tempDir, {
-                engine: { entries: [trackingEntry('T-1A01', 'Thing', 'Done')], goal: RESUME_GOAL },
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Thing', 'Done'),
+                    ],
+                    goal: RESUME_GOAL,
+                },
             });
-            const alone = runResumeState(tempDir, ['--workspace=engine']);
+            const alone = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(alone.status, 0);
             assert.strictEqual(
                 alone.stdout,
@@ -523,11 +724,15 @@ module.exports = () => {
 
             writeResumeFixture(tempDir, {
                 engine: {
-                    entries: [trackingEntry('T-1A01', 'Thing', 'In Progress')],
+                    entries: [
+                        trackingEntry('T-1A01', 'Thing', 'In Progress'),
+                    ],
                     goal: RESUME_GOAL,
                 },
             });
-            const both = runResumeState(tempDir, ['--workspace=engine']);
+            const both = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(both.stdout.trim().split('\n').length, 1, 'one line, not two');
             assert.strictEqual(
                 both.stdout,
@@ -542,12 +747,19 @@ module.exports = () => {
                     goal: {
                         phase: 3,
                         taskLimit: 5,
-                        criteria: [{ state: 'open', text: 'T-3A01 done' }],
+                        criteria: [
+                            {
+                                state: 'open',
+                                text: 'T-3A01 done',
+                            },
+                        ],
                     },
                 },
             });
             assert.strictEqual(
-                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                ]).stdout,
                 '▶ Resume [engine]: goal phase-3 5 tasks — 0 met, 1 open, 0 blocked. Next: /magicspec goal\n',
             );
 
@@ -581,7 +793,11 @@ module.exports = () => {
     test('resume-state is silent for a goal section that names no goal, and its --json carries the goal only where one is recorded (GM-3)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = writeResumeFixture(tempDir, { engine: { entries: [] } });
+            const designDir = writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                },
+            });
             const statePath = path.join(designDir, 'engine', 'STATE.md');
             fs.writeFileSync(
                 statePath,
@@ -592,20 +808,35 @@ module.exports = () => {
                         '## Goal\n\n<!-- nothing recorded -->\n\n## Session Continuity',
                     ),
             );
-            const empty = runResumeState(tempDir, ['--workspace=engine']);
+            const empty = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(empty.status, 0);
             assert.strictEqual(empty.stdout, '', 'an empty block prints nothing');
             assert.deepStrictEqual(
-                JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout),
+                JSON.parse(
+                    runResumeState(tempDir, [
+                        '--workspace=engine',
+                        '--json',
+                    ]).stdout,
+                ),
                 {
                     in_flight: false,
                     workspaces: [],
                 },
             );
 
-            writeResumeFixture(tempDir, { engine: { entries: [], goal: RESUME_GOAL } });
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                    goal: RESUME_GOAL,
+                },
+            });
             const parsed = JSON.parse(
-                runResumeState(tempDir, ['--workspace=engine', '--json']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                    '--json',
+                ]).stdout,
             );
             assert.strictEqual(parsed.in_flight, false, 'in_flight still means a task in flight');
             assert.strictEqual(parsed.workspaces.length, 1);
@@ -617,7 +848,11 @@ module.exports = () => {
                 phase_to: null,
                 task_limit: null,
                 bound: null,
-                criteria: { met: 1, open: 2, blocked: 1 },
+                criteria: {
+                    met: 1,
+                    open: 2,
+                    blocked: 1,
+                },
                 consents: 1,
                 without_progress: 0,
                 tasks_done: 0,
@@ -655,10 +890,17 @@ module.exports = () => {
 
             // With no goal the entry keeps the shape it always had.
             writeResumeFixture(tempDir, {
-                engine: { entries: [trackingEntry('T-1A01', 'Only', 'In Progress')] },
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Only', 'In Progress'),
+                    ],
+                },
             });
             const plain = JSON.parse(
-                runResumeState(tempDir, ['--workspace=engine', '--json']).stdout,
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                    '--json',
+                ]).stdout,
             );
             assert.ok(!('goal' in plain.workspaces[0]), 'no goal key where none is recorded');
         } finally {
@@ -697,16 +939,18 @@ module.exports = () => {
                 path.join(tempDir, 'skills', 'magicspec', 'templates', 'state.md'),
                 'utf8',
             );
-            const declared = [...template.matchAll(/^(?:- )?\*\*([^*\n]+):\*\*/gm)].map(
-                (match) => match[1],
-            );
+            const declared = [
+                ...template.matchAll(/^(?:- )?\*\*([^*\n]+):\*\*/gm),
+            ].map((match) => match[1]);
 
             assert.ok(
                 !declared.includes('Last Session Ended'),
                 'the retired field must not return: nothing ever wrote it after the first bootstrap',
             );
             assert.deepStrictEqual(
-                [...declared].sort(),
+                [
+                    ...declared,
+                ].sort(),
                 Object.keys(STATE_FIELD_WRITERS).sort(),
                 'every template field needs a writer row here, and every row a template field',
             );
@@ -718,7 +962,11 @@ module.exports = () => {
             for (const [label, key] of Object.entries(STATE_FIELD_WRITERS)) {
                 if (key === 'updated') continue; // stamped by every call, never requested
                 const value = `written-through-${key}`;
-                warnedBy(() => updateState(wsDir, { [key]: value }));
+                warnedBy(() =>
+                    updateState(wsDir, {
+                        [key]: value,
+                    }),
+                );
                 assert.match(
                     fs.readFileSync(statePath, 'utf8'),
                     new RegExp(`^(?:- )?\\*\\*${label}:\\*\\* ${value}$`, 'm'),
@@ -744,7 +992,9 @@ module.exports = () => {
     const runFinalizeCheckpoint = ({ change, dryRun = false, stateBlocked = false }) => {
         const tempDir = createTempWorkspace(true);
         try {
-            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, {
+                workspace: 'main',
+            });
             fs.writeFileSync(
                 path.join(wsDir, 'TASKS.md'),
                 '## Active Phases\n\n- [x] [T-1A01] Done\n',
@@ -765,9 +1015,16 @@ module.exports = () => {
                     finalizePath,
                     '--workflow=task',
                     '--workspace=main',
-                    ...(dryRun ? ['--dry-run'] : []),
+                    ...(dryRun
+                        ? [
+                              '--dry-run',
+                          ]
+                        : []),
                 ],
-                { cwd: tempDir, encoding: 'utf8' },
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
             );
             return {
                 result,
@@ -783,7 +1040,9 @@ module.exports = () => {
         const path_ = (change) => (change ? 'significant' : 'skip');
 
         // The claim rides the STATE.md row on the significant path...
-        const significant = runFinalizeCheckpoint({ change: true });
+        const significant = runFinalizeCheckpoint({
+            change: true,
+        });
         assert.strictEqual(significant.result.status, 0);
         assert.match(
             significant.result.stdout,
@@ -793,7 +1052,9 @@ module.exports = () => {
         assert.ok(significant.stateWritten, 'the claim must be backed by a STATE.md on disk');
 
         // ...and is its own line on the skip path.
-        const skipped = runFinalizeCheckpoint({ change: false });
+        const skipped = runFinalizeCheckpoint({
+            change: false,
+        });
         assert.strictEqual(skipped.result.status, 0);
         assert.match(
             skipped.result.stdout,
@@ -803,8 +1064,14 @@ module.exports = () => {
         assert.ok(skipped.stateWritten, 'the claim must be backed by a STATE.md on disk');
 
         // A preview saves nothing, so it claims nothing.
-        for (const change of [true, false]) {
-            const preview = runFinalizeCheckpoint({ change, dryRun: true });
+        for (const change of [
+            true,
+            false,
+        ]) {
+            const preview = runFinalizeCheckpoint({
+                change,
+                dryRun: true,
+            });
             assert.strictEqual(preview.result.status, 0);
             assert.doesNotMatch(
                 preview.result.stdout,
@@ -819,8 +1086,14 @@ module.exports = () => {
         }
 
         // A failed update is not a saved checkpoint, and does not block finalize.
-        for (const change of [true, false]) {
-            const failed = runFinalizeCheckpoint({ change, stateBlocked: true });
+        for (const change of [
+            true,
+            false,
+        ]) {
+            const failed = runFinalizeCheckpoint({
+                change,
+                stateBlocked: true,
+            });
             assert.strictEqual(failed.result.status, 0, 'a STATE.md failure is non-blocking');
             assert.match(
                 failed.result.stderr,
@@ -851,7 +1124,9 @@ module.exports = () => {
     const runFinalizeRunWithState = ({ stateDirBlock }) => {
         const tempDir = createTempWorkspace(true);
         try {
-            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, {
+                workspace: 'main',
+            });
             fs.writeFileSync(
                 path.join(wsDir, 'TASKS.md'),
                 '## Active Phases\n\n- [x] [T-1A01] Done\n',
@@ -861,10 +1136,19 @@ module.exports = () => {
 
             const result = spawnSync(
                 process.execPath,
-                [finalizePath, '--workflow=run', '--workspace=main'],
-                { cwd: tempDir, encoding: 'utf8' },
+                [
+                    finalizePath,
+                    '--workflow=run',
+                    '--workspace=main',
+                ],
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
             );
-            return { result };
+            return {
+                result,
+            };
         } finally {
             cleanup(tempDir);
         }
@@ -877,7 +1161,9 @@ module.exports = () => {
         // path made the significance snapshot's hashFileSafe throw uncaught,
         // aborting the whole invocation before anything else ran: no version
         // bump, no archival, no CHANGELOG, no digest.
-        const { result } = runFinalizeRunWithState({ stateDirBlock: true });
+        const { result } = runFinalizeRunWithState({
+            stateDirBlock: true,
+        });
 
         assert.strictEqual(
             result.status,
@@ -900,7 +1186,9 @@ module.exports = () => {
         // No STATE.md at all — never created (makeWorkspace only mkdirs the
         // workspace itself), not a directory either. The two conditions
         // (absent vs. unreadable) must not collapse into one code path.
-        const { result } = runFinalizeRunWithState({ stateDirBlock: false });
+        const { result } = runFinalizeRunWithState({
+            stateDirBlock: false,
+        });
 
         assert.strictEqual(result.status, 0);
         assert.doesNotMatch(

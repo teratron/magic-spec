@@ -11,6 +11,7 @@ Recomputes every piece of state that is fully computed from other files and rewr
 - Entry
 - Core Invariants (Mandatory)
 - Steps
+- On a 4.0 Workspace
 - Sync Completion Checklist
 - Handoffs
 
@@ -56,6 +57,16 @@ Examples: `/magicspec sync`, `/magicspec sync projections`, `/magicspec sync {wo
    - A failed engine integrity check skips `projections` only and is listed with the restore command.
 2. **Relay the report verbatim** in a fenced block: the counts line, one line per write, disagreement and stale file, and the `Next:` line the script prints. With nothing to write and nothing to report the report is one line.
 3. **End at the report.** The next step is the one the report names: the command of the first disagreement or stale file, else the step live memory records. It is named, never started, and a disagreement is never settled by this workflow.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+With no workspace named, the one pass treats each registered workspace by its own format.
+
+1. **Run**: `node scripts/executor.js sync [{area} | {workspace}] [--dry-run]`.
+2. **A set's derived state** is the `Next` line of its `memory/state.md`, which the `state` area recomputes, and the checker's report: each finding is listed as a disagreement with the command whose stage owns it, `/magicspec spec`, `plan` or `task`. A set has no registry, so the `registry` area skips it. The map is written by `mark-built` alone and is not recomputed here. The other areas apply as written.
+3. **Report**: relayed and ended as in Steps 2 and 3 above.
 
 ## Sync Completion Checklist
 

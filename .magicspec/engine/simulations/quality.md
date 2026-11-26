@@ -53,3 +53,20 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** a goal recorded with a criterion not yet met → a bare `goal` continues it with one `Continuing:` line and takes no phase (composed).
 
 **Last run:** never
+
+## S-17: A defect on a 4.0 workspace becomes a change of kind `fix`, placed and built by its milestone
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l2-sdd-document-set-engine.md §5.4 row `fix`, l1-sdd-document-set.md §5.8 Changes after the first version, l1-fix-command.md §3 FX-8, l1-sdd-document-set.md §6 Implementation Notes
+**Preconditions:** a disposable project with the engine installed, one 4.0 workspace whose first two milestones are built, and no `changes.md`. A requirement of the set states what the product's command prints; the command, as built, prints nothing.
+
+**Steps:**
+
+1. `/magicspec fix "the greet command prints nothing"` → expect: the defect is reproduced, and `changes.md` gains one change of kind `fix` with its `Source`, an `Evidence` naming the contradicted unit and the reproduction, the component under `Affects` and the status `placed` (composed; `fix.md` §On a 4.0 Workspace, steps 2 and 3); no product file differs (printed); `check-docs` reports only that the change names no milestone and that none builds its component yet, and the finalization ends with `Next: /magicspec plan {workspace} — deep reasoning` (printed; l2-sdd-document-set-engine.md §5.2).
+2. `/magicspec plan` → expect: one milestone is appended that `Revises` the component and is named under the change's `Built by`, the done milestones unchanged (composed; `plan.md` §On a 4.0 Workspace, step 3); `check-docs` reports 0 findings and the finalization names `/magicspec task {workspace}` (printed).
+3. `/magicspec task` → expect: the task file of that milestone lists the change in `Context`, builds the component and observes the reproduction in its `Done when` (composed; `task.md` §On a 4.0 Workspace, step 4, `fix.md` §On a 4.0 Workspace, step 4); `check-docs` reports 0 findings and the finalization names `/magicspec run {workspace}` (printed).
+4. `/magicspec run` → expect: the repair is built from the pack and the reproduction now shows the stated outcome (composed; `run.md` §On a 4.0 Workspace, steps 4 and 5); `mark-built` reports one change built, the change reads `built` and `check-docs` reports 0 findings (printed; l2-sdd-document-set-engine.md §5.2, `mark-built`).
+
+**Variants:** the report describes what the units state and the product does → the change is recorded `satisfied` with the stating units as its `Evidence`, no product file differs and nothing is planned for it (composed; `fix.md` §On a 4.0 Workspace, step 3); `check-docs` accepts it (printed).
+
+**Last run:** never

@@ -1,5 +1,16 @@
 # Engine Workspace Changelog
 
+## Phase 84 — 2026-11-26 (Maintenance: The Finalization's Git Probes Print Nothing of Git's)
+
+- **`finalize` shows only what the engine says.** In a repository with no commit yet it no longer prints git's `fatal:` lines, and where git converts line endings it no longer prints its warnings.
+- **Records:** harness 520; engine 3.0.217, and 2.1.150 on the 2.x line. **Specifications:** `l2-engine-finalization` 3.11.0; registry 1.106.0.
+
+## Phase 81 — 2026-11-26 (The Remaining Command Bodies on a 4.0 Workspace)
+
+- **A goal can be pursued on a 4.0 workspace.** Its arguments name milestones, `update-state` keeps its record in `memory/goal.md`, and a new session is told the goal and the command that continues it.
+- **Every command but analysis and migration now says what it does on a set.** A defect becomes a change built by its milestone; scenarios cite units and name their milestone; the briefing, a workspace rule, the graph, `sync` and the help read the files of the set. A 3.x workspace behaves as before; the graph and status bodies only gained a contents list.
+- **Records:** harness 519; engine 3.0.213. **Specifications:** `l2-sdd-document-set-engine` 1.6.1, `l1-goal-mode` 1.4.2, `l1-fix-command` 1.3.2, `l1-product-simulation` 1.1.5, `l1-session-continuity` 2.6.4, `l2-engine-automation` 1.33.4, `l2-test-suite` 1.48.15; registry 1.105.1. Phase 82, the analysis and the migration, is next.
+
 ## Phase 71 — 2026-11-26 (The Scripts of the Remaining Commands on a 4.0 Workspace)
 
 - **The graph, the wiki and the search read a 4.0 workspace.** Units are graph nodes, each document gets a wiki article listing its units and their references, and a search cites a unit by its address.

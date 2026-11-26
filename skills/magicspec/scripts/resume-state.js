@@ -17,7 +17,7 @@ const { stripQuoted } = require('./lib/scan-hygiene');
 const { collectInFlight } = require('./lib/in-flight');
 const { isGitRepo, headSha, changedPaths } = require('./lib/git-utils');
 const diagnostics = require('./lib/diagnostics');
-const { countCriteria, describeScope, parseGoalSection } = require('./lib/goal-block');
+const { GOAL_FILE, countCriteria, describeScope, parseGoalSection } = require('./lib/goal-block');
 const { isDocSetWorkspace } = require('./lib/doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -251,25 +251,26 @@ function inspectWorkspace(workspace) {
 const EMPTY_VALUE = /^(—|-|none|)$/i;
 
 /**
- * The resume summary of a 4.0 workspace, from `memory/state.md`: what is being built now, what
- * is next and how many questions are open. Nothing to resume when neither `Now` nor `Open`
- * holds something.
+ * The resume summary of a 4.0 workspace, from `memory/state.md` — what is being built now, what
+ * is next and how many questions are open — and from `memory/goal.md`, the goal being pursued.
+ * Nothing to resume when neither `Now` nor `Open` holds something and no goal is recorded.
  *
  * @param {{ name: string, dir: string }} workspace
  * @returns {object|null}
  */
 function inspectDocSet(workspace) {
     const state = readText(path.join(workspace.dir, 'memory', 'state.md'));
-    if (state.text === undefined) return null;
+    const record = readText(path.join(workspace.dir, ...GOAL_FILE));
+    const goal = record.text === undefined ? null : parseGoalSection(record.text);
     const values = (/** @type {string} */ label) =>
         [
-            ...state.text.matchAll(new RegExp(`^- ${label}:[ \\t]*(.*)$`, 'gm')),
+            ...(state.text ?? '').matchAll(new RegExp(`^- ${label}:[ \\t]*(.*)$`, 'gm')),
         ]
             .map((m) => m[1].trim())
             .filter((v) => !EMPTY_VALUE.test(v));
     const now = values('Now')[0] ?? null;
     const open = values('Open').length;
-    if (now === null && open === 0) return null;
+    if (now === null && open === 0 && goal === null) return null;
     return {
         workspace: workspace.name,
         source: 'memory',
@@ -279,7 +280,7 @@ function inspectDocSet(workspace) {
         open,
         nextAction: values('Next')[0] ?? null,
         changedFiles: null,
-        goal: null,
+        goal,
     };
 }
 
@@ -313,8 +314,7 @@ function countModifiedFiles() {
  * @returns {string}
  */
 function formatLine(summary) {
-    if (summary.source === 'memory')
-        return `▶ Resume [${summary.workspace}]: Now ${summary.now ?? '—'} · Next ${summary.nextAction ?? '—'} · Open ${summary.open}`;
+    if (summary.source === 'memory') return formatDocSetLine(summary);
     const parts = [];
     if (summary.tasks.length > 0) {
         const named = summary.tasks
@@ -334,27 +334,47 @@ function formatLine(summary) {
 }
 
 /**
+ * Renders the resume line of a 4.0 workspace. A task being built is resumed where it stopped,
+ * with the goal named beside it; with none, a recorded goal is continued by its command.
+ *
+ * @param {NonNullable<ReturnType<typeof inspectWorkspace>>} summary - Of a 4.0 workspace.
+ * @returns {string}
+ */
+function formatDocSetLine(summary) {
+    const head = `▶ Resume [${summary.workspace}]: `;
+    const goal = summary.goal === null ? null : describeGoal(summary.goal, '4');
+    if (summary.now === null && goal !== null) {
+        const open = summary.open > 0 ? `Open ${summary.open}; ` : '';
+        return `${head}${open}${goal}. Next: /magicspec goal`;
+    }
+    const line = `${head}Now ${summary.now ?? '—'} · Next ${summary.nextAction ?? '—'} · Open ${summary.open}`;
+    return goal === null ? line : `${line}; ${goal}`;
+}
+
+/**
  * Describes a recorded goal for the resume line: its scope and the criteria counts,
  * with the consents queued when there are any.
  *
  * @param {NonNullable<ReturnType<typeof parseGoalSection>>} goal - The recorded goal.
+ * @param {string|null} [format] - The workspace's format, `'4'` for a document set.
  * @returns {string}
  */
-function describeGoal(goal) {
+function describeGoal(goal, format = null) {
     const { met, open, blocked } = countCriteria(goal);
     const queued = goal.consents.length > 0 ? `, ${goal.consents.length} consent(s) queued` : '';
-    return `goal ${describeScope(goal)} — ${met} met, ${open} open, ${blocked} blocked${queued}`;
+    return `goal ${describeScope(goal, format)} — ${met} met, ${open} open, ${blocked} blocked${queued}`;
 }
 
 /**
  * The machine-readable form of a recorded goal: the same facts the line states, unbounded.
  *
  * @param {NonNullable<ReturnType<typeof parseGoalSection>>} goal - The recorded goal.
+ * @param {string|null} format - The workspace's format, `'4'` for a document set.
  * @returns {Object}
  */
-function goalJson(goal) {
+function goalJson(goal, format) {
     return {
-        scope: describeScope(goal),
+        scope: describeScope(goal, format),
         statement: goal.statement,
         phase: goal.phase,
         phase_to: goal.phaseTo,
@@ -418,7 +438,10 @@ function main() {
                     ...(summary.goal === null
                         ? {}
                         : {
-                              goal: goalJson(summary.goal),
+                              goal: goalJson(
+                                  summary.goal,
+                                  summary.source === 'memory' ? '4' : null,
+                              ),
                           }),
                 })),
             }),

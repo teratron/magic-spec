@@ -8,6 +8,15 @@ Read-only resume briefing for returning users. Composes current position, progre
 
 > **Scope**: presentation only. No file writes, no version bumps, no finalization, no delegation to other workflows.
 
+**Contents:**
+
+- Entry
+- Core Invariants (Mandatory)
+- Steps
+- On a 4.0 Workspace
+- Status Completion Checklist
+- Handoffs
+
 ## Entry
 
 Read-only resume briefing: where the project stands, what was last done and decided, what blocks progress, and the one command to run next. Composed from live memory (`STATE.md`) and registries — performs zero writes.
@@ -67,6 +76,30 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
 - **In-flight session** → add the resume line printed by `node scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`, a recorded goal, or both in one line. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+The briefing stays read-only: the two scripts below write nothing into the project.
+
+1. **Load**: `memory/state.md` (the primary source), `memory/goal.md`, `plan.md`, `memory/decisions.md`, the engine version and its snapshot as above, and the output of `node scripts/executor.js check-docs --workspace={active-workspace}` and `node scripts/executor.js resume-state --workspace={active-workspace}`.
+2. **Brief**, in the order above: Header (the workspace, format 4.0); Position (the `Now` and `Next` lines and the resume line), with the `Goal:` line when `memory/goal.md` records one, its scope spelled `M{n}` or `M{n}..M{m}`; Progress (the milestones of `plan.md` that have a `- Done:` line, of all of them); Blockers (the `Open` lines, then the checker's findings, each with the command whose stage owns it: `plan` for `plan.md` and what a missing milestone causes, `task` for a task file and what a missing task causes, `spec` for the rest, an open question included); Decisions (the last three of `memory/decisions.md`); Engine; Next. Other registered workspaces are named as in Step 3 above.
+3. **Next**: `/magicspec goal` while a recorded goal has a criterion not `met`. Otherwise the first row that holds; a task is ready when it is not done and every task in its `After` is done:
+
+   | State of the set | Next |
+   | --- | --- |
+   | No `product.md` | `/magicspec spec` |
+   | No milestone, and no stack layer | none: the stack layer is not written yet |
+   | No milestone | `/magicspec plan {workspace}` |
+   | A placed change, other than a clarification, with no milestone under `Built by` | `/magicspec plan {workspace}` |
+   | A milestone of such a change is not done and has no task file | `/magicspec task {workspace}` |
+   | A task is ready | `/magicspec run {workspace}` |
+   | A milestone not done has no task file | `/magicspec task {workspace}` |
+   | A milestone is not done | `/magicspec run {workspace}` |
+   | Every milestone is done | none: nothing pending |
+
+4. **Missing state**: with no `memory/state.md`, brief the documents of the set that exist, then the Next of step 3, no task counting as done; the workflow creates no file.
 
 ## Status Completion Checklist
 

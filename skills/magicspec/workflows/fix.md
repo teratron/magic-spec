@@ -13,6 +13,7 @@ Takes reported defects — a description, a failing test, a finding of a simulat
 - Core Invariants (Mandatory)
 - Workflow: Triage and Repair
 - Report
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Fix Completion Checklist
 - Handoffs
@@ -119,6 +120,23 @@ Next: {one command}
 ```
 
 `{id}` is the defect's number in this report (`D1`, `D2`), or the task identifier of its repair once it has one. One line per defect; an unreproduced defect names the evidence that would reproduce it in place of the check. The `Next:` line is the handoff line the finalization prints once — do not write it twice.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+A repair is a change of the set, built by its milestone: this stage writes no product code and no task, and a set has no registry, ledger or phase workbook. `memory/state.md` takes the place of `STATE.md`.
+
+1. **Pre-flight**: `node scripts/executor.js check-docs --workspace={active-workspace}`. A finding that is there before this run belongs to its stage: the report names it, this stage does not repair it, and the triage goes on.
+2. **Triage**: Steps 1 to 5 above apply as written, with the units of the set where they read specifications (`memory-query` cites them by address). A unit that states the broken behaviour makes the defect an implementation defect, silent units a specification gap, a unit that prescribes the reported behaviour a specification defect.
+3. **Record and place** each defect by steps 3 to 5 of `workflows/spec.md` §On a 4.0 Workspace (the change, the check and the `@role:spec-critic` review), as a change of kind `fix` in `changes.md`:
+   - `Source`: the report; for a simulation finding the scenario, the step and the date of its `Last run`.
+   - `Evidence`: the unit the product contradicts, or `none found`, and the reproduction — its command or steps and what they showed.
+   - A report the units and the code already answer — fixed in the current version, or not a defect — is `satisfied`, the stating units in its `Evidence`, and repairs nothing.
+   - An implementation defect changes no unit, so `Affects` names the component. A specification gap or defect adds or changes the sentence at a new revision. Either way the change ends `placed`, and this stage writes no unit beyond what those steps write.
+   - An unreproduced defect and an external one write nothing into the set; they are reported as above.
+4. **Regression check**: it is the `Observe` of the task that builds the change, which runs the reproduction of `Evidence`; that reproduction was seen to fail here, before any repair. Steps 6 to 8 above — the task entry, the gates, the lasting check — are the work of `plan`, `task` and `run`.
+5. **Report and handoff**: the report layout above, naming the change and the revised units where it names a specification change. The finalization names the next command, `plan` while a placed change has no milestone.
 
 ## Finalization Protocol (Mandatory)
 

@@ -13,6 +13,7 @@ Runs the written scenarios of users interacting with the product, acting as thos
 - Core Invariants (Mandatory)
 - Workflow: Simulation
 - Report
+- On a 4.0 Workspace
 - Finalization Protocol (Mandatory)
 - Simulate Completion Checklist
 - Handoffs
@@ -107,6 +108,17 @@ Next: {one command}
 ```
 
 `{scenario}` is the scenario's identifier and its title. One line per finding; none → the line `No findings.` A traced pass is counted under `{t}` and never under `{l}`. The `Next:` line is the handoff line `finalize` prints: `/magicspec fix` with the findings when there are any, otherwise the command the pipeline state computes.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+Scenarios stay in `simulations/{area}.md` of the workspace, in the layout of `templates/simulation.md`. Each is written from the scope items of `product.md` and the `Accept` lines of the units, cites them by address under `Verifies`, and names its milestone on a `**Milestone:** M{n}` line under it: the milestone that writes or last updates it. A run still writes only `Last run`.
+
+1. **Pre-flight**: `node scripts/executor.js check-prerequisites --json --workspace={active-workspace}`, the C15 Filter as above; a set has no registry headers to verify, and a `DOC_SET` finding does not stop a run.
+2. **Select** the scenarios the scope names; a topic matches their titles and the units they cite. None → nothing runs: print the coverage report and name the command the finalization computes.
+3. **Mode and run**: Steps 2 to 4 above, with `@role:simulator-tester`; an expected outcome is judged against what a unit states, and an expectation no unit states is a specification gap.
+4. **Findings and coverage**: each failed or inconclusive step is handed to `fix`. The coverage report lists, by address, the scope items and the requirements with an `Accept` line that no scenario verifies.
 
 ## Finalization Protocol (Mandatory)
 

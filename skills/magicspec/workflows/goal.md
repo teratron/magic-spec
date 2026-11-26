@@ -13,6 +13,7 @@ Drives the pipeline toward a goal without the pauses between its stages. Every o
 - Core Invariants (Mandatory)
 - Workflow: Pursuit
 - Report
+- On a 4.0 Workspace
 - Goal Completion Checklist
 - Handoffs
 
@@ -165,6 +166,36 @@ Next: {one command}
 `Assumptions: {n}` and the premise lines under it are printed only when the pursuit accepted a premise: each line is one premise of the goal block with the command that overrides it (an amendment of the specification that holds it), and when the block dropped older ones the line reads `Assumptions: {n} ({d} older ones not kept)`.
 
 **Queued consents** are asked after the report, only now (GM-5): one question at a time, in queue order, each a consent question of E1, E2 or E4 — one question, at most three fixed options, the forecast's winner marked as the default. A yes is carried out as that one action and nothing else; a no or a skip drops it. Each answered consent is removed from the block through the writer. The report stands whatever the answers; a yes that unblocks work makes `/magicspec goal` the next step.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+The plan of a set is the milestones of `plan.md`, its state is `memory/state.md`, which takes the place of `STATE.md`, and its goal is recorded in `memory/goal.md`: phases, the task ledger and the registry are 3.x only. The Input Pass, the intake, the stop conditions, the consent questions and the rules on premises and self-made stops apply as written above.
+
+1. **Scope**: `M{n}` — that milestone built and recorded done; `M{n}..M{m}` — those milestones, in the order of `plan.md`; `plan` — every milestone of `plan.md` not done; `{N} tasks` and a statement as written above. A milestone is done when `memory/state.md` holds its `- Done: M{n}` line. A milestone the plan lacks, an inverted range and a `phase-{N}` are answered with one line listing the milestones, and nothing runs. With no argument and no unfinished goal recorded, take the milestone of the task on the `- Now:` line, else the first milestone of `plan.md` not done, and narrate `[DR] Taking M{n} — the next milestone; no unfinished goal is recorded. (Override: /magicspec goal plan)`; with no milestone written or every one done, one line says what the set waits for, as `workflows/status.md` §On a 4.0 Workspace computes it, and nothing is recorded.
+2. **Establish**: read `memory/goal.md` (it holds the `## Goal` section `templates/state.md` documents; absent means no goal) and `memory/state.md`. Pre-flight: `node scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. `ENGINE_INTEGRITY` and `GHOST_REGISTRY` are handled as above; a `DOC_SET` finding belongs to the step that owns it and does not stop the mode.
+3. **Record**: the goal object has the keys listed above; `phase` and `phaseTo` hold milestone numbers. A statement's criteria are written as Step 3 above says. A milestone goal holds the one criterion `M{n} is done`, and a range or `plan` the one criterion `M{n}..M{m} are done`, each checked by the `- Done:` lines of `memory/state.md`. Write it from a temporary file outside the project's tree, and delete that file after the call:
+
+   ```bash
+   node scripts/executor.js update-state --workspace={active-workspace} --goal-file {path-to-the-json}
+   ```
+
+   The engine writes `memory/goal.md` and nobody edits it by hand. The same call with `--goal-clear` in place of `--goal-file` removes it; no step of the pursuit clears a goal on its own, and a new goal replaces the recorded one.
+4. **Choose the next step**, the first row that holds, queuing a step that needs consent as Step 4 above does:
+
+   | State read from the files | Step |
+   | --- | --- |
+   | A criterion of a statement that no unit of the set states | `spec`: the first run with the intent statement and every such criterion, a later run with one |
+   | A failed or inconclusive scenario step whose repair is built — a change names it under `Source` and reads `built` — while that `Last run` is still the scenario's last | `simulate` for that area |
+   | An open finding: a failed or inconclusive step that no change names, or a failing check of a criterion | `fix` with that finding |
+   | The set waits for a stage: the command the last finalization named, in a new session the one `workflows/status.md` §On a 4.0 Workspace computes | `plan`, `task` or `run`; `run` takes the next ready task of the goal's first milestone not done |
+   | Scenarios verify an open criterion and none has run since the behaviour last changed | `simulate` for that area |
+   | None of the above | no step runs, as written above |
+
+   A task limit makes `run` build one task (`/magicspec run {workspace} "M{n}.T{k}"`) and end after it, without continuing to the next ready one.
+5. **Run and count**: Step 5 above applies; each step is run by its body's section for a 4.0 workspace, finalizes as itself, and the record is written as in 3. Progress is a change of a recorded state: a criterion's state, a `- Done:` line, a change's status, the milestones of `plan.md` or their order, a finding closed. `tasksDone` counts the tasks that gained a `- Done:` line and `phasesDone` the milestones. A task that waits for a queued consent is recorded `- Open: {task} — waiting for consent: {action}` in `memory/state.md`. A premise is written on the unit it concerns, as `workflows/spec.md` §On a 4.0 Workspace states, and in the goal record.
+6. **Report**: the layout above, the scope spelled `M{n}` or `M{n}..M{m}` and one `Work:` line per milestone worked on.
 
 ## Goal Completion Checklist
 

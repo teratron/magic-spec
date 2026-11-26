@@ -23,7 +23,7 @@ const { countItems } = require('./lib/checklist');
 const diagnostics = require('./lib/diagnostics');
 const { isDocSetWorkspace, nothingWritten } = require('./lib/doc-set-state');
 const { withFileLock } = require('./lib/file-lock');
-const { GoalError, normalizeGoal, renderGoalSection } = require('./lib/goal-block');
+const { GoalError, GOAL_FILE, normalizeGoal, renderGoalSection } = require('./lib/goal-block');
 
 /**
  * Groups a Markdown list section into logical entries, keeping each entry's
@@ -524,13 +524,25 @@ function workspaceNameOf(designDir) {
 }
 
 /**
+ * Names the lock one workspace's live memory is written under. It lives in the state folder's
+ * cache, which projects keep out of version control.
+ *
+ * @param {string} designDir - Path to .magicspec/{workspace} directory, or the state folder.
+ * @returns {string} The path of the lock file.
+ */
+function stateLockPath(designDir) {
+    const stateRoot =
+        path.basename(designDir) === STATE_DIR_NAME ? designDir : path.dirname(designDir);
+    return path.join(stateRoot, '.cache', `state-${workspaceNameOf(designDir)}.lock`);
+}
+
+/**
  * Updates STATE.md with provided key-value patches.
  * Reads the existing state file, applies changes, and writes back.
  * Never exceeds 100 lines — prunes old Decisions if needed.
  *
  * The read-modify-write runs under a lock: parallel tracks of one run report to the same file,
- * and without it two reports at once keep only the later write. The lock file lives in the
- * state folder's cache, which projects keep out of version control.
+ * and without it two reports at once keep only the later write.
  *
  * @param {string} designDir   Path to .magicspec/{workspace} directory.
  * @param {object} patch       Key-value pairs to apply.
@@ -552,10 +564,9 @@ function updateState(designDir, patch, options = {}) {
             goal: renderGoalSection(normalizeGoal(patch.goal)),
         };
     }
-    const stateRoot =
-        path.basename(designDir) === STATE_DIR_NAME ? designDir : path.dirname(designDir);
-    const lockPath = path.join(stateRoot, '.cache', `state-${workspaceNameOf(designDir)}.lock`);
-    return withFileLock(lockPath, () => applyStateUpdate(designDir, patch, options));
+    return withFileLock(stateLockPath(designDir), () =>
+        applyStateUpdate(designDir, patch, options),
+    );
 }
 
 /**
@@ -1114,11 +1125,11 @@ function runCli() {
     process.chdir(resolveProjectRoot());
     const workspaceArg = values['--workspace'] || process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
 
-    if (!writesStateInto(workspaceArg)) return;
-
+    const wsDir = registeredWorkspaceDir(workspaceArg);
+    const write = isDocSetWorkspace(wsDir) ? updateDocSet : updateState;
     try {
         if (values['--goal-file'] !== undefined) parsed.goal = readGoalFile(values['--goal-file']);
-        updateState(workspaceArg, parsed, opts);
+        write(workspaceArg, parsed, opts);
     } catch (error) {
         if (!(error instanceof GoalError)) throw error;
         refuseGoal(error.message);
@@ -1126,22 +1137,70 @@ function runCli() {
 }
 
 /**
- * Whether live memory is written into a folder: an unregistered workspace ends the run, and a
- * set, whose state is `memory/state.md`, takes none.
+ * Names the folder live memory goes to; an unregistered workspace ends the run.
  *
  * @param {string} workspaceArg - The design directory.
- * @returns {boolean}
+ * @returns {string} The folder of the workspace, absolute.
  */
-function writesStateInto(workspaceArg) {
+function registeredWorkspaceDir(workspaceArg) {
     const unregistered = unregisteredWorkspaceMessage(workspaceArg);
     if (unregistered) {
         console.error(`[update-state] HALT: ${unregistered}`);
         process.exit(1);
     }
-    const wsDir = path.resolve(workspaceArg);
-    if (!isDocSetWorkspace(wsDir)) return true;
-    console.log(nothingWritten('update-state', wsDir, 'its state is memory/state.md'));
-    return false;
+    return path.resolve(workspaceArg);
+}
+
+/**
+ * Applies a patch to a 4.0 workspace. Its state is `memory/state.md`, which the workflows
+ * write, so the only thing recorded here is the goal; any other patch, and a call that names
+ * none, is answered with one line and writes nothing.
+ *
+ * @param {string} designDir - Path to the workspace's design directory.
+ * @param {Record<string, unknown>} patch - The parsed patch; `goal` is an object to record, `null`
+ *   to clear, or absent.
+ * @param {{ autoProgress?: boolean }} options - The parsed options.
+ * @returns {void}
+ * @throws {GoalError} When the goal is one the section cannot hold; nothing is written.
+ */
+function updateDocSet(designDir, patch, options) {
+    const wsDir = path.resolve(designDir);
+    const { goal, ...others } = patch;
+    if (goal !== undefined) recordGoalFile(wsDir, goal);
+    const ignored = Object.keys(others).length > 0 || Boolean(options.autoProgress);
+    if (ignored || goal === undefined) {
+        console.log(nothingWritten('update-state', wsDir, 'its state is memory/state.md'));
+    }
+}
+
+/**
+ * Writes the goal file of a 4.0 workspace, or removes it. The file holds the section a 3.x
+ * `STATE.md` holds, so one reader parses both.
+ *
+ * @param {string} wsDir - The folder of the workspace.
+ * @param {unknown} goal - A goal object to record, or `null` to remove the record.
+ * @returns {void}
+ * @throws {GoalError} When the goal is one the section cannot hold; nothing is written.
+ */
+function recordGoalFile(wsDir, goal) {
+    // Rendered ahead of every write, so a refusal changes nothing.
+    const section = goal === null ? null : renderGoalSection(normalizeGoal(goal));
+    const goalPath = path.join(wsDir, ...GOAL_FILE);
+    withFileLock(stateLockPath(wsDir), () => {
+        const name = GOAL_FILE.join('/');
+        if (section !== null) {
+            fs.mkdirSync(path.dirname(goalPath), {
+                recursive: true,
+            });
+            fs.writeFileSync(goalPath, section, 'utf8');
+            console.log(`[update-state] ${name} written`);
+        } else if (fs.existsSync(goalPath)) {
+            fs.rmSync(goalPath);
+            console.log(`[update-state] ${name} removed`);
+        } else {
+            console.log(`[update-state] ${name} absent; nothing removed`);
+        }
+    });
 }
 
 /**
