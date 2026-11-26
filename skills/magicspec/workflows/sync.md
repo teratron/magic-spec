@@ -65,7 +65,7 @@ Taken when the resolved workspace's entry in `workspace.json` carries `"format":
 With no workspace named, the one pass treats each registered workspace by its own format.
 
 1. **Run**: `node scripts/executor.js sync [{area} | {workspace}] [--dry-run]`.
-2. **A set's derived state** is the `Next` line of its `memory/state.md`, which the `state` area recomputes, and the checker's report: each finding is listed as a disagreement with the command whose stage owns it, `/magicspec spec`, `plan` or `task`. A set has no registry, so the `registry` area skips it. The map is written by `mark-built` alone and is not recomputed here. The other areas apply as written.
+2. **A set's derived state** is the `Next` line of its `memory/state.md`, which the `state` area recomputes, and the checker's report: each finding is listed as a disagreement with the command whose stage owns it, `/magicspec spec`, `plan` or `task`. A set has no registry of its own: of the `registry` area it gets only its row of the global registry, written without a link to one. The map is written by `mark-built` alone and is not recomputed here. The other areas apply as written.
 3. **Report**: relayed and ended as in Steps 2 and 3 above.
 
 ## Sync Completion Checklist

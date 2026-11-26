@@ -4,20 +4,20 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-26 19:07
+**Updated:** 2026-11-26 19:43
 **Phase:** 83 — 4.0.0 (4.0 Step 4, Part 5)
-**Status:** Active
+**Status:** Blocked
 
 ## Current Position
 
-- **Task:** T-85T01 Validation: static checks, full harness, C14
+- **Task:** T-83R01 The release plan and its one consent question
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Execute T-83G01 The graph, the wiki and the artifact index leave out a workspace in flight via /magicspec run engine
+- **Next Action:** T-83R01 and any other open tasks need user or blocker action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, then re-run /magicspec plan engine
 
 ## Progress
 
 ```
-Phase 83: [0/10] ░░░░░░░░ 0%
+Phase 83: [9/10] ███████░ 90%
 Overall: [84/85] ████████ 99%
 ```
 

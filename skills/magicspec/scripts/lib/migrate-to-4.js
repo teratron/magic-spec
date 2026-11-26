@@ -16,17 +16,19 @@ const {
 } = require('../utils');
 const { NEXT_TREE, MOVED_FILES, moveInFlight } = require('./doc-set-state');
 const { SIMULATIONS_DIR, SCENARIO_HEADING_RE, recognisedLines } = require('./simulation-findings');
+const { unlinkWorkspaceRow } = require('./sync-registry');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THE MOVE TO 4.0 (one 3.x workspace to the document set)
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The set is written into `next/` of the workspace by the analysis, never by a text
-// transformation here: this module only previews the move and moves files. Its state is read
-// from the files and never from a log, so a run that was interrupted continues where they
-// stand. The 3.x files leave for `archives/3x/` first, then the set comes out of `next/`,
-// `product.md` first, and the format is set last. The order is what makes the state readable:
-// `product.md` in the workspace and no longer in `next/` means the set is on its way up.
+// transformation here: this module only previews the move, moves files and takes the link to the
+// registry that left out of the global registry's row. Its state is read from the files and never
+// from a log, so a run that was interrupted continues where they stand. The 3.x files leave for
+// `archives/3x/` first, then the set comes out of `next/`, `product.md` first, and the format is
+// set last. The order is what makes the state readable: `product.md` in the workspace and no
+// longer in `next/` means the set is on its way up.
 
 /**
  * Where each file of a 3.x workspace goes in the 4.0 layout. The dry run prints it and the
@@ -438,6 +440,9 @@ function apply(ws) {
     carryOut(up);
     const nextDir = path.join(ws.dir, NEXT_TREE);
     if (fs.existsSync(nextDir)) fs.rmdirSync(nextDir);
+    // The workspace's registry has left, so the global row stops linking it. The format is set
+    // after it, so an interrupted run comes back to both.
+    unlinkWorkspaceRow(ws.designAbs, ws.name);
     setFormat(ws);
     console.log(`[migrate] ${ws.name} is a 4.0 workspace.`);
     return 0;

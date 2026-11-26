@@ -1,6 +1,6 @@
 # Artifact Memory Store (SQLite)
 
-**Version:** 1.3.2
+**Version:** 1.3.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-artifact-memory.md
@@ -148,10 +148,13 @@ An optional `apiKeyEnv` names the environment variable that holds a bearer key; 
 
 **The tree of a move** `[ADDED]`. `lib/memory-sections.js` walks the state folder and skips, besides the derived folders, `next/` directly under a workspace: the set being written for a move to 4.0 ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5) is no artifact until it is moved into place. A folder of that name deeper down is read.
 
+**A workspace between two layouts** `[ADDED]`. The walk also skips a whole workspace whose move to 4.0 was started and not finished, by `moveInFlight` of `lib/doc-set-state.js`, so no file of a half-moved tree is indexed whichever workspace the query runs for; a section indexed before the move leaves the index with the next refresh. `lib/memory-sections.js` therefore requires that one module beside its siblings; it and the shared utilities it brings are built on Node alone, so the fallback still runs on the runtime floor.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.3 | 2026-11-26 | Agent | As built in Phase 83, Stable retained, no requirement changed: the index skips a workspace whose move to 4.0 is unfinished, by the move predicate of `lib/doc-set-state.js`. |
 | 1.3.2 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the index skips `next/` directly under a workspace, the tree a move to 4.0 writes; a folder of that name deeper down is read. |
 | 1.3.1 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: §5.3 states the kinds of a 4.0 set's documents; `KINDS` unchanged. |
 | 1.3.0 | 2026-11-13 | Agent | **As built in Phase 58, Stable retained.** §5.4 records what the build fixed: the history count absent under `--kind` as well as `--history`, the page past the end, the vector-mode first line, the size as the section's text, and the JSON `total` as the pool's size with `byMeaning`; §6 item 4 (f) records the fixed fused pool that replaced the per-call bound; item 5 moves from "to deploy" to "as built" with the decisions of the build (the file lines, `count` on both backends, the credential check in `embed()`, the query-time address check, the harness and the mutation list). No requirement changed. |

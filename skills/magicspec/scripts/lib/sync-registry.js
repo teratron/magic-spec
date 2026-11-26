@@ -7,11 +7,13 @@
 //
 // Writes the cells of the registries that are fully computed from other files
 // (SY-1): the specification count of each workspace row of the global registry,
-// and a row for a registered workspace the table lacks. Whatever needs a
-// judgement is reported and left as it is (SY-2): a specification header that
-// disagrees with its registry row, a registered specification missing from the
-// disk, a specification file no row registers. Nothing else of a registry is
-// written — no version line, no history row, no description cell that exists.
+// a row for a registered workspace the table lacks, and the row of a 4.0
+// workspace without a link to a registry, which a set does not have (the move
+// to 4.0 writes that row through this module too). Whatever needs a judgement
+// is reported and left as it is (SY-2): a specification header that disagrees
+// with its registry row, a registered specification missing from the disk, a
+// specification file no row registers. Nothing else of a registry is written —
+// no version line, no history row, no description cell that exists.
 
 const fs = require('fs');
 const path = require('path');
@@ -20,6 +22,8 @@ const { isDocSetWorkspace } = require('./doc-set-state');
 
 const SPEC_ROW_RE = /^\|\s*\[[^\]]*\]\(specifications\/([a-z0-9][a-z0-9-]*\.md)\)\s*\|/;
 const SPEC_DISK_RE = /^[a-z0-9][a-z0-9-]*\.md$/;
+/** A table cell that holds one link and nothing else; the group is its target. */
+const LINK_CELL_RE = /^\[[^\]]*\]\(([^)]*)\)$/;
 
 // ───────────────────────────────────────────────────────────────────────────
 // Table Helpers
@@ -210,6 +214,111 @@ function newWorkspaceRow(header, workspace, count, linked) {
 }
 
 /**
+ * The workspace table of the global registry, with the line each workspace's row is on.
+ *
+ * @param {string[]} lines - The registry's lines.
+ * @returns {(NonNullable<ReturnType<typeof findTable>> & {rowOf: Map<string, number>, linked: boolean})|null}
+ *   `linked` says whether a row links its workspace name; null when there is no such table.
+ */
+function workspaceTable(lines) {
+    const table = findTable(lines, 'Workspace');
+    if (!table) return null;
+    const rowOf = new Map();
+    let linked = false;
+    for (let i = table.bodyFrom; i < table.bodyTo; i++) {
+        const first = cellsOf(lines[i])[0].trim();
+        const name = /^\[([^\]]+)\]/.exec(first)?.[1] ?? first;
+        rowOf.set(name, i);
+        if (first.startsWith('[')) linked = true;
+    }
+    return {
+        ...table,
+        rowOf,
+        linked,
+    };
+}
+
+/**
+ * A workspace's row without a link to its registry, for a workspace that has none (a set). The
+ * name cell becomes the bare name, a cell that only links that registry is emptied, and every
+ * other cell stays as it is written.
+ *
+ * @param {string} line - The workspace's row.
+ * @param {string} name - The workspace.
+ * @returns {string} The line itself when it links no registry of that workspace.
+ */
+function withoutRegistryLinks(line, name) {
+    const registry = `${name}/INDEX.md`;
+    let changed = false;
+    const cells = cellsOf(line).map((cell, at) => {
+        const target = LINK_CELL_RE.exec(cell.trim())?.[1].replace(/^\.\//, '');
+        if (target !== registry) return cell;
+        changed = true;
+        return at === 0 ? ` ${name} ` : ' ';
+    });
+    return changed ? `|${cells.join('|')}|` : line;
+}
+
+/**
+ * Takes the links to a workspace's registry out of its row of the global registry. A project
+ * without a global registry, or a registry without that row, is left as it is.
+ *
+ * @param {string} designAbs - The state folder.
+ * @param {string} name - The workspace.
+ * @returns {void}
+ */
+function unlinkWorkspaceRow(designAbs, name) {
+    const indexPath = path.join(designAbs, 'INDEX.md');
+    const read = readLines(indexPath);
+    if (!read) return;
+    const at = workspaceTable(read.lines)?.rowOf.get(name);
+    if (at === undefined) return;
+    const row = withoutRegistryLinks(read.lines[at], name);
+    if (row === read.lines[at]) return;
+    read.lines[at] = row;
+    const temp = `${indexPath}.tmp`;
+    fs.writeFileSync(temp, read.lines.join(read.eol));
+    fs.renameSync(temp, indexPath);
+}
+
+/**
+ * A workspace's row as the sync pass rewrites it: the registry's lines, the row's place in
+ * them, and the list of changes the write is reported with.
+ *
+ * @typedef {{lines: string[], at: number, name: string, changes: string[]}} Row
+ */
+
+/**
+ * Takes the registry links out of the row of a set.
+ *
+ * @param {Row} row
+ * @returns {void}
+ */
+function unlinkRow({ lines, at, name, changes }) {
+    const bare = withoutRegistryLinks(lines[at], name);
+    if (bare === lines[at]) return;
+    lines[at] = bare;
+    changes.push(`${name} registry link removed`);
+}
+
+/**
+ * Writes the number of specifications into a row.
+ *
+ * @param {Row} row
+ * @param {number} specsAt - The `Specs` column.
+ * @param {number} count
+ * @returns {void}
+ */
+function countRow({ lines, at, name, changes }, specsAt, count) {
+    const cells = cellsOf(lines[at]);
+    const before = cells[specsAt].trim();
+    if (before === String(count)) return;
+    cells[specsAt] = ` ${count} `;
+    lines[at] = `|${cells.join('|')}|`;
+    changes.push(`${name} Specs ${before} → ${count}`);
+}
+
+/**
  * Applies the computed cells to the global registry's workspace table.
  *
  * @param {{designAbs: string, workspaces: {name: string, dir: string, description?: string}[], scoped: boolean, registeredNames: string[]}} ctx
@@ -220,18 +329,11 @@ function syncGlobalRegistry(ctx, counts, report) {
     const indexPath = path.join(ctx.designAbs, 'INDEX.md');
     const read = readLines(indexPath);
     if (!read) return;
-    const table = findTable(read.lines, 'Workspace');
+    const table = workspaceTable(read.lines);
     if (!table) return;
+    const { rowOf, linked } = table;
     const specsAt = columnOf(table.header, 'Specs');
     const changes = [];
-    const rowOf = new Map();
-    let linked = false;
-    for (let i = table.bodyFrom; i < table.bodyTo; i++) {
-        const first = cellsOf(read.lines[i])[0].trim();
-        const name = /^\[([^\]]+)\]/.exec(first)?.[1] ?? first;
-        rowOf.set(name, i);
-        if (first.startsWith('[')) linked = true;
-    }
     const added = [];
     for (const workspace of ctx.workspaces) {
         const count = counts.get(workspace.name) ?? null;
@@ -241,13 +343,14 @@ function syncGlobalRegistry(ctx, counts, report) {
             changes.push(`row for workspace '${workspace.name}' added`);
             continue;
         }
-        if (specsAt === -1 || count === null) continue;
-        const cells = cellsOf(read.lines[at]);
-        if (cells[specsAt].trim() === String(count)) continue;
-        const before = cells[specsAt].trim();
-        cells[specsAt] = ` ${count} `;
-        read.lines[at] = `|${cells.join('|')}|`;
-        changes.push(`${workspace.name} Specs ${before} → ${count}`);
+        const row = {
+            lines: read.lines,
+            at,
+            name: workspace.name,
+            changes,
+        };
+        if (isDocSetWorkspace(workspace.dir, workspace.name)) unlinkRow(row);
+        if (specsAt !== -1 && count !== null) countRow(row, specsAt, count);
     }
     if (added.length > 0) read.lines.splice(table.bodyTo, 0, ...added);
     if (!ctx.scoped) {
@@ -285,6 +388,7 @@ function syncRegistry(ctx) {
 
 module.exports = {
     syncRegistry,
+    unlinkWorkspaceRow,
     findTable,
     cellsOf,
     columnOf,

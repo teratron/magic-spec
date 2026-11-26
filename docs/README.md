@@ -85,6 +85,8 @@ your-project/
         └── specifications/ #    Directory for all .md spec files
 ```
 
+> **Two layouts**: the tree above is the 3.x layout. A workspace can instead hold a [4.0 document set](document-set.md): small addressed units from which each task's reading is computed. Each workspace is in one layout, and an existing one is moved by `/magicspec migrate --to 4` ([Migrating](migration.md#from-3x-to-40)).
+
 > **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.magicspec/core/`, `.magicspec/web/`) that all share the same `skills/magicspec/` engine without colliding.
 >
 > ```json
@@ -152,4 +154,4 @@ The Retrospective system is Magic's heartbeat. It detects:
 
 It runs **automatically** after every phase completion, providing the user with a table of metrics and actionable recommendations to improve the workflow.
 
-[Main Repository](https://github.com/teratron/magic-spec) | [Distribution Guide](distribution.md) | [Developing the Engine](development.md) | [Context Economy](context-economy.md) | [Engine Integrity (Checksums)](checksums.md) | [Repository Settings](repository-settings.md)
+[Main Repository](https://github.com/teratron/magic-spec) | [The 4.0 Document Set](document-set.md) | [Migrating](migration.md) | [Distribution Guide](distribution.md) | [Developing the Engine](development.md) | [Context Economy](context-economy.md) | [Engine Integrity (Checksums)](checksums.md) | [Repository Settings](repository-settings.md)

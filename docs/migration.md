@@ -2,6 +2,8 @@
 
 3.0 ships the engine as one skill, `skills/magicspec/`, and renames the state folder from `.design/` to `.magicspec/`. A project on 2.x keeps working until it is migrated, and the migration is one resumable command.
 
+This page has a second, separate move: a workspace of a 3.x project to the 4.0 document set, in [From 3.x to 4.0](#from-3x-to-40). A 2.x project makes the first move before it.
+
 ## What changes
 
 | 2.x | 3.0 |
@@ -64,3 +66,79 @@ Only the 2.x layout is migrated. A project on 1.x must first be brought to the l
 
 - Add `magicspec-migration-backup-*/` to `.gitignore`, or delete the backup once you have checked the result.
 - Update any script, CI step or note of your own that names `.design/`, `.magic/` or a `/magic.*` command.
+
+## From 3.x to 4.0
+
+The [4.0 document set](document-set.md) is a second layout of a workspace. The engine reads both, so the move is optional and made one workspace at a time; the other workspaces and the global constitution stay as they are. Move a workspace when you want each task's reading computed from addressed units instead of chosen by the builder.
+
+Commit your work first: until the next commit, git is the way back.
+
+### 1. See what would move
+
+Type `/magicspec migrate --to 4` (add the workspace name when it is not the one the engine would choose). The first thing it does is a dry run, which writes nothing: each file of the workspace with its place in the new layout, the specifications that have to be split by judgement, the scenarios that have to be rewritten, and the state of `next/`, the folder the new documents are written into.
+
+```plaintext
+Migration to 4.0 of docs (dry run — nothing changes without --apply):
+  INDEX.md → archives/3x/INDEX.md
+  PLAN.md → plan.md
+  RULES.md → rules.md
+  STATE.md → memory/state.md, memory/goal.md
+  TASKS.md → stack/{stack}/tasks/M{n}.md
+  simulations/greeting.md → simulations/greeting.md (stays)
+  specifications/l1-greeting.md → spec/{key}.md, product.md
+  specifications/l2-greeting-cli.md → stack/{stack}/bind/{key}.md, profile.md, deps.md
+  tasks/phase-2.md → stack/{stack}/tasks/M{n}.md
+  archives/ → archives/ (stays)
+  split by the reverse mode: l1-greeting.md
+  split by the reverse mode: l2-greeting-cli.md
+  scenario to rewrite: simulations/greeting.md S-1
+next/: clean
+```
+
+By script, where the host cannot invoke the skill:
+
+```bash
+node <skills folder>/magicspec/scripts/executor.js migrate --to 4 --workspace <name>
+```
+
+### 2. Write the new documents
+
+The new set is not produced by transforming text. When `next/` is absent or the checker has findings in it, the run creates the folder, ends there and names `/magicspec analyze first-time {workspace}`. That command writes the set into `next/` from your code, with the 3.x specifications as a source beside it. A requirement it cannot observe becomes an `- Open:` line: answer it, or correct the finding by hand, until the dry run reports `next/: clean`.
+
+### 3. Answer the one question and apply
+
+Run `/magicspec migrate --to 4` again. With a clean `next/` it asks once: move this workspace, or not now. On *not now* nothing changes and both trees stay. On a yes it applies the move, which by script is the command above with `--apply` added:
+
+1. the 3.x files go to `archives/3x/` of the workspace;
+2. the new documents move out of `next/` into the workspace, and the empty `next/` goes;
+3. the workspace's row in `.magicspec/INDEX.md` stops linking a registry the workspace no longer has;
+4. `"format": "4"` is set on the workspace in `workspace.json`, last.
+
+The workflow then records as built each milestone whose observation holds on your code, lists the scenarios to rewrite and names `/magicspec status` as the next step.
+
+### What stays where
+
+| Part | After the move |
+| --- | --- |
+| `archives/` of the workspace | unchanged; the 3.x files join it under `archives/3x/` |
+| `simulations/` | unchanged; a scenario that cites a 3.x specification is listed to be rewritten |
+| the other workspaces, `.magicspec/RULES.md` | unchanged |
+| your code | unchanged |
+
+### An interrupted move
+
+The apply step reads where the files stand, so running it again finishes the same move. Until it is finished, every other command on the workspace stops and writes nothing:
+
+```plaintext
+HALT: The move of docs to 4.0 was started and not finished. Run `/magicspec migrate --to 4` (by script: `node .agents/skills/magicspec/scripts/executor.js migrate --to 4 --apply`) to finish it.
+```
+
+The graph, the wiki and the search over your design documents leave such a workspace out until then.
+
+### Going back
+
+Before you commit the result:
+
+1. `git restore` on the workspace folder, `.magicspec/workspace.json` and `.magicspec/INDEX.md` brings the 3.x files back.
+2. Delete the workspace's `archives/3x/`. Its copies are untracked and `git restore` leaves them; while the folder holds a file and the format is not set, every command reads the move as unfinished and stops.
+3. The files of the new set stay untracked beside the 3.x files, for you to keep or delete.

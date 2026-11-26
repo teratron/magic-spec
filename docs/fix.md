@@ -90,4 +90,4 @@ Next: /magicspec run — standard reasoning
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-26 (v3.0.224).
+Synchronized with engine workflows on 2026-11-26 (v4.0.0).

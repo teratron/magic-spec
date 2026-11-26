@@ -1,6 +1,6 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
-**Version:** 1.1.7
+**Version:** 1.1.8
 **Status:** Stable
 **Layer:** concept
 
@@ -122,6 +122,8 @@ In the engine's repository the product is the engine, and its user is a develope
 
    **As built (Phase 85).** `[ADDED]` `session` gains S-20, `migrate --to 4` previewing, asking once and moving a 3.x workspace, or leaving it on 3.x with the findings it cannot close; traced, its `Last run` stays `never`.
 
+   **As built (Phase 83).** `[ADDED]` S-20 gains a variant: with the move in flight the graph built for another workspace leaves the moving one out, and after the move the global registry's row names the workspace without a link; traced.
+
 ## 7. Drawbacks & Alternatives
 
 - **Scenario upkeep cost.** Bounded by SM-4 (updated in the task that changes the behaviour, when the context is fresh).
@@ -140,6 +142,7 @@ In the engine's repository the product is the engine, and its user is a develope
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.8 | 2026-11-26 | Agent | As built in Phase 83, Stable retained, no requirement changed: S-20 gains the variant of a move in flight read by the graph of another workspace and of the global registry's row after it. |
 | 1.1.7 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the engine's scenarios gain S-20 (`session`, the move of a 3.x workspace to 4.0). |
 | 1.1.6 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: §6 records S-18 and S-19, nineteen scenarios and seventy steps. |
 | 1.1.5 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: §6 states the 4.0 branch and the engine's scenarios as they stand — S-16 and S-17 added, the repeated identifier of the 4.0 pipeline scenario now S-15. |

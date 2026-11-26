@@ -8,7 +8,8 @@ Security fixes go to the latest minor line of the current major version only.
 
 | Version line | Supported |
 | --- | --- |
-| `3.0.x` | Yes |
+| `4.0.x` | Yes |
+| `3.0.x` | No |
 | `2.1.x` | No |
 | `2.0.x` | No |
 | `1.x` | No |

@@ -1,6 +1,6 @@
 # Sync Command: Bringing Derived State up to Date
 
-**Version:** 1.1.1
+**Version:** 1.1.2
 **Status:** Stable
 **Layer:** concept
 
@@ -132,6 +132,7 @@ The `sync` section of `workspace.json` holds two lists, both optional; an absent
 8. **The preview reaches the build too.** The wiki is rendered by a graph build that writes its extraction cache into the project, so the extraction cache honors `MAGIC_DRY_RUN` (no folder created, no entry saved or pruned) and the graph area sets it for the build of a preview (SY-7).
 9. **The containment check is written once.** No script implemented the reference rule (ventilation runs it as a cognitive scan), so the shipped pass carries it for the one place it generates text: a task identifier, a phase designator (the file form and the prose `Phase N`, refused conservatively because generated text cannot apply the rule's judgement), an SDD system file, a specification file name and a path into the state folder refuse the write and are reported.
 10. **The maintenance pipeline's project-state step is the shipped pass.** The earlier updater also bumped the registries' version lines and appended history rows; neither is derived state (SY-1), so both ended with it, the updater was removed, and the registries' versions and history are authored with the specifications.
+11. **As built (Phase 83), no requirement changed `[ADDED]`.** The global registry's workspace rows are derived for a 4.0 workspace too (SY-1). A set has no registry of its own, so the `registry` area adds a missing row without a link and takes the links to `{workspace}/INDEX.md` out of a row that still has them — the name cell becomes the bare name, a cell that only links that registry is emptied, every other cell stays as written — and reports it as one write. The helper is the one the move to 4.0 uses ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5), so the two writers cannot disagree. A 3.x row is untouched.
 
 ## 7. Drawbacks & Alternatives
 
@@ -151,6 +152,7 @@ The `sync` section of `workspace.json` holds two lists, both optional; an absent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.2 | 2026-11-26 | Agent | As built in Phase 83, Stable retained, no requirement changed: §6 item 11 states what the `registry` area writes for a 4.0 workspace, a row of the global registry without a link to a registry. |
 | 1.1.1 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: SY-1 names the derived state of a 4.0 workspace as the document-set concept declares; the 3.x contract unchanged. |
 | 1.1.0 | 2026-11-12 | Agent | **As built in Phase 55; the registration form decided.** The open question of §2 is closed by a forecast: a `sync` section of `workspace.json` (§5.5), with the entry grammar, the neutral `sync:{key}` markers and the rule that a malformed entry is one disagreement; the runner-up (a file of its own) and its override are recorded. §6 items 7 to 10 record the as-built decisions: the area order and compare-before-write for the three writers that would otherwise write on every run, the preview reaching the graph build's extraction cache, the containment check written once in the shipped pass, and the retirement of the maintenance updater's version and history writes. Amendment Rule: `Stable → RFC`; re-promoted `Stable` after the Post-Update Review (`@role:spec-critic`, coherence check against the command surface, session-continuity and reference-containment specifications: no ordering conflict, contradiction, duplicate definition or interaction gap; `@role:prompt-engineer`: PASS). |
 | 1.0.0 | 2026-11-11 | Agent | Created from the owner's list of commands of 2026-11-11 (origin `user-stated`): `sync` as a user command for versions, documentation and other derived state; the maintenance command of the same name becomes its extension in the engine's repository. |

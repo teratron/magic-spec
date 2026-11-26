@@ -416,19 +416,43 @@ module.exports = () => {
     });
 
     test('memory fallback: the module requires nothing beyond Node and its own folder, so it runs on the stated runtime floor (§2)', () => {
-        for (const file of ['memory-sections.js', 'memory-fallback.js', 'memory-sqlite.js']) {
-            const source = fs.readFileSync(path.join(scriptsDir, 'lib', file), 'utf8');
-            const required = [...source.matchAll(/require\('([^']+)'\)/g)].map((m) => m[1]);
+        const requiredBy = (...parts) => {
+            const source = fs.readFileSync(path.join(scriptsDir, ...parts), 'utf8');
+            return [
+                ...source.matchAll(/require\('([^']+)'\)/g),
+            ].map((m) => m[1]);
+        };
+        for (const file of [
+            'memory-sections.js',
+            'memory-fallback.js',
+            'memory-sqlite.js',
+        ]) {
+            const required = requiredBy('lib', file);
             assert.ok(required.length > 0);
             for (const name of required) {
                 assert.ok(
-                    ['fs', 'path'].includes(name) ||
+                    [
+                        'fs',
+                        'path',
+                    ].includes(name) ||
                         /^\.\/memory-[a-z]+$/.test(name) ||
+                        (file === 'memory-sections.js' && name === './doc-set-state') ||
                         (file === 'memory-sqlite.js' && name === 'node:sqlite'),
-                    `${file} requires only node:fs, node:path, its siblings and, for the SQLite backend, node:sqlite (${name})`,
+                    `${file} requires only node:fs, node:path, its siblings, the move predicate and, for the SQLite backend, node:sqlite (${name})`,
                 );
             }
         }
+        // The predicate of a move in flight brings the shared utilities with it, which are
+        // built on Node alone.
+        assert.deepStrictEqual(requiredBy('lib', 'doc-set-state.js').sort(), [
+            '../utils',
+            'node:fs',
+            'node:path',
+        ]);
+        assert.deepStrictEqual(
+            requiredBy('utils.js').filter((name) => name.startsWith('.')),
+            [],
+        );
     });
 
     const memorySqlitePath = path.join(scriptsDir, 'lib', 'memory-sqlite.js');

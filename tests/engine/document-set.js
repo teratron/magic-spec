@@ -200,7 +200,7 @@ const BODY_SECTIONS = [
         ],
         names: [
             'the `Next` line of its `memory/state.md`',
-            '`registry` area skips it',
+            'its row of the global registry, written without a link to one',
         ],
         place: checklist('Sync'),
     },

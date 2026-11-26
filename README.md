@@ -154,6 +154,9 @@ Magic Spec includes a built-in upgrade-detection rule (`skills/magicspec/CONSTIT
 > [!IMPORTANT]
 > **Coming from 2.x?** 3.0 changes where the engine lives (one skill folder), how commands are typed (`/magicspec <command>`) and the state folder (`.magicspec/`). Install the new folder and run `/magicspec migrate` once — see [Migrating from 2.x](./docs/migration.md). Until then every other command stops with the same instruction.
 
+> [!NOTE]
+> **3.x and 4.0 workspaces.** The engine reads both layouts, one per workspace. A workspace is on 4.0, the [document set](./docs/document-set.md), when its entry in `.magicspec/workspace.json` carries `"format": "4"`; start a new one that way, or move a 3.x workspace with `/magicspec migrate --to 4` — see [From 3.x to 4.0](./docs/migration.md#from-3x-to-40). Nothing moves unless you ask.
+
 To update:
 
 1. Download the new release archive from [Releases](https://github.com/teratron/magic-spec/releases/latest).
@@ -245,7 +248,8 @@ Arguments scope the operation to a **workspace** or provide a **directive**:
 | [**SDD Philosophy**](./docs/conception.md) | Two-Layer Model, Integrity by Design, Self-Improving Feedback Loop |
 | [**Distribution Guide**](./docs/distribution.md) | Integration patterns, manual install, and update instructions |
 | [**Context Economy**](./docs/context-economy.md) | What the engine keeps small, size budgets, and how to measure a session |
-| [**Migrating from 2.x**](./docs/migration.md) | The one command that takes a 2.x project to the 3.0 layout |
+| [**The 4.0 Document Set**](./docs/document-set.md) | The addressed layout of a workspace: its files, which stage writes which, the checker, the pack, how a change moves |
+| [**Migrating**](./docs/migration.md) | A 2.x project to the 3.0 layout, and a 3.x workspace to the 4.0 document set |
 | [**Developing the Engine**](./docs/development.md) | Layout, the harness, C14, the command tables, releasing |
 | [**Contributing**](./CONTRIBUTING.md) | How to develop, test, and extend the engine |
 
@@ -268,4 +272,4 @@ Distributed under the [MIT](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v3.0.144). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v4.0.0). We are constantly refining the SDD engine based on real-world usage.

@@ -1,6 +1,6 @@
 # Contributing to magic-spec
 
-Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.224<!-- /generated:version -->).
+Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v4.0.0<!-- /generated:version -->).
 This guide tells you, in order, how to report a bug, how to propose a change, how to run the repository's checks, what a pull request must contain, and which conventions a change follows.
 
 ## 1. Report a bug or propose a change
@@ -98,7 +98,7 @@ This table is generated from the registry.
 <!-- generated:workspaces -->
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 55 | [engine/INDEX.md](.magicspec/engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 58 | [engine/INDEX.md](.magicspec/engine/INDEX.md) |
 <!-- /generated:workspaces -->
 
 ## 5. Expected conduct

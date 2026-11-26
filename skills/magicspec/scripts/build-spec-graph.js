@@ -23,7 +23,7 @@ const {
 } = require('./utils');
 const { parseCanonicalRefs } = require('./lib/canonical-refs');
 const graphCache = require('./graph-cache');
-const { isDocSetWorkspace } = require('./lib/doc-set-state');
+const { isDocSetWorkspace, moveInFlight } = require('./lib/doc-set-state');
 const { docSetGraph } = require('./lib/doc-set-graph');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -154,7 +154,8 @@ function wholeProjectScope() {
 /**
  * Parses .magicspec/workspace.json and creates workspace nodes + scope edges.
  * A workspace without a `scope` covers the whole project (`context.md`), so its scope is
- * every top-level entry of the project rather than nothing.
+ * every top-level entry of the project rather than nothing. A workspace whose move to 4.0 is
+ * unfinished gets no node and no edge.
  *
  * @returns {Record<string, string[]>} Map of workspace name → scope array.
  */
@@ -167,6 +168,8 @@ function extractWorkspaces() {
     const result = {};
 
     for (const [name, config] of Object.entries(workspaces)) {
+        // A workspace half way to 4.0 holds two layouts at once: the graph leaves it out whole.
+        if (moveInFlight(path.join(designAbs, name), name)) continue;
         const wsId = `ws:${name}`;
         addNode(wsId, name, 'workspace', {
             workspace: name,

@@ -61,6 +61,51 @@ const migrate = (/** @type {string} */ dir, /** @type {string[]} */ ...args) =>
 
 const linesOf = (/** @type {string} */ text) => text.split('\n').filter(Boolean);
 
+/** A script's JSON output without the times it was made at. */
+const stable = (/** @type {string} */ text) =>
+    text.replace(/"(generated|generated_at|checked_at|built_at)": "[^"]*"/g, '');
+
+/** Registers a second workspace, `web`, with a folder of its own, and changes nothing else. */
+const addWeb = (
+    /** @type {(rel: string) => string} */ at,
+    /** @type {(registry: any) => void} */ change = () => {},
+) => {
+    const registry = JSON.parse(fs.readFileSync(at('workspace.json'), 'utf8'));
+    registry.workspaces.web = {
+        scope: [
+            'src',
+        ],
+    };
+    change(registry);
+    fs.writeFileSync(at('workspace.json'), `${JSON.stringify(registry, null, 2)}\n`);
+    fs.mkdirSync(at('web'));
+};
+
+/** What the graph, the wiki and the artifact index say about a project. */
+const readerOutputs = (/** @type {string} */ dir) => {
+    const run = (/** @type {string[]} */ ...args) => {
+        const done = simExec(dir, args);
+        assert.strictEqual(done.status, 0, `${args[0]}: ${done.stdout}${done.stderr}`);
+        return stable(done.stdout);
+    };
+    const graph = run('build-spec-graph', '--json', '--no-cache');
+    run('export-wiki');
+    const wiki = path.join(dir, '.magicspec', 'graph', 'wiki');
+    const { listArtifacts } = require(path.join(SIM_SCRIPTS, 'lib', 'memory-sections.js'));
+    return {
+        graph,
+        wiki: fs
+            .readdirSync(wiki)
+            .sort()
+            .map((name) => [
+                name,
+                fs.readFileSync(path.join(wiki, name), 'utf8'),
+            ]),
+        listed: listArtifacts(path.join(dir, '.magicspec')),
+        query: run('memory-query', 'greeting', '--json'),
+    };
+};
+
 /** The state folder alone: what a move changes, without the engine copy or the caches. */
 const stateTree = (/** @type {string} */ dir) =>
     [
@@ -438,8 +483,6 @@ module.exports = () => {
             fs.rmSync(path.join(without, '.magicspec', 'docs', 'next'), {
                 recursive: true,
             });
-            const stable = (/** @type {string} */ text) =>
-                text.replace(/"(generated|generated_at|checked_at|built_at)": "[^"]*"/g, '');
             for (const args of [
                 [
                     'analyze-coverage',
@@ -534,6 +577,121 @@ module.exports = () => {
         assert.deepStrictEqual(counted, shares(false));
     });
 
+    test('migrate to 4: the graph, the wiki and the artifact index leave out a workspace whose move is unfinished, though they run for another one, and read it again once it is moved', () => {
+        const moving = makeMoveProject();
+        const without = makeMoveProject();
+        try {
+            const at = (/** @type {string} */ dir) => (/** @type {string} */ rel) =>
+                path.join(dir, '.magicspec', ...rel.split('/'));
+            addWeb(at(moving), (registry) => {
+                registry.default = 'web';
+            });
+            moveByHand(at(moving), [
+                [
+                    'INDEX.md',
+                    'archives/3x/INDEX.md',
+                ],
+            ]);
+            addWeb(at(without), (registry) => {
+                registry.default = 'web';
+                delete registry.workspaces.docs;
+            });
+            fs.rmSync(at(without)('docs'), {
+                recursive: true,
+            });
+            const left = readerOutputs(moving);
+            const absent = readerOutputs(without);
+            for (const reader of /** @type {const} */ ([
+                'graph',
+                'wiki',
+                'listed',
+                'query',
+            ]))
+                assert.deepStrictEqual(left[reader], absent[reader], reader);
+
+            const applied = migrate(moving, '--apply', '--workspace', 'docs');
+            assert.strictEqual(applied.status, 0, applied.stdout + applied.stderr);
+            const moved = readerOutputs(moving);
+            assert.ok(moved.graph.includes('"ws:docs"'), 'the graph reads the moved workspace');
+            assert.ok(
+                moved.wiki.some(([name]) => name === 'workspace__docs.md'),
+                'the wiki has its page',
+            );
+            assert.ok(
+                moved.listed.files.includes('docs/product.md'),
+                'the index reads its set, the 3.x files beside it or not',
+            );
+            assert.ok(moved.listed.files.includes('docs/archives/3x/INDEX.md'));
+        } finally {
+            cleanup(moving);
+            cleanup(without);
+        }
+    });
+
+    test('migrate to 4: the apply step leaves the global row of the moved workspace without a link to its registry and changes no other line', () => {
+        onMoveProject((dir, at) => {
+            const before = fs.readFileSync(at('INDEX.md'), 'utf8').split('\n');
+            const run = migrate(dir, '--apply');
+            assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+            const after = fs.readFileSync(at('INDEX.md'), 'utf8').split('\n');
+            assert.deepStrictEqual(
+                after,
+                before.map((line) => line.replace('[docs](docs/INDEX.md)', () => 'docs')),
+            );
+            assert.ok(after.includes('| docs | The greeting command. | 2 |'), after.join('\n'));
+        });
+        onMoveProject((dir, at) => {
+            fs.rmSync(at('INDEX.md'));
+            assert.strictEqual(
+                migrate(dir, '--apply').stdout.trim(),
+                FINISHED,
+                'no global registry',
+            );
+            assert.ok(!fs.existsSync(at('INDEX.md')), 'and none is written');
+        });
+    });
+
+    test('migrate to 4: sync takes the registry links out of a 4.0 row as one write, writes nothing on a second run and leaves a 3.x row linked', () => {
+        onMoveProject((dir, at) => {
+            assert.strictEqual(migrate(dir, '--apply').status, 0);
+            addWeb(at);
+            fs.writeFileSync(at('web/INDEX.md'), '# Web\n');
+            const registryOf = (/** @type {string} */ name) =>
+                `[${name}/INDEX.md](${name}/INDEX.md)`;
+            const web = `| [web](web/INDEX.md) | The site. | 0 | ${registryOf('web')} |`;
+            const linked = [
+                '## Workspaces',
+                '',
+                '| Workspace | Description | Specs | Registry |',
+                '| --- | --- | --- | --- |',
+                `| [docs](docs/INDEX.md) | The greeting command. | 2 | ${registryOf('docs')} |`,
+                web,
+                '',
+            ].join('\r\n');
+            fs.writeFileSync(at('INDEX.md'), linked);
+            const sync = (/** @type {string[]} */ ...args) => {
+                const run = simExec(dir, [
+                    'sync',
+                    'registry',
+                    ...args,
+                ]);
+                assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+                return run.stdout;
+            };
+            const written = 'registry: .magicspec/INDEX.md — docs registry link removed';
+            assert.ok(sync('--dry-run').includes(written));
+            assert.strictEqual(fs.readFileSync(at('INDEX.md'), 'utf8'), linked, 'a preview');
+            assert.ok(sync().includes('[Sync] 1 written'));
+            const repaired = linked.replace(
+                `| [docs](docs/INDEX.md) | The greeting command. | 2 | ${registryOf('docs')} |`,
+                () => '| docs | The greeting command. | 2 | |',
+            );
+            assert.strictEqual(fs.readFileSync(at('INDEX.md'), 'utf8'), repaired);
+            assert.ok(sync().includes('[Sync] in sync'));
+            assert.strictEqual(fs.readFileSync(at('INDEX.md'), 'utf8'), repaired);
+        });
+    });
+
     test('migrate to 4: the router row names the argument and its default, and the command help lists it from the row', () => {
         const row = lineWith(readShipped('skills/magicspec/SKILL.md'), '| `migrate` |') ?? '';
         assert.ok(
@@ -599,6 +757,14 @@ module.exports = () => {
             [
                 'no 3.x file before the yes',
                 'no 3.x file is moved before the yes',
+            ],
+            [
+                'the revert restores the global row too',
+                '`git restore` on the workspace folder, `workspace.json` and the global `INDEX.md`',
+            ],
+            [
+                'the revert removes the moved copies, which would read as a move in flight',
+                "then delete the workspace's `archives/3x/`",
             ],
         ]) {
             assert.ok(section.toLowerCase().includes(needle.toLowerCase()), what);

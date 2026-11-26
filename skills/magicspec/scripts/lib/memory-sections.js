@@ -15,10 +15,12 @@
 // What the index reads is closed. A Markdown file of the state folder is indexed when
 // its location gives it one of the kinds below; a derived file (the extraction cache, the
 // graph folder with its wiki, the generated CONTEXT.md) is never indexed, because
-// nothing computed from the artifacts may enter an index built from them.
+// nothing computed from the artifacts may enter an index built from them. Neither is the
+// tree a move to 4.0 is writing, nor any file of a workspace whose move is unfinished.
 
 const fs = require('fs');
 const path = require('path');
+const { moveInFlight } = require('./doc-set-state');
 
 /** A section longer than this many characters is split at paragraph boundaries. */
 const MAX_SECTION_CHARS = 2000;
@@ -506,6 +508,22 @@ function parseQuery(text) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
+ * Whether the walk stays out of a folder: a derived one, the tree a move to 4.0 writes
+ * (`next/` directly under a workspace), or a whole workspace whose move is unfinished.
+ *
+ * @param {string} abs - The folder.
+ * @param {string} rel - Its path relative to the state folder, forward slashes.
+ * @returns {boolean}
+ */
+function isLeftOut(abs, rel) {
+    const parts = rel.split('/');
+    const name = parts[parts.length - 1];
+    if (SKIPPED_DIRS.includes(name)) return true;
+    if (parts.length === 1) return moveInFlight(abs, name);
+    return parts.length === 2 && name === 'next';
+}
+
+/**
  * Lists the Markdown files of the state folder the index reads, with the ones it leaves
  * out so a caller can report an artifact that no kind covers.
  *
@@ -522,10 +540,8 @@ function listArtifacts(designAbs) {
         })) {
             const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
             if (entry.isDirectory()) {
-                // Directly under a workspace, `next/` is the set a move to 4.0 is writing.
-                const moveTree = entry.name === 'next' && rel.split('/').length === 2;
-                if (!SKIPPED_DIRS.includes(entry.name) && !moveTree)
-                    walk(path.join(dir, entry.name), rel);
+                const abs = path.join(dir, entry.name);
+                if (!isLeftOut(abs, rel)) walk(abs, rel);
             } else if (entry.name.endsWith('.md') && !SKIPPED_FILES.includes(entry.name)) {
                 (kindOf(rel) === null ? unkinded : files).push(rel);
             }
