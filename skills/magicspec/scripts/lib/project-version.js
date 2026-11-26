@@ -41,13 +41,25 @@ const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
  */
 function readVersion(versionPath) {
     if (!fs.existsSync(versionPath)) {
-        return { version: INITIAL_VERSION, exists: false, corrupted: false };
+        return {
+            version: INITIAL_VERSION,
+            exists: false,
+            corrupted: false,
+        };
     }
     const raw = fs.readFileSync(versionPath, 'utf8').trim();
     if (!SEMVER_RE.test(raw)) {
-        return { version: INITIAL_VERSION, exists: true, corrupted: true };
+        return {
+            version: INITIAL_VERSION,
+            exists: true,
+            corrupted: true,
+        };
     }
-    return { version: raw, exists: true, corrupted: false };
+    return {
+        version: raw,
+        exists: true,
+        corrupted: false,
+    };
 }
 
 /**
@@ -108,7 +120,10 @@ function backupCorrupted(versionPath) {
 function ensureInitialized(versionPath) {
     const state = readVersion(versionPath);
     if (state.exists && !state.corrupted) {
-        return { version: state.version, created: false };
+        return {
+            version: state.version,
+            created: false,
+        };
     }
     if (state.corrupted) {
         const backup = backupCorrupted(versionPath);
@@ -125,7 +140,10 @@ function ensureInitialized(versionPath) {
         }
     }
     writeVersion(versionPath, INITIAL_VERSION);
-    return { version: INITIAL_VERSION, created: true };
+    return {
+        version: INITIAL_VERSION,
+        created: true,
+    };
 }
 
 /**
@@ -140,7 +158,11 @@ function bumpAndWrite(versionPath) {
     const { version: current, created } = ensureInitialized(versionPath);
     const next = bumpPatch(current);
     writeVersion(versionPath, next);
-    return { previous: current, next, created };
+    return {
+        previous: current,
+        next,
+        created,
+    };
 }
 
 module.exports = {

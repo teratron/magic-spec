@@ -122,7 +122,9 @@ module.exports = () => {
             // Bootstrap STATE.md from the real template (placeholder counters),
             // then recompute: `{filled}/{total}`-style placeholders are engine-owned
             // lines and must be replaced, not preserved as narrative.
-            const state = autoProgressState(updateState, wsDir, { phase: '1' });
+            const state = autoProgressState(updateState, wsDir, {
+                phase: '1',
+            });
 
             assert.match(
                 state,
@@ -151,7 +153,15 @@ module.exports = () => {
             // The finalize shape: a Next Action and a progress recompute, and
             // nothing else — every other field keeps whatever the bootstrap gave it.
             warnedBy(() =>
-                updateState(wsDir, { nextAction: 'Do the thing' }, { autoProgress: true }),
+                updateState(
+                    wsDir,
+                    {
+                        nextAction: 'Do the thing',
+                    },
+                    {
+                        autoProgress: true,
+                    },
+                ),
             );
             const fresh = stateText();
             assert.deepStrictEqual(
@@ -165,7 +175,17 @@ module.exports = () => {
             assert.doesNotMatch(fresh, /\n\n\n/, 'removing examples must not leave a double blank');
 
             // The decision examples are gone, so the first real decision is the only entry.
-            warnedBy(() => updateState(wsDir, { decision: 'first' }, { addDecision: true }));
+            warnedBy(() =>
+                updateState(
+                    wsDir,
+                    {
+                        decision: 'first',
+                    },
+                    {
+                        addDecision: true,
+                    },
+                ),
+            );
             assert.strictEqual(
                 (stateText().match(/^- \d{4}-\d{2}-\d{2} /gm) || []).length,
                 1,
@@ -178,7 +198,17 @@ module.exports = () => {
                 '| Phase | Description | Status |\n| --- | --- | --- |\n' +
                     '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
             );
-            warnedBy(() => updateState(wsDir, { phase: '1' }, { autoProgress: true }));
+            warnedBy(() =>
+                updateState(
+                    wsDir,
+                    {
+                        phase: '1',
+                    },
+                    {
+                        autoProgress: true,
+                    },
+                ),
+            );
             assert.match(
                 stateText(),
                 /```\nOverall: \[1\/1\][^\n]*\n```/,
@@ -187,7 +217,9 @@ module.exports = () => {
 
             // A root-level design directory is no workspace name.
             const rootDir = path.join(tempDir, '.magicspec');
-            fs.rmSync(path.join(rootDir, 'main'), { recursive: true });
+            fs.rmSync(path.join(rootDir, 'main'), {
+                recursive: true,
+            });
             warnedBy(() => updateState(rootDir, {}));
             assert.match(
                 fs.readFileSync(path.join(rootDir, 'STATE.md'), 'utf8'),
@@ -443,7 +475,9 @@ module.exports = () => {
                     '## Recent Decisions',
                     '',
                     ...Array.from(
-                        { length: decisionCount },
+                        {
+                            length: decisionCount,
+                        },
                         (_, i) => `- 2026-01-0${i + 1} **Decision:** entry ${i + 1}`,
                     ),
                     '',
@@ -523,11 +557,26 @@ module.exports = () => {
                 ].join('\n'),
             );
 
-            updateState(wsDir, { decision: 'A brand new decision' }, { addDecision: true });
             updateState(
                 wsDir,
-                { constraint: { title: 'No Z', desc: 'Because W' } },
-                { addConstraint: true },
+                {
+                    decision: 'A brand new decision',
+                },
+                {
+                    addDecision: true,
+                },
+            );
+            updateState(
+                wsDir,
+                {
+                    constraint: {
+                        title: 'No Z',
+                        desc: 'Because W',
+                    },
+                },
+                {
+                    addConstraint: true,
+                },
             );
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
@@ -705,7 +754,14 @@ module.exports = () => {
                 ].join('\n'),
             );
 
-            updateState(wsDir, { phase: '2 — Build', status: 'Blocked' }, {});
+            updateState(
+                wsDir,
+                {
+                    phase: '2 — Build',
+                    status: 'Blocked',
+                },
+                {},
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
@@ -758,7 +814,15 @@ module.exports = () => {
                 ].join('\n'),
             );
 
-            updateState(wsDir, { task: '[T-1A02] Short', spec: 'x.md', nextAction: 'Go' }, {});
+            updateState(
+                wsDir,
+                {
+                    task: '[T-1A02] Short',
+                    spec: 'x.md',
+                    nextAction: 'Go',
+                },
+                {},
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
@@ -821,11 +885,23 @@ module.exports = () => {
                     ].join('\n'),
                 );
 
-                updateState(wsDir, { task: 'new task' }, {});
+                updateState(
+                    wsDir,
+                    {
+                        task: 'new task',
+                    },
+                    {},
+                );
 
                 assert.strictEqual(
                     fs.readFileSync(stateFile, 'utf8'),
-                    ['# Project State', '', '- **Task:** new task', start, ''].join('\n'),
+                    [
+                        '# Project State',
+                        '',
+                        '- **Task:** new task',
+                        start,
+                        '',
+                    ].join('\n'),
                     `a line opening \`${start}\` must survive the patch of the bullet above it`,
                 );
             }
@@ -843,7 +919,13 @@ module.exports = () => {
                 ].join('\n'),
             );
 
-            updateState(wsDir, { task: 'new task' }, {});
+            updateState(
+                wsDir,
+                {
+                    task: 'new task',
+                },
+                {},
+            );
 
             assert.strictEqual(
                 fs.readFileSync(stateFile, 'utf8'),
@@ -888,7 +970,13 @@ module.exports = () => {
                 ].join('\r\n'),
             );
 
-            updateState(wsDir, { task: '[T-1A02] Short' }, {});
+            updateState(
+                wsDir,
+                {
+                    task: '[T-1A02] Short',
+                },
+                {},
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.doesNotMatch(
@@ -938,7 +1026,10 @@ module.exports = () => {
             // transition, so the per-task patch carries no status at all.
             updateState(
                 wsDir,
-                { task: 'T-1A02 Wire the parser', nextAction: 'Execute T-1A03' },
+                {
+                    task: 'T-1A02 Wire the parser',
+                    nextAction: 'Execute T-1A03',
+                },
                 {},
             );
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
@@ -1003,7 +1094,14 @@ module.exports = () => {
                 ].join('\n'),
             );
 
-            updateState(wsDir, { nextAction, task: `T-8B04 ${evilTitle}` }, {});
+            updateState(
+                wsDir,
+                {
+                    nextAction,
+                    task: `T-8B04 ${evilTitle}`,
+                },
+                {},
+            );
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.ok(
@@ -1049,7 +1147,15 @@ module.exports = () => {
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\n'));
 
             const warnings = warnedBy(() =>
-                updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true }),
+                updateState(
+                    wsDir,
+                    {
+                        decision: 'Adopt the strict parser',
+                    },
+                    {
+                        addDecision: true,
+                    },
+                ),
             );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
@@ -1076,7 +1182,9 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 recordedCodes(tempDir),
-                ['STATE_SECTION_CREATED'],
+                [
+                    'STATE_SECTION_CREATED',
+                ],
                 'creating the section must be recorded once as a diagnostic',
             );
         } finally {
@@ -1090,9 +1198,25 @@ module.exports = () => {
             const { updateState, wsDir } = requireUpdateState(tempDir);
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\n'));
 
-            updateState(wsDir, { decision: 'first' }, { addDecision: true });
+            updateState(
+                wsDir,
+                {
+                    decision: 'first',
+                },
+                {
+                    addDecision: true,
+                },
+            );
             const warnings = warnedBy(() =>
-                updateState(wsDir, { decision: 'second' }, { addDecision: true }),
+                updateState(
+                    wsDir,
+                    {
+                        decision: 'second',
+                    },
+                    {
+                        addDecision: true,
+                    },
+                ),
             );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
@@ -1113,7 +1237,9 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 recordedCodes(tempDir),
-                ['STATE_SECTION_CREATED'],
+                [
+                    'STATE_SECTION_CREATED',
+                ],
                 'creation is recorded once, not once per call',
             );
         } finally {
@@ -1153,7 +1279,12 @@ module.exports = () => {
                 },
                 {
                     name: 'Session Continuity follows it, so it is inserted before that section',
-                    existing: ['## Session Continuity', '', '**Handoff File:** none', ''],
+                    existing: [
+                        '## Session Continuity',
+                        '',
+                        '**Handoff File:** none',
+                        '',
+                    ],
                     expected: [
                         '## Blocking Constraints',
                         '',
@@ -1172,18 +1303,33 @@ module.exports = () => {
             for (const { name, existing, expected } of cases) {
                 fs.writeFileSync(
                     path.join(wsDir, 'STATE.md'),
-                    [...trimmedState, ...existing].join('\n'),
+                    [
+                        ...trimmedState,
+                        ...existing,
+                    ].join('\n'),
                 );
                 updateState(
                     wsDir,
-                    { constraint: { title: 'No Z', desc: 'Because W' } },
-                    { addConstraint: true },
+                    {
+                        constraint: {
+                            title: 'No Z',
+                            desc: 'Because W',
+                        },
+                    },
+                    {
+                        addConstraint: true,
+                    },
                 );
                 const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
                 assert.strictEqual(
                     withoutVolatile(after),
-                    withoutVolatile([...trimmedState, ...expected].join('\n')),
+                    withoutVolatile(
+                        [
+                            ...trimmedState,
+                            ...expected,
+                        ].join('\n'),
+                    ),
                     `${name}: the constraint must be recorded as C-001 in a newly created section`,
                 );
             }
@@ -1203,10 +1349,21 @@ module.exports = () => {
             const { updateState, wsDir } = requireUpdateState(tempDir);
             fs.writeFileSync(
                 path.join(wsDir, 'STATE.md'),
-                [...trimmedState, ...following].join('\n'),
+                [
+                    ...trimmedState,
+                    ...following,
+                ].join('\n'),
             );
 
-            updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true });
+            updateState(
+                wsDir,
+                {
+                    decision: 'Adopt the strict parser',
+                },
+                {
+                    addDecision: true,
+                },
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
@@ -1285,8 +1442,24 @@ module.exports = () => {
             // that the heading is found on the second call and not created again.
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\r\n'));
 
-            updateState(wsDir, { decision: 'first' }, { addDecision: true });
-            updateState(wsDir, { decision: 'second' }, { addDecision: true });
+            updateState(
+                wsDir,
+                {
+                    decision: 'first',
+                },
+                {
+                    addDecision: true,
+                },
+            );
+            updateState(
+                wsDir,
+                {
+                    decision: 'second',
+                },
+                {
+                    addDecision: true,
+                },
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
@@ -1299,7 +1472,9 @@ module.exports = () => {
                 /\*\*Decision:\*\* second\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* first/,
                 'both entries must be present, newest first',
             );
-            assert.deepStrictEqual(recordedCodes(tempDir), ['STATE_SECTION_CREATED']);
+            assert.deepStrictEqual(recordedCodes(tempDir), [
+                'STATE_SECTION_CREATED',
+            ]);
         } finally {
             cleanup(tempDir);
         }
@@ -1325,13 +1500,23 @@ module.exports = () => {
             );
 
             const warnings = warnedBy(() =>
-                updateState(wsDir, { decision: 'a later entry' }, { addDecision: true }),
+                updateState(
+                    wsDir,
+                    {
+                        decision: 'a later entry',
+                    },
+                    {
+                        addDecision: true,
+                    },
+                ),
             );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.deepStrictEqual(
                 after.match(/^## Recent Decisions.*$/gm),
-                ['## Recent Decisions'],
+                [
+                    '## Recent Decisions',
+                ],
                 'exactly one section, rebuilt to the canonical heading',
             );
             assert.match(
@@ -1358,11 +1543,21 @@ module.exports = () => {
     // silently, a write whose anchor was absent, and matched their anchors
     // anywhere in a line rather than at its start.
     test('a requested header field with no line is created in template order (SC-2)', () => {
-        const tail = ['## Current Position', '', '- **Task:** [T-2A01] Wire the parser', ''];
+        const tail = [
+            '## Current Position',
+            '',
+            '- **Task:** [T-2A01] Wire the parser',
+            '',
+        ];
         const headerOf = (...fields) => [
             '# Project State',
             '',
-            ...(fields.length ? [...fields, ''] : []),
+            ...(fields.length
+                ? [
+                      ...fields,
+                      '',
+                  ]
+                : []),
             ...tail,
         ];
         const stamp = '**Updated:** 2026-01-01 00:00';
@@ -1370,7 +1565,9 @@ module.exports = () => {
             {
                 name: 'before the earliest present field that follows it',
                 existing: headerOf('**Workspace:** docs', stamp, '**Status:** Active'),
-                patch: { phase: '3 — Ship' },
+                patch: {
+                    phase: '3 — Ship',
+                },
                 expected: headerOf(
                     '**Workspace:** docs',
                     stamp,
@@ -1381,7 +1578,9 @@ module.exports = () => {
             {
                 name: 'after the last present field when none follows it',
                 existing: headerOf('**Workspace:** docs', stamp, '**Phase:** 2 — Build'),
-                patch: { status: 'Blocked' },
+                patch: {
+                    status: 'Blocked',
+                },
                 expected: headerOf(
                     '**Workspace:** docs',
                     stamp,
@@ -1392,7 +1591,9 @@ module.exports = () => {
             {
                 name: 'after the title when the header holds no field at all',
                 existing: headerOf(),
-                patch: { phase: '2 — Build' },
+                patch: {
+                    phase: '2 — Build',
+                },
                 expected: headerOf('**Phase:** 2 — Build'),
             },
         ];
@@ -1406,7 +1607,9 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 codes,
-                ['STATE_FIELD_CREATED'],
+                [
+                    'STATE_FIELD_CREATED',
+                ],
                 `${name}: creation must be recorded once`,
             );
             assert.ok(
@@ -1417,8 +1620,20 @@ module.exports = () => {
     });
 
     test('a requested Current Position field with no line is created, and so is the section when it is gone (SC-2)', () => {
-        const header = ['# Project State', '', '**Phase:** 2 — Build', ''];
-        const progress = ['## Progress', '', '```', 'Overall: [1/2] ████░░░░ 50%', '```', ''];
+        const header = [
+            '# Project State',
+            '',
+            '**Phase:** 2 — Build',
+            '',
+        ];
+        const progress = [
+            '## Progress',
+            '',
+            '```',
+            'Overall: [1/2] ████░░░░ 50%',
+            '```',
+            '',
+        ];
         const cases = [
             {
                 name: 'appended after the last field of the section',
@@ -1429,7 +1644,9 @@ module.exports = () => {
                     '- **Task:** [T-2A01] Wire the parser',
                     '',
                 ],
-                patch: { nextAction: 'Go' },
+                patch: {
+                    nextAction: 'Go',
+                },
                 expected: [
                     ...header,
                     '## Current Position',
@@ -1438,12 +1655,22 @@ module.exports = () => {
                     '- **Next Action:** Go',
                     '',
                 ],
-                codes: ['STATE_FIELD_CREATED'],
+                codes: [
+                    'STATE_FIELD_CREATED',
+                ],
             },
             {
                 name: 'inserted before the earliest present field that follows it',
-                existing: [...header, '## Current Position', '', '- **Next Action:** Continue', ''],
-                patch: { task: '[T-2A02] New task' },
+                existing: [
+                    ...header,
+                    '## Current Position',
+                    '',
+                    '- **Next Action:** Continue',
+                    '',
+                ],
+                patch: {
+                    task: '[T-2A02] New task',
+                },
                 expected: [
                     ...header,
                     '## Current Position',
@@ -1452,12 +1679,19 @@ module.exports = () => {
                     '- **Next Action:** Continue',
                     '',
                 ],
-                codes: ['STATE_FIELD_CREATED'],
+                codes: [
+                    'STATE_FIELD_CREATED',
+                ],
             },
             {
                 name: 'with the section itself created ahead of Progress when the file has none',
-                existing: [...header, ...progress],
-                patch: { nextAction: 'Go' },
+                existing: [
+                    ...header,
+                    ...progress,
+                ],
+                patch: {
+                    nextAction: 'Go',
+                },
                 expected: [
                     ...header,
                     '## Current Position',
@@ -1466,7 +1700,10 @@ module.exports = () => {
                     '',
                     ...progress,
                 ],
-                codes: ['STATE_SECTION_CREATED', 'STATE_FIELD_CREATED'],
+                codes: [
+                    'STATE_SECTION_CREATED',
+                    'STATE_FIELD_CREATED',
+                ],
             },
         ];
 
@@ -1495,8 +1732,12 @@ module.exports = () => {
         ];
         const before = withoutVolatile(existing.join('\n'));
         for (const patch of [
-            { handoff: '.magicspec/docs/HANDOFF.json' },
-            { nextAction: 'Continue' },
+            {
+                handoff: '.magicspec/docs/HANDOFF.json',
+            },
+            {
+                nextAction: 'Continue',
+            },
         ]) {
             const { after } = patchState(existing, patch);
             assert.match(after, /^\*\*Handoff File:\*\* none$/m, 'the old line survives an update');
@@ -1525,7 +1766,10 @@ module.exports = () => {
                         '--next-action=Continue',
                         flag,
                     ],
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 );
             const retired = run('--handoff=x');
             const madeUp = run('--handoof=x');

@@ -67,13 +67,27 @@ function syncGraph(ctx) {
     const wikiDir = graphPaths(designAbs).wiki;
     const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'magicspec-sync-wiki-'));
     try {
-        const run = spawnSync(process.execPath, [EXECUTOR, 'export-wiki', '--out', scratch], {
-            cwd: projectRoot,
-            // A preview renders with the extraction cache read-only (it honors MAGIC_DRY_RUN).
-            env: report.dryRun ? { ...process.env, MAGIC_DRY_RUN: '1' } : process.env,
-            encoding: 'utf8',
-            maxBuffer: 64 * 1024 * 1024,
-        });
+        const run = spawnSync(
+            process.execPath,
+            [
+                EXECUTOR,
+                'export-wiki',
+                '--out',
+                scratch,
+            ],
+            {
+                cwd: projectRoot,
+                // A preview renders with the extraction cache read-only (it honors MAGIC_DRY_RUN).
+                env: report.dryRun
+                    ? {
+                          ...process.env,
+                          MAGIC_DRY_RUN: '1',
+                      }
+                    : process.env,
+                encoding: 'utf8',
+                maxBuffer: 64 * 1024 * 1024,
+            },
+        );
         if (run.status !== 0) {
             report.disagreements.push({
                 location: 'the specification graph',
@@ -87,7 +101,9 @@ function syncGraph(ctx) {
             report.inSync += 1;
         } else {
             if (!report.dryRun) {
-                fs.mkdirSync(wikiDir, { recursive: true });
+                fs.mkdirSync(wikiDir, {
+                    recursive: true,
+                });
                 for (const name of changed)
                     fs.copyFileSync(path.join(scratch, name), path.join(wikiDir, name));
             }
@@ -97,11 +113,18 @@ function syncGraph(ctx) {
                 what: `${changed.length} page${changed.length === 1 ? '' : 's'} (${changed.slice(0, 3).join(', ')}${changed.length > 3 ? ', …' : ''}), then the artifact index`,
             });
             if (!report.dryRun) {
-                spawnSync(process.execPath, [EXECUTOR, 'memory-index'], {
-                    cwd: projectRoot,
-                    env: process.env,
-                    encoding: 'utf8',
-                });
+                spawnSync(
+                    process.execPath,
+                    [
+                        EXECUTOR,
+                        'memory-index',
+                    ],
+                    {
+                        cwd: projectRoot,
+                        env: process.env,
+                        encoding: 'utf8',
+                    },
+                );
             }
         }
         const rendered = new Set(pagesOf(scratch));
@@ -113,8 +136,13 @@ function syncGraph(ctx) {
             });
         }
     } finally {
-        fs.rmSync(scratch, { recursive: true, force: true });
+        fs.rmSync(scratch, {
+            recursive: true,
+            force: true,
+        });
     }
 }
 
-module.exports = { syncGraph };
+module.exports = {
+    syncGraph,
+};

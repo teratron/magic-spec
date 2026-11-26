@@ -16,7 +16,10 @@ const DESCRIPTION_MAX_LENGTH = 1024;
 const NAME_GRAMMAR = /^[a-z0-9-]+$/;
 
 /** Words the target skill format reserves inside a `name`. Kept here and nowhere else. */
-const RESERVED_NAME_WORDS = ['anthropic', 'claude'];
+const RESERVED_NAME_WORDS = [
+    'anthropic',
+    'claude',
+];
 
 /** First- and second-person words a third-person description never contains. */
 const PERSON_WORD = /\b(?:I|we|my|you|your)\b/i;
@@ -39,7 +42,12 @@ const USE_WHEN_SENTENCE = /(?:^|[.!?]\s+)Use when\b/;
 function readScalar(frontmatterBody, key) {
     const lines = frontmatterBody.split(/\r?\n/);
     const start = lines.findIndex((line) => line.startsWith(`${key}:`));
-    if (start === -1) return { present: false, parsed: true, value: '' };
+    if (start === -1)
+        return {
+            present: false,
+            parsed: true,
+            value: '',
+        };
 
     const head = lines[start].slice(key.length + 1).trim();
     const tail = [];
@@ -54,11 +62,18 @@ function readScalar(frontmatterBody, key) {
     const continuation = tail.filter(Boolean);
 
     if (/^[>|][+-]?\d*[+-]?$/.test(head)) {
-        return { present: true, parsed: true, value: continuation.join(' ') };
+        return {
+            present: true,
+            parsed: true,
+            value: continuation.join(' '),
+        };
     }
 
     if (head.startsWith('"') || head.startsWith("'")) {
-        const text = [head, ...continuation].join(' ');
+        const text = [
+            head,
+            ...continuation,
+        ].join(' ');
         const quote = text[0];
         let value = '';
         for (let i = 1; i < text.length; i++) {
@@ -75,19 +90,34 @@ function readScalar(frontmatterBody, key) {
                     continue;
                 }
                 const after = text.slice(i + 1).trim();
-                return { present: true, parsed: after === '' || after.startsWith('#'), value };
+                return {
+                    present: true,
+                    parsed: after === '' || after.startsWith('#'),
+                    value,
+                };
             }
             value += ch;
         }
-        return { present: true, parsed: false, value };
+        return {
+            present: true,
+            parsed: false,
+            value,
+        };
     }
 
-    const text = [head, ...continuation]
+    const text = [
+        head,
+        ...continuation,
+    ]
         .join(' ')
         .replace(/\s+#.*$/, '')
         .trim();
     const unparsable = /:(\s|$)/.test(text) || /^[[{*&!%@`]/.test(text);
-    return { present: true, parsed: !unparsable, value: text };
+    return {
+        present: true,
+        parsed: !unparsable,
+        value: text,
+    };
 }
 
 /**
@@ -101,7 +131,11 @@ function readScalar(frontmatterBody, key) {
  */
 function checkProjection(projection) {
     const problems = [];
-    const refuse = (field, rule) => problems.push({ field, rule });
+    const refuse = (field, rule) =>
+        problems.push({
+            field,
+            rule,
+        });
     const count = (n) => n.toLocaleString('en-US');
 
     const name = readScalar(projection.frontmatter, 'name');
@@ -154,4 +188,8 @@ function checkProjection(projection) {
     return problems;
 }
 
-module.exports = { checkProjection, readScalar, RESERVED_NAME_WORDS };
+module.exports = {
+    checkProjection,
+    readScalar,
+    RESERVED_NAME_WORDS,
+};

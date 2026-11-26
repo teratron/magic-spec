@@ -33,7 +33,11 @@ function readCommands(root) {
     const commands = [];
     for (const line of text.split(/\r?\n/)) {
         const row = /^\| `([a-z][a-z-]*)` \| (.+?) \| `workflows\/[a-z-]+\.md` \|$/.exec(line);
-        if (row) commands.push({ name: row[1], summary: row[2] });
+        if (row)
+            commands.push({
+                name: row[1],
+                summary: row[2],
+            });
     }
     if (commands.length === 0) throw new Error('No command rows in the maintenance router.');
     return commands;
@@ -56,7 +60,9 @@ function project(root) {
         /* absent */
     }
     if (existing === null) {
-        fs.mkdirSync(path.dirname(link), { recursive: true });
+        fs.mkdirSync(path.dirname(link), {
+            recursive: true,
+        });
         fs.symlinkSync(target, link, 'junction');
         report.push(`linked ${LINK_REL.split(path.sep).join('/')}`);
     } else if (existing !== target) {
@@ -81,7 +87,9 @@ function project(root) {
             report.push(`left alone: ${path.relative(root, file).split(path.sep).join('/')}`);
             continue;
         }
-        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.mkdirSync(path.dirname(file), {
+            recursive: true,
+        });
         if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== content) {
             fs.writeFileSync(file, content);
             report.push(`wrote ${path.relative(root, file).split(path.sep).join('/')}`);
@@ -94,4 +102,7 @@ if (require.main === module) {
     for (const line of project(repoRoot())) console.log(`   ${line}`);
 }
 
-module.exports = { project, readCommands };
+module.exports = {
+    project,
+    readCommands,
+};

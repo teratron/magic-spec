@@ -52,7 +52,11 @@ const GENERIC_NAMES = new Set([
 ]);
 
 const CREDENTIAL = '[redacted: credential]';
-const IMPACT_RANK = { minor: 0, workaround: 1, blocked: 2 };
+const IMPACT_RANK = {
+    minor: 0,
+    workaround: 1,
+    blocked: 2,
+};
 
 /** The sections of a report, in order: the issue form of the repository carries the same labels. */
 const SECTIONS = Object.freeze([
@@ -76,9 +80,21 @@ const SECTIONS = Object.freeze([
  * @type {ReadonlyArray<readonly [string, RegExp, string]>}
  */
 const REDACTIONS = Object.freeze([
-    ['code block', /```[\s\S]*?(?:```|$)/g, '[code block removed]'],
-    ['image', /!\[[^\]]*\]\([^)]*\)/g, '[image removed]'],
-    ['markup', /<\/?[A-Za-z!][^>]*>/g, '[markup removed]'],
+    [
+        'code block',
+        /```[\s\S]*?(?:```|$)/g,
+        '[code block removed]',
+    ],
+    [
+        'image',
+        /!\[[^\]]*\]\([^)]*\)/g,
+        '[image removed]',
+    ],
+    [
+        'markup',
+        /<\/?[A-Za-z!][^>]*>/g,
+        '[markup removed]',
+    ],
     [
         'private key',
         /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)/g,
@@ -89,21 +105,41 @@ const REDACTIONS = Object.freeze([
         /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|sk-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,})\b/g,
         CREDENTIAL,
     ],
-    ['jwt', /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, CREDENTIAL],
-    ['bearer', /\bBearer\s+[A-Za-z0-9._~+/=-]{16,}/gi, `Bearer ${CREDENTIAL}`],
+    [
+        'jwt',
+        /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g,
+        CREDENTIAL,
+    ],
+    [
+        'bearer',
+        /\bBearer\s+[A-Za-z0-9._~+/=-]{16,}/gi,
+        `Bearer ${CREDENTIAL}`,
+    ],
     [
         'assignment',
         /\b(password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|client[_-]?secret)(\s*[:=]\s*)(?:"[^"]*"|'[^']*'|\S+)/gi,
         `$1$2${CREDENTIAL}`,
     ],
-    ['long hex', /\b[A-Fa-f0-9]{40,}\b/g, CREDENTIAL],
-    ['email', /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, '[email removed]'],
+    [
+        'long hex',
+        /\b[A-Fa-f0-9]{40,}\b/g,
+        CREDENTIAL,
+    ],
+    [
+        'email',
+        /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g,
+        '[email removed]',
+    ],
     [
         'mention',
         /(^|[^\w@])@[A-Za-z0-9][A-Za-z0-9-]*(?:\/[A-Za-z0-9._-]+)?/g,
         '$1[mention removed]',
     ],
-    ['issue reference', /(?:\b[\w.-]+\/[\w.-]+)?#\d+\b/g, '[issue reference removed]'],
+    [
+        'issue reference',
+        /(?:\b[\w.-]+\/[\w.-]+)?#\d+\b/g,
+        '[issue reference removed]',
+    ],
 ]);
 
 /** A path that ends inside the skill folder: what follows `skills/magicspec/` names an engine file. */
@@ -147,7 +183,9 @@ function projectNames(root) {
     try {
         const base = root || resolveProjectRoot();
         names.add(path.basename(base));
-        for (const entry of fs.readdirSync(base, { withFileTypes: true })) {
+        for (const entry of fs.readdirSync(base, {
+            withFileTypes: true,
+        })) {
             if (entry.isDirectory()) names.add(entry.name);
         }
     } catch {
@@ -160,7 +198,9 @@ function projectNames(root) {
     }
     names.add(os.hostname());
     names.add(path.basename(os.homedir()));
-    return [...names].filter(
+    return [
+        ...names,
+    ].filter(
         (name) =>
             name.length >= 3 && !name.startsWith('.') && !GENERIC_NAMES.has(name.toLowerCase()),
     );
@@ -198,7 +238,12 @@ function scrubText(text, names = []) {
  * @returns {string} Twelve hexadecimal characters.
  */
 function fingerprint(note) {
-    const facts = [note.kind, note.engineFile || '', note.code || '', note.workflow || ''];
+    const facts = [
+        note.kind,
+        note.engineFile || '',
+        note.code || '',
+        note.workflow || '',
+    ];
     if (!facts[1] && !facts[2] && !facts[3]) facts.push(note.id);
     return crypto
         .createHash('sha256')
@@ -242,7 +287,11 @@ function strongestImpact(notes) {
  * @returns {string[]} The lines of the Environment section: what the engine observed on the latest note that has it.
  */
 function environmentLines(notes) {
-    const evidence = [...notes].reverse().find((note) => note.evidence)?.evidence;
+    const evidence = [
+        ...notes,
+    ]
+        .reverse()
+        .find((note) => note.evidence)?.evidence;
     if (!evidence)
         return [
             '- Not recorded (the evidence of this note was dropped to keep the store within its bound).',
@@ -263,7 +312,9 @@ function environmentLines(notes) {
  */
 function contextLines(notes) {
     const evidences = notes.map((note) => note.evidence).filter(Boolean);
-    const codes = [...new Set(evidences.flatMap((evidence) => evidence.findingCodes || []))];
+    const codes = [
+        ...new Set(evidences.flatMap((evidence) => evidence.findingCodes || [])),
+    ];
     const failing = evidences.find((evidence) => evidence.failingScript);
     return [
         `- Finding codes recorded in the same workflow: ${codes.length > 0 ? codes.join(', ') : 'none'}`,
@@ -282,7 +333,10 @@ function buildReport(notes, names) {
     const clean = (text) => scrubText(text, names);
     const first = notes[0];
     const stated = (note) =>
-        [note.engineFile ? `file ${note.engineFile}` : '', note.code ? `code ${note.code}` : '']
+        [
+            note.engineFile ? `file ${note.engineFile}` : '',
+            note.code ? `code ${note.code}` : '',
+        ]
             .filter(Boolean)
             .join(', ');
     const written = '_Written by the agent._';
@@ -309,10 +363,32 @@ function buildReport(notes, names) {
                 (note) => `- Tried: ${clean(note.tried)}\n  Happened: ${clean(note.happened)}`,
             ),
         ],
-        ...(expected.length > 0 ? [['Expected / suggestion', written, expected]] : []),
-        ['Impact', written, [`- ${strongestImpact(notes)}`]],
-        ['Environment', observed, environmentLines(notes)],
-        ['Engine-observed context', observed, contextLines(notes)],
+        ...(expected.length > 0
+            ? [
+                  [
+                      'Expected / suggestion',
+                      written,
+                      expected,
+                  ],
+              ]
+            : []),
+        [
+            'Impact',
+            written,
+            [
+                `- ${strongestImpact(notes)}`,
+            ],
+        ],
+        [
+            'Environment',
+            observed,
+            environmentLines(notes),
+        ],
+        [
+            'Engine-observed context',
+            observed,
+            contextLines(notes),
+        ],
         [
             'Report details',
             '_Added by the engine._',
@@ -436,11 +512,19 @@ function createDrafts(noteId, root) {
     let pending = store.notes.filter((note) => !note.draftId);
     if (noteId) {
         const wanted = pending.find((note) => note.id === noteId);
-        if (!wanted) return { drafts: [], message: `No pending note ${noteId}.` };
+        if (!wanted)
+            return {
+                drafts: [],
+                message: `No pending note ${noteId}.`,
+            };
         const key = fingerprint(wanted);
         pending = pending.filter((note) => fingerprint(note) === key);
     }
-    if (pending.length === 0) return { drafts: [], message: 'No pending notes to draft.' };
+    if (pending.length === 0)
+        return {
+            drafts: [],
+            message: 'No pending notes to draft.',
+        };
 
     const names = projectNames(root);
     const drafts = [];
@@ -453,7 +537,10 @@ function createDrafts(noteId, root) {
         drafts.push(addDraft(store, group, names));
     }
     if (drafts.length > 0) feedback.saveStore(store, root);
-    return { drafts, message };
+    return {
+        drafts,
+        message,
+    };
 }
 
 /**
@@ -466,10 +553,17 @@ function createDrafts(noteId, root) {
 function showDraft(id, root) {
     const store = feedback.loadStore(root);
     const draft = store.drafts.find((entry) => entry.id === id);
-    if (!draft) return { draft: null, message: `No draft ${id || '(none given)'}.` };
+    if (!draft)
+        return {
+            draft: null,
+            message: `No draft ${id || '(none given)'}.`,
+        };
     draft.shownAt = new Date().toISOString();
     feedback.saveStore(store, root);
-    return { draft, message: null };
+    return {
+        draft,
+        message: null,
+    };
 }
 
 /**
@@ -483,11 +577,18 @@ function showDraft(id, root) {
 function closeDraft(id, root) {
     const store = feedback.loadStore(root);
     const index = store.drafts.findIndex((entry) => entry.id === id);
-    if (index === -1) return { closed: false, draft: null };
+    if (index === -1)
+        return {
+            closed: false,
+            draft: null,
+        };
     const [draft] = store.drafts.splice(index, 1);
     store.notes = store.notes.filter((note) => note.draftId !== id);
     const { saved } = feedback.saveStore(store, root);
-    return { closed: saved, draft };
+    return {
+        closed: saved,
+        draft,
+    };
 }
 
 module.exports = {

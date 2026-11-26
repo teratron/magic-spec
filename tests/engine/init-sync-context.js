@@ -27,7 +27,10 @@ module.exports = () => {
             // 1. Standard init
             execSync(`node "${scriptPath}"`, {
                 cwd: tempDir,
-                env: { ...process.env, MAGIC_DESIGN_DIR: '.magicspec' },
+                env: {
+                    ...process.env,
+                    MAGIC_DESIGN_DIR: '.magicspec',
+                },
             });
             assert.ok(fs.existsSync(path.join(tempDir, '.magicspec', 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.magicspec', 'RULES.md')));
@@ -50,7 +53,10 @@ module.exports = () => {
             const wsPath = path.join('.magicspec', 'test-ws');
             execSync(`node "${scriptPath}"`, {
                 cwd: tempDir,
-                env: { ...process.env, MAGIC_DESIGN_DIR: wsPath },
+                env: {
+                    ...process.env,
+                    MAGIC_DESIGN_DIR: wsPath,
+                },
             });
             assert.ok(fs.existsSync(path.join(tempDir, wsPath, 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, wsPath, 'specifications')));
@@ -67,7 +73,9 @@ module.exports = () => {
         try {
             // Setup the seed of a guide that does not exist yet (a maintenance artifact beside the script)
             const templatesDir = path.join(tempDir, 'scripts', 'templates');
-            fs.mkdirSync(templatesDir, { recursive: true });
+            fs.mkdirSync(templatesDir, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(templatesDir, 'contributing.md'),
                 '# Contributing <!-- generated:version --><!-- /generated:version -->\n\n## Registry\n\n<!-- generated:workspaces -->\n<!-- /generated:workspaces -->\n',
@@ -93,7 +101,9 @@ module.exports = () => {
             );
 
             const workflowsDir = path.join(tempDir, 'skills', 'magicspec', 'workflows');
-            fs.mkdirSync(workflowsDir, { recursive: true });
+            fs.mkdirSync(workflowsDir, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(workflowsDir, 'test-wf.md'),
                 '# Test Workflow\n\n**Triggers:** `new-trigger`, `another-trigger`',
@@ -115,7 +125,10 @@ module.exports = () => {
             fs.writeFileSync(path.join(docsDir, 'orphan.md'), orphanContent);
 
             const scriptPath = path.join(tempDir, 'scripts', 'sync.js');
-            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
 
             // Verify README.md (Active Development line)
             const readme = fs.readFileSync(path.join(tempDir, 'README.md'), 'utf8');
@@ -175,7 +188,10 @@ module.exports = () => {
                 'arg-wf.md': argDocContent,
                 'CONTRIBUTING.md': contributing,
             };
-            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
             assert.strictEqual(
                 fs.readFileSync(path.join(docsDir, 'test-wf.md'), 'utf8'),
                 beforeSecondRun['test-wf.md'],
@@ -202,7 +218,14 @@ module.exports = () => {
             const put = simPutter(tempDir);
             put(
                 '.magicspec/workspace.json',
-                JSON.stringify({ default: 'ws', workspaces: { ws: { description: 'W' } } }),
+                JSON.stringify({
+                    default: 'ws',
+                    workspaces: {
+                        ws: {
+                            description: 'W',
+                        },
+                    },
+                }),
             );
             const index = (count) =>
                 `# Index\n\n**Version:** 1.0.0\n\n## Workspaces\n\n| Workspace | Description | Specs | Registry |\n| --- | --- | --- | --- |\n| ws | W | ${count} | [ws/INDEX.md](ws/INDEX.md) |\n\n## Document History\n\n| Version | Date | Author | Description |\n| --- | --- | --- | --- |\n| 1.0.0 | 2026-01-01 | Agent | First |\n`;
@@ -229,7 +252,10 @@ module.exports = () => {
                     {
                         cwd: tempDir,
                         encoding: 'utf8',
-                        env: { ...process.env, MAGIC_ROOT: '' },
+                        env: {
+                            ...process.env,
+                            MAGIC_ROOT: '',
+                        },
                     },
                 );
             const read = () => fs.readFileSync(path.join(tempDir, '.magicspec/INDEX.md'), 'utf8');
@@ -283,7 +309,9 @@ module.exports = () => {
                 'scripts',
                 'generate-context.js',
             );
-            execSync(`node "${scriptPath}"`, { cwd: tempDir });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+            });
 
             const contextContent = fs.readFileSync(
                 path.join(tempDir, '.magicspec', 'CONTEXT.md'),
@@ -320,7 +348,9 @@ module.exports = () => {
                 'scripts',
                 'executor.js',
             );
-            execSync(`node "${executorPath}" update-engine-meta`, { cwd: tempDir });
+            execSync(`node "${executorPath}" update-engine-meta`, {
+                cwd: tempDir,
+            });
 
             const versionFile = path.join(tempDir, 'skills', 'magicspec', '.version');
             const newVersion = fs.readFileSync(versionFile, 'utf8').trim();

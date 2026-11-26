@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-26 19:43
+**Updated:** 2026-11-26 20:23
 **Phase:** 83 — 4.0.0 (4.0 Step 4, Part 5)
-**Status:** Blocked
+**Status:** Active
 
 ## Current Position
 
 - **Task:** T-83R01 The release plan and its one consent question
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** T-83R01 and any other open tasks need user or blocker action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, then re-run /magicspec plan engine
+- **Next Action:** Run /magicspec plan engine "Phase 83 is complete without a release: on 2026-11-26 the owner ruled that nothing is released until the `develop` branch is brought to quality, and that work stays on that branch. Keep the 4.0.0 release as pending work that opens only on the owner's word (the version file reads 4.0.0 and the `[4.0.0]` section collects what changes before it), keep the consumer and engine migrations waiting for it, and revalidate the plan against registry 1.107.4."
 
 ## Progress
 
 ```
-Phase 83: [9/10] ███████░ 90%
-Overall: [84/85] ████████ 99%
+Overall: [85/85] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-26 **Decision:** Phase 83 complete without a release (the owner: nothing is released until develop is brought to quality). Provides: the two gaps of the move closed, the 4.0 documents, version 4.0.0 unreleased, format check green again, harness 540, registry 1.107.4
 - 2026-11-26 **Decision:** PLAN 1.100.0 on registry 1.107.2: Phase 83 planned in full — the two gaps Phase 85 left (readers of a workspace in flight, the global registry row), the documentation, the 4.0.0 version and the release behind one consent question
 - 2026-11-26 **Decision:** Phase 85 complete. Provides: migrate --to 4 (dry run, apply with resumption, the stop of a move in flight, next/ skipped by 3.x readers, the bodies), harness 536, engine 3.0.229, registry 1.107.2; Phase 83 (documentation and the 4.0.0 release) is next after a plan revalidation
 - 2026-11-26 **Decision:** PLAN 1.99.0 on registry 1.107.1: revalidated after Phase 82; Phase 85 decomposable now; the map comparison's blind spot (mark-built writes a folder as Where) parked in the Backlog as a concept question
 - 2026-11-26 **Decision:** Phase 82 complete. Provides: analyze on a 4.0 workspace (audit and reverse mode), the map compared with the code by analyze-coverage, the 4.0 containment classes, scenarios S-18 and S-19, harness 523, engine 3.0.220; Phase 85 (migrate --to 4) is next after a plan revalidation
-- 2026-11-26 **Decision:** PLAN 1.98.0 on registry 1.107.0: Phase 85 (migrate --to 4: the subcommand, the in-flight stop, next/ skipped by 3.x readers, the bodies) planned in full; Phase 82 unchanged and decomposed; Phase 83 the release
 
 ## Blockers
 

@@ -308,7 +308,9 @@ class DocSet {
             /(?<![\w.:-])(R\d+|S\d+|X\d+|P\d+|D\d+|C\d+|M\d+(?:\.T\d+)?|map:[\w-]+|term:[\w-]+)(?![\w-])/g,
         ))
             found.add(m[1]);
-        for (const m of prose.matchAll(/(?<![\w.:-])([a-z][a-z0-9_]*)\.(b?\d+)(?![\w.])/g)) {
+        // A full stop after the number ends a sentence; one followed by more makes it something
+        // else (a version, a file name).
+        for (const m of prose.matchAll(/(?<![\w.:-])([a-z][a-z0-9_]*)\.(b?\d+)(?!\w|\.\w)/g)) {
             if (this.componentDeps.has(m[1])) found.add(`${m[1]}.${m[2]}`);
         }
         return [

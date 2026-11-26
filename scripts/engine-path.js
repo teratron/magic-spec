@@ -32,4 +32,9 @@ function enginePath(...parts) {
     return path.join(repoRoot(), ENGINE_DIR, ...parts);
 }
 
-module.exports = { ENGINE_DIR, MAINTENANCE_DIR, repoRoot, enginePath };
+module.exports = {
+    ENGINE_DIR,
+    MAINTENANCE_DIR,
+    repoRoot,
+    enginePath,
+};

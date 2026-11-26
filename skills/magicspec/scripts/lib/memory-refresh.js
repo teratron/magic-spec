@@ -38,8 +38,14 @@ function cacheDirOf(designAbs) {
  * @returns {void}
  */
 function removeIndex(designAbs) {
-    for (const name of ['memory.sqlite', 'memory.json', 'memory.json.tmp']) {
-        fs.rmSync(path.join(cacheDirOf(designAbs), name), { force: true });
+    for (const name of [
+        'memory.sqlite',
+        'memory.json',
+        'memory.json.tmp',
+    ]) {
+        fs.rmSync(path.join(cacheDirOf(designAbs), name), {
+            force: true,
+        });
     }
 }
 
@@ -77,7 +83,13 @@ function refresh(designAbs, backend) {
         }
     }
     backend.save();
-    return { files: files.length, indexed, unchanged, removed, sections: backend.sectionCount() };
+    return {
+        files: files.length,
+        indexed,
+        unchanged,
+        removed,
+        sections: backend.sectionCount(),
+    };
 }
 
 /**
@@ -97,7 +109,9 @@ function withFreshIndex(designAbs, options, fn) {
     const cacheDir = cacheDirOf(designAbs);
     return withFileLock(path.join(cacheDir, 'memory.lock'), () => {
         if (options.rebuild) removeIndex(designAbs);
-        const backend = openBackend(cacheDir, { loader: options.loader });
+        const backend = openBackend(cacheDir, {
+            loader: options.loader,
+        });
         try {
             return fn(backend, refresh(designAbs, backend));
         } finally {
@@ -162,14 +176,18 @@ function embedIfConfigured(designAbs, backend, record, embedFn) {
     const { setting, error } = readSetting(designAbs);
     if (error) {
         reportEmbeddingsFailed('memory-index', error, record);
-        return { error };
+        return {
+            error,
+        };
     }
     if (!setting) return null;
     try {
         return embedPending(backend, setting, embedFn);
     } catch (err) {
         reportEmbeddingsFailed('memory-index', err.message, record);
-        return { error: err.message };
+        return {
+            error: err.message,
+        };
     }
 }
 

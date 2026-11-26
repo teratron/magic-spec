@@ -34,15 +34,22 @@ function sourceOf(block) {
     try {
         text = fs.readFileSync(block.fromAbs, 'utf8');
     } catch {
-        return { reason: `the source \`${block.from}\` does not exist` };
+        return {
+            reason: `the source \`${block.from}\` does not exist`,
+        };
     }
-    if (block.fromMarker === undefined) return { content: text.trim() };
+    if (block.fromMarker === undefined)
+        return {
+            content: text.trim(),
+        };
     const range = blockRange(text, block.fromMarker);
     if (!range)
         return {
             reason: `the source \`${block.from}\` has no ${markersOf(block.fromMarker).open} block`,
         };
-    return { content: text.slice(range.from, range.to).trim() };
+    return {
+        content: text.slice(range.from, range.to).trim(),
+    };
 }
 
 /**
@@ -104,4 +111,6 @@ function syncDocs(ctx) {
     }
 }
 
-module.exports = { syncDocs };
+module.exports = {
+    syncDocs,
+};

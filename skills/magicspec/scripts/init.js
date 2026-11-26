@@ -26,7 +26,9 @@ const hosts = require('./lib/hosts');
 // left; it writes no entry. An unknown name, or a source that cannot be read, stops the run
 // before anything is written.
 const { values: initFlags, errors: initFlagErrors } = parseFlags(process.argv.slice(2), {
-    valueFlags: ['--host'],
+    valueFlags: [
+        '--host',
+    ],
 });
 if (initFlagErrors.length > 0) {
     console.error(`HALT: ${initFlagErrors[0]}`);
@@ -103,7 +105,10 @@ function getTemplate(name, placeholders = {}) {
 const shown = (p) => normalizePath(path.relative(projectRoot, p));
 
 function createGlobalFiles() {
-    if (!fs.existsSync(designDir)) fs.mkdirSync(designDir, { recursive: true });
+    if (!fs.existsSync(designDir))
+        fs.mkdirSync(designDir, {
+            recursive: true,
+        });
 
     const workspacePath = path.join(designDir, 'workspace.json');
     if (!fs.existsSync(workspacePath)) {
@@ -124,14 +129,19 @@ function createGlobalFiles() {
 
     const rulesPath = path.join(designDir, 'RULES.md');
     if (!fs.existsSync(rulesPath)) {
-        const content = getTemplate('rules.md', { DATE: date });
+        const content = getTemplate('rules.md', {
+            DATE: date,
+        });
         fs.writeFileSync(rulesPath, content);
         console.log(`✅ Created ${shown(rulesPath)}`);
     }
 }
 
 function initWorkspace(workspaceDir) {
-    if (!fs.existsSync(workspaceDir)) fs.mkdirSync(workspaceDir, { recursive: true });
+    if (!fs.existsSync(workspaceDir))
+        fs.mkdirSync(workspaceDir, {
+            recursive: true,
+        });
 
     const dirsToCreate = [
         path.join(workspaceDir, 'specifications'),
@@ -140,12 +150,17 @@ function initWorkspace(workspaceDir) {
     ];
 
     dirsToCreate.forEach((dir) => {
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        if (!fs.existsSync(dir))
+            fs.mkdirSync(dir, {
+                recursive: true,
+            });
     });
 
     const indexPath = path.join(workspaceDir, 'INDEX.md');
     if (!fs.existsSync(indexPath)) {
-        const content = getTemplate('workspace-index.md', { DATE: date });
+        const content = getTemplate('workspace-index.md', {
+            DATE: date,
+        });
         fs.writeFileSync(indexPath, content);
         console.log(`✅ Created ${shown(indexPath)}`);
     }
@@ -164,11 +179,22 @@ if (fs.existsSync(path.join(projectRoot, '.git'))) {
     const executorPath = path.join(__dirname, 'executor.js');
     // The installer's own words (a hook of the project's, a redirected hooks folder) are the
     // reason worth recording; they are shown as they come and kept for the digest.
-    const installed = spawnSync(process.execPath, [executorPath, 'install-hooks'], {
-        cwd: projectRoot,
-        encoding: 'utf8',
-        stdio: ['ignore', 'inherit', 'pipe'],
-    });
+    const installed = spawnSync(
+        process.execPath,
+        [
+            executorPath,
+            'install-hooks',
+        ],
+        {
+            cwd: projectRoot,
+            encoding: 'utf8',
+            stdio: [
+                'ignore',
+                'inherit',
+                'pipe',
+            ],
+        },
+    );
     if (installed.stderr) process.stderr.write(installed.stderr);
     if (installed.status !== 0) {
         console.warn('Note: Could not automatically install Git hooks.');

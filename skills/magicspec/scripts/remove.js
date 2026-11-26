@@ -27,7 +27,11 @@ const hosts = require('./lib/hosts');
 //
 // Usage: node scripts/executor.js remove [--dry-run]
 
-const { flags } = parseFlags(process.argv.slice(2), { boolFlags: ['--dry-run'] });
+const { flags } = parseFlags(process.argv.slice(2), {
+    boolFlags: [
+        '--dry-run',
+    ],
+});
 const dryRun = Boolean(flags['--dry-run']);
 const projectRoot = resolveProjectRoot();
 const rel = (p) => normalizePath(path.relative(projectRoot, p));
@@ -74,7 +78,10 @@ if (hasEngineWriteTooling()) {
     console.log(`   Would remove: ${rel(engineDir)}/`);
 } else {
     try {
-        fs.rmSync(engineDir, { recursive: true, force: true });
+        fs.rmSync(engineDir, {
+            recursive: true,
+            force: true,
+        });
         console.log(`   Removed: ${rel(engineDir)}/`);
     } catch (err) {
         // The running executor can keep its own files open on some platforms.

@@ -19,13 +19,21 @@ const scriptsDir = path.resolve(TESTS_DIR, '..', 'skills', 'magicspec', 'scripts
 const devScriptsDir = path.resolve(TESTS_DIR, '..', 'scripts');
 
 const scaffoldTempDirs = (tempDir) => {
-    fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec'), { recursive: true });
-    fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec', 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec'), {
+        recursive: true,
+    });
+    fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec', 'scripts'), {
+        recursive: true,
+    });
     fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec', 'scripts', 'lib'), {
         recursive: true,
     });
-    fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec', 'templates'), { recursive: true });
-    fs.mkdirSync(path.join(tempDir, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(tempDir, 'skills', 'magicspec', 'templates'), {
+        recursive: true,
+    });
+    fs.mkdirSync(path.join(tempDir, 'scripts'), {
+        recursive: true,
+    });
 };
 
 const copyDirShallow = (src, dst) => {
@@ -40,16 +48,31 @@ const copyDirShallow = (src, dst) => {
 
 const initGitFixture = (tempDir) => {
     try {
-        execSync('git init -b master', { cwd: tempDir, stdio: 'ignore' });
-        execSync('git config user.email "test@example.com"', { cwd: tempDir, stdio: 'ignore' });
-        execSync('git config user.name "Test User"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git init -b master', {
+            cwd: tempDir,
+            stdio: 'ignore',
+        });
+        execSync('git config user.email "test@example.com"', {
+            cwd: tempDir,
+            stdio: 'ignore',
+        });
+        execSync('git config user.name "Test User"', {
+            cwd: tempDir,
+            stdio: 'ignore',
+        });
         // Initial commit with a baseline file
         fs.writeFileSync(
             path.join(tempDir, 'README.md'),
             '# Test Project\n**Active Development** (v0.0.1)\n',
         );
-        execSync('git add .', { cwd: tempDir, stdio: 'ignore' });
-        execSync('git commit -m "Initial commit"', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git add .', {
+            cwd: tempDir,
+            stdio: 'ignore',
+        });
+        execSync('git commit -m "Initial commit"', {
+            cwd: tempDir,
+            stdio: 'ignore',
+        });
     } catch (e) {
         console.warn('Note: Git initialization failed in test, some tests may skip drift check.');
         console.error(e.message);
@@ -58,7 +81,11 @@ const initGitFixture = (tempDir) => {
 
 /** Makes `dir` a git repository with everything in it committed, for a case that reads the working tree against a commit. */
 const commitAllInFixture = (dir) => {
-    const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+    const git = (...args) =>
+        spawnSync('git', args, {
+            cwd: dir,
+            encoding: 'utf8',
+        });
     git('init', '-b', 'master');
     git('config', 'user.email', 'test@example.com');
     git('config', 'user.name', 'Test User');
@@ -101,7 +128,10 @@ const requireFromFixture = (fixtureDir, ...parts) => {
 const cleanup = (dir) => {
     if (dir && fs.existsSync(dir)) {
         try {
-            fs.rmSync(dir, { recursive: true, force: true });
+            fs.rmSync(dir, {
+                recursive: true,
+                force: true,
+            });
         } catch {
             /* ignore */
         }
@@ -111,7 +141,9 @@ const cleanup = (dir) => {
 // STATE.md "Blocking Constraints" body: `count` numbered anti-pattern bullets.
 const antiPatternLines = (count) =>
     Array.from(
-        { length: count },
+        {
+            length: count,
+        },
         (_, i) =>
             `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
     );
@@ -119,7 +151,10 @@ const antiPatternLines = (count) =>
 // Runs generate-context.js in a temp workspace and returns the CONTEXT.md text.
 const generateContext = (tempDir) => {
     const scriptPath = path.join(tempDir, 'skills', 'magicspec', 'scripts', 'generate-context.js');
-    execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+    execSync(`node "${scriptPath}"`, {
+        cwd: tempDir,
+        stdio: 'pipe',
+    });
     return fs.readFileSync(path.join(tempDir, '.magicspec', 'CONTEXT.md'), 'utf8');
 };
 
@@ -131,7 +166,10 @@ const loadChangelogWriter = (tempDir) => requireFromFixture(tempDir, 'lib', 'cha
 // see a consistent skills/magicspec/.checksums.
 const generateChecksums = (tempDir) => {
     const checksumScript = path.join(tempDir, 'scripts', 'generate-checksums.js');
-    execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
+    execSync(`node "${checksumScript}"`, {
+        cwd: tempDir,
+        stdio: 'pipe',
+    });
 };
 
 // Runs update-engine-meta.js --check in a temp workspace, returning
@@ -150,9 +188,15 @@ const runEngineMetaCheck = (tempDir) => {
             encoding: 'utf8',
             stdio: 'pipe',
         });
-        return { failed: false, output: stdout };
+        return {
+            failed: false,
+            output: stdout,
+        };
     } catch (e) {
-        return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
+        return {
+            failed: true,
+            output: `${e.stdout || ''}${e.stderr || ''}`,
+        };
     }
 };
 
@@ -200,7 +244,9 @@ const copyGlobalIndexTemplate = (tempDir) => {
 // Creates `.magicspec/{workspace}/` inside a temp workspace.
 const makeWorkspace = (tempDir, workspace = 'engine') => {
     const wsDir = path.join(tempDir, '.magicspec', workspace);
-    fs.mkdirSync(wsDir, { recursive: true });
+    fs.mkdirSync(wsDir, {
+        recursive: true,
+    });
     return wsDir;
 };
 
@@ -209,8 +255,14 @@ const makeWorkspace = (tempDir, workspace = 'engine') => {
 const makeWorkspaceWithTasks = (tempDir, workspace = 'engine') => {
     const wsDir = makeWorkspace(tempDir, workspace);
     const tasksDir = path.join(wsDir, 'tasks');
-    fs.mkdirSync(tasksDir, { recursive: true });
-    return { wsDir, tasksDir, tasksPath: path.join(wsDir, 'TASKS.md') };
+    fs.mkdirSync(tasksDir, {
+        recursive: true,
+    });
+    return {
+        wsDir,
+        tasksDir,
+        tasksPath: path.join(wsDir, 'TASKS.md'),
+    };
 };
 
 // Builds the git-backed workspace every finalize end-to-end test needs:
@@ -249,22 +301,33 @@ const createFinalizeFixture = (
 // finalize reads the diff against HEAD, so a dirty baseline would blur
 // which change the assertion is actually about.
 const commitFixture = (tempDir) => {
-    execSync('git add -A', { cwd: tempDir, stdio: 'ignore' });
-    execSync('git commit -m "fixture"', { cwd: tempDir, stdio: 'ignore' });
+    execSync('git add -A', {
+        cwd: tempDir,
+        stdio: 'ignore',
+    });
+    execSync('git commit -m "fixture"', {
+        cwd: tempDir,
+        stdio: 'ignore',
+    });
 };
 
 // require()s phase-archiver.js and creates its workspace fixture in one
 // step — the pairing every phase-archiver test starts with.
 const requirePhaseArchiverWorkspace = (tempDir) => {
     const archiver = requireFromFixture(tempDir, 'lib', 'phase-archiver.js');
-    return { archiver, ...makeWorkspaceWithTasks(tempDir) };
+    return {
+        archiver,
+        ...makeWorkspaceWithTasks(tempDir),
+    };
 };
 
 // Writes a minimal `l1-core.md` spec with a Canonical References entry for
 // `src/`, used by the Invariant 7 gitignore-parity fixtures.
 const writeCanonicalCoreSpec = (tempDir) => {
     const specsDir = path.join(tempDir, '.magicspec', 'specifications');
-    fs.mkdirSync(specsDir, { recursive: true });
+    fs.mkdirSync(specsDir, {
+        recursive: true,
+    });
     fs.writeFileSync(
         path.join(specsDir, 'l1-core.md'),
         '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n',
@@ -276,7 +339,10 @@ const writeCanonicalCoreSpec = (tempDir) => {
 // one step — the pairing every computeNextAction test (§7b) starts with.
 const requireFinalizeWorkspace = (tempDir) => {
     const finalize = requireFromFixture(tempDir, 'finalize.js');
-    return { finalize, ...makeWorkspaceWithTasks(tempDir) };
+    return {
+        finalize,
+        ...makeWorkspaceWithTasks(tempDir),
+    };
 };
 
 // The canonical two-level TASKS.md registry: one Phase-1 "Bootstrap" row,
@@ -318,7 +384,10 @@ const requireFinalizePlan = (tempDir, registryStatus = 'In Progress') => {
     fs.writeFileSync(plan.tasksPath, registryTable(registryStatus));
     const writePhase = (items, options) =>
         fs.writeFileSync(path.join(plan.tasksDir, 'phase-1.md'), phaseWorkbook(items, options));
-    return { ...plan, writePhase };
+    return {
+        ...plan,
+        writePhase,
+    };
 };
 
 // require()s update-state.js and creates a plain single-workspace fixture
@@ -326,14 +395,20 @@ const requireFinalizePlan = (tempDir, registryStatus = 'In Progress') => {
 // starts with.
 const requireUpdateState = (tempDir) => {
     const { updateState } = requireFromFixture(tempDir, 'update-state.js');
-    return { updateState, wsDir: makeWorkspace(tempDir) };
+    return {
+        updateState,
+        wsDir: makeWorkspace(tempDir),
+    };
 };
 
 // Same pairing, but with a tasks/ directory too — for the computeProgress
 // test that needs a phase file alongside TASKS.md.
 const requireUpdateStateWithTasks = (tempDir) => {
     const { updateState } = requireFromFixture(tempDir, 'update-state.js');
-    return { updateState, ...makeWorkspaceWithTasks(tempDir) };
+    return {
+        updateState,
+        ...makeWorkspaceWithTasks(tempDir),
+    };
 };
 
 // Runs autoProgress and reads back STATE.md — the "recompute, then
@@ -341,7 +416,9 @@ const requireUpdateStateWithTasks = (tempDir) => {
 // the field-patch object forwarded as updateState's 2nd argument, for the
 // one test that recomputes progress alongside a field write.
 const autoProgressState = (updateState, wsDir, patch = {}) => {
-    updateState(wsDir, patch, { autoProgress: true });
+    updateState(wsDir, patch, {
+        autoProgress: true,
+    });
     return fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 };
 
@@ -365,7 +442,9 @@ const warnedBy = (fn) => {
 // file tree rather than a full .magicspec/ workspace (§15, §18).
 const writeTreeFile = (tempDir, rel, body) => {
     const abs = path.join(tempDir, ...rel.split('/'));
-    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.mkdirSync(path.dirname(abs), {
+        recursive: true,
+    });
     fs.writeFileSync(abs, body);
 };
 
@@ -375,8 +454,13 @@ const writeTreeFile = (tempDir, rel, body) => {
 const makeSpecWorkspace = (tempDir) => {
     const designDir = path.join(tempDir, '.magicspec');
     const specsDir = path.join(designDir, 'specifications');
-    fs.mkdirSync(specsDir, { recursive: true });
-    return { designDir, specsDir };
+    fs.mkdirSync(specsDir, {
+        recursive: true,
+    });
+    return {
+        designDir,
+        specsDir,
+    };
 };
 
 // makeSpecWorkspace() plus a single genuine `l1-real.md` spec with a
@@ -388,7 +472,10 @@ const makeRegistryScanWorkspace = (tempDir) => {
         path.join(specsDir, 'l1-real.md'),
         '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n',
     );
-    return { designDir, specsDir };
+    return {
+        designDir,
+        specsDir,
+    };
 };
 
 // Runs check-prerequisites.js against tempDir with the given flags and
@@ -413,7 +500,9 @@ const runCheckPrerequisites = (tempDir, ...extraArgs) => {
 // exercise spec content, only PLAN.md/TASKS.md.
 const makeMinimalDesignDir = (tempDir) => {
     const designDir = path.join(tempDir, '.magicspec');
-    fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
+    fs.mkdirSync(path.join(designDir, 'specifications'), {
+        recursive: true,
+    });
     fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
     fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
     return designDir;

@@ -90,10 +90,27 @@ function fileTokens(absPath) {
  * Reference material is neither corpus nor spec layer, so it never counts
  * toward token totals.
  */
-const SKIP_DIRS = new Set([...BUILD_NOISE_DIRS, '.references']);
+const SKIP_DIRS = new Set([
+    ...BUILD_NOISE_DIRS,
+    '.references',
+]);
 
-const SOURCE_EXTENSIONS = new Set(['.js', '.py', '.ts', '.go', '.rs', '.java', '.c', '.cpp', '.h']);
-const DOC_EXTENSIONS = new Set(['.md', '.txt', '.rst']);
+const SOURCE_EXTENSIONS = new Set([
+    '.js',
+    '.py',
+    '.ts',
+    '.go',
+    '.rs',
+    '.java',
+    '.c',
+    '.cpp',
+    '.h',
+]);
+const DOC_EXTENSIONS = new Set([
+    '.md',
+    '.txt',
+    '.rst',
+]);
 
 /**
  * Recursively scans a directory for files matching a set of extensions.
@@ -140,17 +157,35 @@ function buildAdjacency(nodeIds, edges) {
 
 function loadGraph() {
     const executorPath = enginePath('scripts', 'executor.js');
-    const stdout = execFileSync(process.execPath, [executorPath, 'build-spec-graph', '--json'], {
-        cwd: rootDir,
-        env: process.env,
-        timeout: 30000,
-    });
+    const stdout = execFileSync(
+        process.execPath,
+        [
+            executorPath,
+            'build-spec-graph',
+            '--json',
+        ],
+        {
+            cwd: rootDir,
+            env: process.env,
+            timeout: 30000,
+        },
+    );
 
     const raw = JSON.parse(stdout.toString('utf8'));
-    const nodes = new Map(raw.nodes.map((n) => [n.id, n]));
+    const nodes = new Map(
+        raw.nodes.map((n) => [
+            n.id,
+            n,
+        ]),
+    );
     const adjacency = buildAdjacency(nodes.keys(), raw.edges);
 
-    return { nodes, edges: raw.edges, analysis: raw.analysis || {}, adjacency };
+    return {
+        nodes,
+        edges: raw.edges,
+        analysis: raw.analysis || {},
+        adjacency,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -163,13 +198,19 @@ function loadGraph() {
  * @returns {{files: number, tokens: number}}
  */
 function benchRawCorpus() {
-    const allExts = new Set([...SOURCE_EXTENSIONS, ...DOC_EXTENSIONS]);
+    const allExts = new Set([
+        ...SOURCE_EXTENSIONS,
+        ...DOC_EXTENSIONS,
+    ]);
     const designPrefix = designAbs + path.sep;
     const files = scanDir(rootDir, allExts).filter(
         (f) => f !== designAbs && !f.startsWith(designPrefix),
     );
     const tokens = files.reduce((sum, f) => sum + fileTokens(f), 0);
-    return { files: files.length, tokens };
+    return {
+        files: files.length,
+        tokens,
+    };
 }
 
 /**
@@ -180,7 +221,10 @@ function benchRawCorpus() {
 function benchSpecLayer() {
     const files = scanDir(designAbs, DOC_EXTENSIONS);
     const tokens = files.reduce((sum, f) => sum + fileTokens(f), 0);
-    return { files: files.length, tokens };
+    return {
+        files: files.length,
+        tokens,
+    };
 }
 
 /**
@@ -217,15 +261,23 @@ function bfsExpand(frontier, adjacency, visited) {
 }
 
 function benchGraphQuery(nodes, adjacency, seedId, depth) {
-    const visited = new Set([seedId]);
-    let frontier = [seedId];
+    const visited = new Set([
+        seedId,
+    ]);
+    let frontier = [
+        seedId,
+    ];
 
     for (let d = 0; d < depth; d++) {
         frontier = bfsExpand(frontier, adjacency, visited);
     }
 
     // Serialize the subgraph to approximate what an agent would load
-    const subgraphNodes = [...visited].map((id) => nodes.get(id)).filter(Boolean);
+    const subgraphNodes = [
+        ...visited,
+    ]
+        .map((id) => nodes.get(id))
+        .filter(Boolean);
     const serialized = JSON.stringify(subgraphNodes, null, 2);
 
     return {
@@ -264,7 +316,10 @@ function graphQueryAverage(queries, corpusTokens) {
         queries.reduce((sum, q) => sum + q.tokens, 0) / queries.length,
     );
     const avgRatio = corpusTokens > 0 ? (corpusTokens / avgGraphTokens).toFixed(1) : '—';
-    return { avgGraphTokens, avgRatio };
+    return {
+        avgGraphTokens,
+        avgRatio,
+    };
 }
 
 function printGraphQueryResults(queries, corpusTokens) {
@@ -354,7 +409,9 @@ function main() {
     const specs = benchSpecLayer();
 
     // Use top god-nodes as query seeds (most representative queries)
-    const seeds = [...graph.nodes.values()]
+    const seeds = [
+        ...graph.nodes.values(),
+    ]
         .filter((n) => typeof n.degree === 'number')
         .sort((a, b) => b.degree - a.degree)
         .slice(0, TOP_SEEDS)
@@ -368,11 +425,17 @@ function main() {
     );
 
     const report = {
-        graph_summary: { nodes: graph.nodes.size, edges: graph.edges.length },
+        graph_summary: {
+            nodes: graph.nodes.size,
+            edges: graph.edges.length,
+        },
         corpus,
         specs,
         queries,
-        config: { bfs_depth: BFS_DEPTH, top_seeds: TOP_SEEDS },
+        config: {
+            bfs_depth: BFS_DEPTH,
+            top_seeds: TOP_SEEDS,
+        },
     };
 
     if (JSON_OUTPUT) {

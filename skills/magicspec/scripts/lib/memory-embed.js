@@ -61,27 +61,44 @@ function readSetting(designAbs) {
         raw = JSON.parse(fs.readFileSync(path.join(designAbs, 'workspace.json'), 'utf8'))?.memory
             ?.embeddings;
     } catch {
-        return { setting: null };
+        return {
+            setting: null,
+        };
     }
-    if (raw === undefined || raw === null) return { setting: null };
+    if (raw === undefined || raw === null)
+        return {
+            setting: null,
+        };
     if (typeof raw !== 'object' || Array.isArray(raw)) {
         return {
             setting: null,
             error: 'memory.embeddings must be an object with url, model and dimensions',
         };
     }
-    if (Object.keys(raw).length === 0) return { setting: null };
+    if (Object.keys(raw).length === 0)
+        return {
+            setting: null,
+        };
     let url;
     try {
         url = new URL(String(raw.url));
     } catch {
-        return { setting: null, error: 'memory.embeddings.url is not a URL' };
+        return {
+            setting: null,
+            error: 'memory.embeddings.url is not a URL',
+        };
     }
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        return { setting: null, error: 'memory.embeddings.url must be http or https' };
+        return {
+            setting: null,
+            error: 'memory.embeddings.url must be http or https',
+        };
     }
     if (typeof raw.model !== 'string' || raw.model.trim() === '') {
-        return { setting: null, error: 'memory.embeddings.model must be a non-empty string' };
+        return {
+            setting: null,
+            error: 'memory.embeddings.model must be a non-empty string',
+        };
     }
     if (!Number.isInteger(raw.dimensions) || raw.dimensions < 1 || raw.dimensions > 8192) {
         return {
@@ -100,7 +117,11 @@ function readSetting(designAbs) {
             url: url.href,
             model: raw.model,
             dimensions: raw.dimensions,
-            ...(raw.apiKeyEnv ? { apiKeyEnv: raw.apiKeyEnv } : {}),
+            ...(raw.apiKeyEnv
+                ? {
+                      apiKeyEnv: raw.apiKeyEnv,
+                  }
+                : {}),
         },
     };
 }
@@ -147,13 +168,27 @@ function embed(setting, texts) {
     const missing = credentialProblem(setting);
     if (missing) throw new Error(missing);
     const key = setting.apiKeyEnv ? process.env[setting.apiKeyEnv] : undefined;
-    const child = spawnSync(process.execPath, [__filename], {
-        input: JSON.stringify({ url: setting.url, model: setting.model, input: texts, key }),
-        encoding: 'utf8',
-        maxBuffer: 256 * 1024 * 1024,
-        timeout: REQUEST_TIMEOUT_MS + 5000,
-        env: { ...process.env, NODE_OPTIONS: '' },
-    });
+    const child = spawnSync(
+        process.execPath,
+        [
+            __filename,
+        ],
+        {
+            input: JSON.stringify({
+                url: setting.url,
+                model: setting.model,
+                input: texts,
+                key,
+            }),
+            encoding: 'utf8',
+            maxBuffer: 256 * 1024 * 1024,
+            timeout: REQUEST_TIMEOUT_MS + 5000,
+            env: {
+                ...process.env,
+                NODE_OPTIONS: '',
+            },
+        },
+    );
     if (child.error) throw new Error(`the embeddings request did not run: ${child.error.message}`);
     let answer;
     try {
@@ -194,11 +229,16 @@ function runRequest() {
     try {
         request = JSON.parse(fs.readFileSync(0, 'utf8'));
     } catch (err) {
-        return done({ error: `the request could not be read: ${err.message}` });
+        return done({
+            error: `the request could not be read: ${err.message}`,
+        });
     }
     const target = new URL(request.url);
     const transport = target.protocol === 'https:' ? require('https') : require('http');
-    const body = JSON.stringify({ model: request.model, input: request.input });
+    const body = JSON.stringify({
+        model: request.model,
+        input: request.input,
+    });
     const headers = {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(body),
@@ -206,27 +246,43 @@ function runRequest() {
     if (request.key) headers.Authorization = `Bearer ${request.key}`;
     const req = transport.request(
         target,
-        { method: 'POST', headers, timeout: REQUEST_TIMEOUT_MS },
+        {
+            method: 'POST',
+            headers,
+            timeout: REQUEST_TIMEOUT_MS,
+        },
         (res) => {
             const chunks = [];
             res.on('data', (c) => chunks.push(c));
             res.on('end', () => {
                 const text = Buffer.concat(chunks).toString('utf8');
                 if (res.statusCode < 200 || res.statusCode >= 300) {
-                    return done({ error: `the provider answered HTTP ${res.statusCode}` });
+                    return done({
+                        error: `the provider answered HTTP ${res.statusCode}`,
+                    });
                 }
                 try {
                     const data = JSON.parse(text).data;
-                    const ordered = [...data].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
-                    done({ vectors: ordered.map((d) => d.embedding) });
+                    const ordered = [
+                        ...data,
+                    ].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+                    done({
+                        vectors: ordered.map((d) => d.embedding),
+                    });
                 } catch {
-                    done({ error: 'the provider answered with a body that is not embeddings' });
+                    done({
+                        error: 'the provider answered with a body that is not embeddings',
+                    });
                 }
             });
         },
     );
     req.on('timeout', () => req.destroy(new Error('the provider did not answer in time')));
-    req.on('error', (err) => done({ error: `the provider could not be reached: ${err.message}` }));
+    req.on('error', (err) =>
+        done({
+            error: `the provider could not be reached: ${err.message}`,
+        }),
+    );
     req.end(body);
 }
 
@@ -268,13 +324,19 @@ function embedPending(backend, setting, embedFn = embed) {
         backend.putVectors(
             model,
             dimensions,
-            rows.map((r, i) => ({ id: r.id, vector: vectors[i] })),
+            rows.map((r, i) => ({
+                id: r.id,
+                vector: vectors[i],
+            })),
         );
         backend.save();
         sent += rows.length;
     }
     backend.save();
-    return { sent, host: hostOf(setting) };
+    return {
+        sent,
+        host: hostOf(setting),
+    };
 }
 
 /**
@@ -308,7 +370,11 @@ function cosine(a, b) {
 function rankByVector(query, vectors, keep, depth) {
     const ranked = [];
     for (const [id, vector] of vectors) {
-        if (keep(id)) ranked.push({ id, similarity: cosine(query, vector) });
+        if (keep(id))
+            ranked.push({
+                id,
+                similarity: cosine(query, vector),
+            });
     }
     ranked.sort((a, b) => b.similarity - a.similarity || a.id - b.id);
     return ranked.slice(0, depth);
@@ -331,8 +397,13 @@ function fuse(rankings) {
             if (!firstSeen.has(id)) firstSeen.set(id, firstSeen.size);
         });
     }
-    return [...scores]
-        .map(([id, score]) => ({ id, score }))
+    return [
+        ...scores,
+    ]
+        .map(([id, score]) => ({
+            id,
+            score,
+        }))
         .sort((a, b) => b.score - a.score || firstSeen.get(a.id) - firstSeen.get(b.id));
 }
 

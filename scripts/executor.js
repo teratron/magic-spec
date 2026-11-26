@@ -42,10 +42,17 @@ if (!fs.existsSync(scriptPath)) {
     process.exit(1);
 }
 
-const child = spawn(process.execPath, [scriptPath, ...args], {
-    stdio: 'inherit',
-    cwd: process.cwd(),
-    env: process.env,
-});
+const child = spawn(
+    process.execPath,
+    [
+        scriptPath,
+        ...args,
+    ],
+    {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+        env: process.env,
+    },
+);
 
 child.on('exit', (code) => process.exit(code ?? 0));

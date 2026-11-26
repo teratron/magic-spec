@@ -70,7 +70,11 @@ function rebuildableCaches(designAbs) {
  */
 function measure(target) {
     const stat = fs.lstatSync(target);
-    if (!stat.isDirectory()) return { files: 1, bytes: stat.size };
+    if (!stat.isDirectory())
+        return {
+            files: 1,
+            bytes: stat.size,
+        };
     let files = 0;
     let bytes = 0;
     for (const name of fs.readdirSync(target)) {
@@ -78,7 +82,10 @@ function measure(target) {
         files += inner.files;
         bytes += inner.bytes;
     }
-    return { files, bytes };
+    return {
+        files,
+        bytes,
+    };
 }
 
 /**
@@ -137,7 +144,11 @@ function findBackups(projectRoot, now) {
         } catch {
             /* a backup that cannot be measured is still listed */
         }
-        found.push({ name, days: Math.max(0, Math.floor((now - madeAt) / DAY_MS)), bytes });
+        found.push({
+            name,
+            days: Math.max(0, Math.floor((now - madeAt) / DAY_MS)),
+            bytes,
+        });
     }
     return found;
 }
@@ -184,7 +195,11 @@ function main() {
             console.log(`  ${shown(target)}  is a link: left alone`);
             continue;
         }
-        present.push({ target, ...measure(target), isDirectory: stat.isDirectory() });
+        present.push({
+            target,
+            ...measure(target),
+            isDirectory: stat.isDirectory(),
+        });
     }
 
     let failed = 0;
@@ -201,7 +216,10 @@ function main() {
                 console.log(`  ${label}  (${size})`);
             } else {
                 try {
-                    fs.rmSync(entry.target, { recursive: true, force: true });
+                    fs.rmSync(entry.target, {
+                        recursive: true,
+                        force: true,
+                    });
                     console.log(`  ${label}  (${size})`);
                 } catch (error) {
                     failed += 1;
@@ -240,4 +258,7 @@ if (require.main === module) {
     process.exit(main());
 }
 
-module.exports = { rebuildableCaches, findBackups };
+module.exports = {
+    rebuildableCaches,
+    findBackups,
+};

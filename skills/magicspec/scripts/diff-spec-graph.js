@@ -84,8 +84,18 @@ function loadSnapshot(filePath) {
  * @returns {{added: GraphNode[], removed: GraphNode[], changed: Array<{id: string, before: object, after: object, delta: object}>}}
  */
 function diffNodes(before, after) {
-    const beforeMap = new Map(before.map((n) => [n.id, n]));
-    const afterMap = new Map(after.map((n) => [n.id, n]));
+    const beforeMap = new Map(
+        before.map((n) => [
+            n.id,
+            n,
+        ]),
+    );
+    const afterMap = new Map(
+        after.map((n) => [
+            n.id,
+            n,
+        ]),
+    );
 
     const added = after.filter((n) => !beforeMap.has(n.id));
     const removed = before.filter((n) => !afterMap.has(n.id));
@@ -96,19 +106,36 @@ function diffNodes(before, after) {
         if (!aNode) continue;
 
         const delta = {};
-        const TRACKED = ['status', 'layer', 'degree', 'version'];
+        const TRACKED = [
+            'status',
+            'layer',
+            'degree',
+            'version',
+        ];
         for (const field of TRACKED) {
             if (bNode[field] !== aNode[field]) {
-                delta[field] = { from: bNode[field], to: aNode[field] };
+                delta[field] = {
+                    from: bNode[field],
+                    to: aNode[field],
+                };
             }
         }
 
         if (Object.keys(delta).length) {
-            changed.push({ id, before: bNode, after: aNode, delta });
+            changed.push({
+                id,
+                before: bNode,
+                after: aNode,
+                delta,
+            });
         }
     }
 
-    return { added, removed, changed };
+    return {
+        added,
+        removed,
+        changed,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -158,11 +185,18 @@ function diffEdges(before, after) {
  * @returns {Array<{id: string, label: string, type: string, degree: number}>}
  */
 function topByDegree(nodes, topN = 5) {
-    return [...nodes]
+    return [
+        ...nodes,
+    ]
         .filter((n) => typeof n.degree === 'number')
         .sort((a, b) => b.degree - a.degree)
         .slice(0, topN)
-        .map((n) => ({ id: n.id, label: n.label, type: n.type, degree: n.degree }));
+        .map((n) => ({
+            id: n.id,
+            label: n.label,
+            type: n.type,
+            degree: n.degree,
+        }));
 }
 
 /**
@@ -175,12 +209,25 @@ function topByDegree(nodes, topN = 5) {
 function diffCoverage(beforeAnalysis, afterAnalysis) {
     const bStats = beforeAnalysis?.coverage_stats || {};
     const aStats = afterAnalysis?.coverage_stats || {};
-    const allWs = new Set([...Object.keys(bStats), ...Object.keys(aStats)]);
+    const allWs = new Set([
+        ...Object.keys(bStats),
+        ...Object.keys(aStats),
+    ]);
     const result = {};
 
     for (const ws of allWs) {
-        const b = bStats[ws] || { specs: 0, files_covered: 0, total_scope: 0, coverage_pct: 0 };
-        const a = aStats[ws] || { specs: 0, files_covered: 0, total_scope: 0, coverage_pct: 0 };
+        const b = bStats[ws] || {
+            specs: 0,
+            files_covered: 0,
+            total_scope: 0,
+            coverage_pct: 0,
+        };
+        const a = aStats[ws] || {
+            specs: 0,
+            files_covered: 0,
+            total_scope: 0,
+            coverage_pct: 0,
+        };
 
         result[ws] = {
             specs_delta: a.specs - b.specs,
@@ -233,7 +280,11 @@ function diffAnalysis(ba, aa) {
     const aConvOrphan = aa.convention_coverage?.orphaned || [];
     const convDiff = setDiff(bConvOrphan, aConvOrphan);
 
-    return { orphanDiff, missingImplDiff, convDiff };
+    return {
+        orphanDiff,
+        missingImplDiff,
+        convDiff,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -399,7 +450,12 @@ function main() {
     const coverage = diffCoverage(before.analysis, after.analysis);
     const analysis = diffAnalysis(before.analysis, after.analysis);
 
-    const beforeNodesMap = new Map(before.nodes.map((n) => [n.id, n]));
+    const beforeNodesMap = new Map(
+        before.nodes.map((n) => [
+            n.id,
+            n,
+        ]),
+    );
 
     const diff = {
         summary: {
@@ -423,8 +479,12 @@ function main() {
 
     if (JSON_OUTPUT) {
         const { beforeNodesMap: _, ...clean } = diff;
-        clean.godNodes.before = [...clean.godNodes.before];
-        clean.godNodes.after = [...clean.godNodes.after];
+        clean.godNodes.before = [
+            ...clean.godNodes.before,
+        ];
+        clean.godNodes.after = [
+            ...clean.godNodes.after,
+        ];
         console.log(JSON.stringify(clean, null, 2));
     } else {
         printReport(diff);

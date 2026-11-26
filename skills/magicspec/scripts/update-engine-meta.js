@@ -106,11 +106,19 @@ function updateEngineMeta() {
     // Integrity scope: the whole engine folder. Projections outside it (the rule
     // copy, the command entries) are generated from it and are checked for
     // staleness by init, not by checksum.
-    const scanZones = [{ dir: magicDir, relBase: magicDir }];
+    const scanZones = [
+        {
+            dir: magicDir,
+            relBase: magicDir,
+        },
+    ];
     // Invariant 7 parity (the shared scan-hygiene rule) — must stay
     // in sync with generate-checksums.js's identical floor/gitignore union,
     // or the two can disagree about what belongs in the manifest.
-    const scanIgnoreDirs = ['history', ...BUILD_NOISE_DIRS];
+    const scanIgnoreDirs = [
+        'history',
+        ...BUILD_NOISE_DIRS,
+    ];
     const isGitignored = loadGitignore(projectRoot);
 
     let anyChanged = false;
@@ -301,7 +309,17 @@ function runGenerateChecksums() {
         });
         return;
     }
-    execFileSync(process.execPath, [scriptPath, '--dir', magicDir], { stdio: 'inherit' });
+    execFileSync(
+        process.execPath,
+        [
+            scriptPath,
+            '--dir',
+            magicDir,
+        ],
+        {
+            stdio: 'inherit',
+        },
+    );
 }
 
 /**

@@ -85,9 +85,17 @@ function fileHash(absPath, rootDir) {
 
     const h = crypto.createHash('sha256');
     h.update(`extraction:${EXTRACTION_VERSION}`);
-    h.update(Buffer.from([0]));
+    h.update(
+        Buffer.from([
+            0,
+        ]),
+    );
     h.update(body);
-    h.update(Buffer.from([0]));
+    h.update(
+        Buffer.from([
+            0,
+        ]),
+    );
 
     let rel;
     try {
@@ -115,7 +123,10 @@ function fileHash(absPath, rootDir) {
 function cacheDir(designAbs) {
     const dir = graphPaths(designAbs).cache;
     // A dry run (MAGIC_DRY_RUN, which `sync --dry-run` sets for the build it renders) leaves the project as it is.
-    if (!isDryRun()) fs.mkdirSync(dir, { recursive: true });
+    if (!isDryRun())
+        fs.mkdirSync(dir, {
+            recursive: true,
+        });
     return dir;
 }
 

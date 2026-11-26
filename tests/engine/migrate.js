@@ -23,7 +23,9 @@ module.exports = () => {
     // A second `migrate --apply` finds nothing to do and changes nothing.
     const expectSecondRunIdle = (skill, dir) => {
         const after = snapshot(dir);
-        const again = skillExec(skill, dir, 'migrate', ['--apply']);
+        const again = skillExec(skill, dir, 'migrate', [
+            '--apply',
+        ]);
         assert.strictEqual(again.status, 0, again.stdout + again.stderr);
         assert.match(again.stdout, /Nothing to migrate/);
         assert.deepStrictEqual(snapshot(dir), after, 'a second run changes nothing');
@@ -67,7 +69,9 @@ module.exports = () => {
     test("migrate --apply installs the new layout, renames the state, removes exactly the old engine and keeps the project's own files; a second run does nothing (migration)", () => {
         const { dir, skill } = legacyProject();
         try {
-            const run = skillExec(skill, dir, 'migrate', ['--apply']);
+            const run = skillExec(skill, dir, 'migrate', [
+                '--apply',
+            ]);
             assert.strictEqual(run.status, 0, run.stdout + run.stderr);
 
             // the state moved, with its entries
@@ -81,7 +85,10 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 ws.workspaces.main.scope,
-                ['.magicspec', 'src'],
+                [
+                    '.magicspec',
+                    'src',
+                ],
                 'the entries that named the old folder follow it',
             );
 
@@ -141,7 +148,9 @@ module.exports = () => {
         const { dir, skill } = legacyProject();
         try {
             fs.appendFileSync(path.join(dir, OLD_ENGINE, 'spec.md'), 'my change\n');
-            const run = skillExec(skill, dir, 'migrate', ['--apply']);
+            const run = skillExec(skill, dir, 'migrate', [
+                '--apply',
+            ]);
             assert.strictEqual(run.status, 0, run.stdout + run.stderr);
             assert.match(run.stdout, /ENGINE_FILE_MODIFIED \.magic\/spec\.md/);
             assert.ok(
@@ -167,7 +176,9 @@ module.exports = () => {
     });
 
     const applyMigration = (skill, dir) => {
-        const run = skillExec(skill, dir, 'migrate', ['--apply']);
+        const run = skillExec(skill, dir, 'migrate', [
+            '--apply',
+        ]);
         assert.strictEqual(run.status, 0, run.stdout + run.stderr);
         return run;
     };
@@ -415,7 +426,10 @@ module.exports = () => {
         const link = path.join(dir, '.claude', 'commands');
         try {
             fs.writeFileSync(path.join(outside, 'magic.task.md'), 'not ours\n');
-            fs.rmSync(link, { recursive: true, force: true });
+            fs.rmSync(link, {
+                recursive: true,
+                force: true,
+            });
             fs.symlinkSync(outside, link, 'junction');
 
             applyMigration(skill, dir);
@@ -425,14 +439,20 @@ module.exports = () => {
             );
         } finally {
             removeLink(link);
-            fs.rmSync(outside, { recursive: true, force: true });
+            fs.rmSync(outside, {
+                recursive: true,
+                force: true,
+            });
             cleanLink(dir);
             cleanup(dir);
         }
     });
 
     test('migrate resumes from the filesystem: after the rename but before the removal, and before the rename with the projections in place (migration)', () => {
-        for (const stage of ['renamed', 'projected']) {
+        for (const stage of [
+            'renamed',
+            'projected',
+        ]) {
             const { dir, skill } = legacyProject();
             try {
                 if (stage === 'renamed') {
@@ -449,7 +469,9 @@ module.exports = () => {
                         else process.env.MAGIC_ROOT = previous;
                     }
                 }
-                const run = skillExec(skill, dir, 'migrate', ['--apply']);
+                const run = skillExec(skill, dir, 'migrate', [
+                    '--apply',
+                ]);
                 assert.strictEqual(run.status, 0, stage + ': ' + run.stdout + run.stderr);
                 assert.ok(
                     fs.existsSync(path.join(dir, '.magicspec', 'main', 'STATE.md')),
@@ -474,9 +496,24 @@ module.exports = () => {
             fs.writeFileSync(path.join(dir, '.magicspec', 'marker.txt'), 'new\n');
             const before = snapshot(dir);
             for (const [script, args] of [
-                ['migrate', ['--apply']],
-                ['check-prerequisites', ['--json']],
-                ['finalize', ['--workflow=spec']],
+                [
+                    'migrate',
+                    [
+                        '--apply',
+                    ],
+                ],
+                [
+                    'check-prerequisites',
+                    [
+                        '--json',
+                    ],
+                ],
+                [
+                    'finalize',
+                    [
+                        '--workflow=spec',
+                    ],
+                ],
             ]) {
                 const r = skillExec(skill, dir, script, args);
                 assert.strictEqual(r.status, 1, script + ': ' + r.stdout);
@@ -500,7 +537,9 @@ module.exports = () => {
     test('any other command in an unmigrated project stops and says so, and creates no second state folder (migration)', () => {
         const { dir, skill } = legacyProject();
         try {
-            const r = skillExec(skill, dir, 'check-prerequisites', ['--json']);
+            const r = skillExec(skill, dir, 'check-prerequisites', [
+                '--json',
+            ]);
             assert.strictEqual(r.status, 1);
             assert.match(r.stderr, /uses the 2\.x layout/);
             assert.match(r.stderr, /migrate/);
@@ -519,7 +558,9 @@ module.exports = () => {
                 fs.mkdirSync(path.join(other, OLD_STATE));
                 fs.writeFileSync(path.join(other, OLD_STATE, 'logo.png'), 'x');
                 const skill2 = installSkill(other);
-                const ok = skillExec(skill2, other, 'check-prerequisites', ['--json']);
+                const ok = skillExec(skill2, other, 'check-prerequisites', [
+                    '--json',
+                ]);
                 assert.doesNotMatch(
                     ok.stderr,
                     /2\.x layout/,
@@ -535,10 +576,14 @@ module.exports = () => {
     });
 
     test('migrate refuses a layout older than 2.x and names the way, an unknown host stops it, and a missing manifest keeps the engine folder (migration)', () => {
-        const old = legacyProject({ version: '1.5.207' });
+        const old = legacyProject({
+            version: '1.5.207',
+        });
         try {
             const before = snapshot(old.dir);
-            const r = skillExec(old.skill, old.dir, 'migrate', ['--apply']);
+            const r = skillExec(old.skill, old.dir, 'migrate', [
+                '--apply',
+            ]);
             assert.strictEqual(r.status, 1);
             assert.match(r.stderr, /2\.x layout only/);
             assert.deepStrictEqual(snapshot(old.dir), before, 'nothing was changed');
@@ -549,7 +594,10 @@ module.exports = () => {
 
         const host = legacyProject();
         try {
-            const r = skillExec(host.skill, host.dir, 'migrate', ['--apply', '--host=zed']);
+            const r = skillExec(host.skill, host.dir, 'migrate', [
+                '--apply',
+                '--host=zed',
+            ]);
             assert.strictEqual(r.status, 1);
             assert.match(r.stderr, /Unknown host 'zed'/);
             assert.ok(
@@ -561,9 +609,13 @@ module.exports = () => {
             cleanup(host.dir);
         }
 
-        const bare = legacyProject({ manifest: false });
+        const bare = legacyProject({
+            manifest: false,
+        });
         try {
-            const r = skillExec(bare.skill, bare.dir, 'migrate', ['--apply']);
+            const r = skillExec(bare.skill, bare.dir, 'migrate', [
+                '--apply',
+            ]);
             assert.strictEqual(r.status, 0, r.stdout + r.stderr);
             assert.match(r.stdout, /ENGINE_MANIFEST_MISSING/);
             assert.ok(

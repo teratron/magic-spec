@@ -39,7 +39,10 @@ module.exports = () => {
                         '--tried=read it twice',
                         '--happened=two readings',
                     ],
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 );
             const registry = path.join(tempDir, '.magicspec', 'workspace.json');
             const storeFile = path.join(tempDir, '.magicspec', '.cache', 'feedback.json');
@@ -110,7 +113,9 @@ module.exports = () => {
                 'D:\\work\\proj\\skills\\magicspec\\scripts\\finalize.js and /srv/x/.agents/skills/magicspec/workflows/run.md',
                 'the secret-app project',
             ].join(' | ');
-            const clean = drafts.scrubText(dirty, ['secret-app']);
+            const clean = drafts.scrubText(dirty, [
+                'secret-app',
+            ]);
             for (const planted of hostile)
                 assert.ok(!clean.includes(planted), `scrubbed: ${planted}`);
             assert.ok(!clean.includes('secret-app'), 'the project name is gone');
@@ -181,24 +186,36 @@ module.exports = () => {
                 path.join(TESTS_DIR, '..', '.github', 'ISSUE_TEMPLATE', 'agent-feedback.yml'),
                 'utf8',
             );
-            const labels = [...form.matchAll(/^ {6}label: (.+)$/gm)].map((m) => m[1].trim());
+            const labels = [
+                ...form.matchAll(/^ {6}label: (.+)$/gm),
+            ].map((m) => m[1].trim());
             assert.deepStrictEqual(
                 labels,
                 drafts.SECTIONS,
                 'the issue form and the report share their section labels',
             );
-            const headings = (text) => [...text.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+            const headings = (text) =>
+                [
+                    ...text.matchAll(/^## (.+)$/gm),
+                ].map((m) => m[1]);
             assert.deepStrictEqual(
                 headings(drafted.stdout),
                 drafts.SECTIONS.filter((s) => s !== 'Expected / suggestion'),
                 'a report without an expectation has no Expected section',
             );
-            for (const label of ['Summary', 'What happened', 'Impact'])
+            for (const label of [
+                'Summary',
+                'What happened',
+                'Impact',
+            ])
                 assert.ok(
                     drafted.stdout.includes(`## ${label}\n_Written by the agent._`),
                     `${label} is labelled as the agent's`,
                 );
-            for (const label of ['Environment', 'Engine-observed context'])
+            for (const label of [
+                'Environment',
+                'Engine-observed context',
+            ])
                 assert.ok(
                     drafted.stdout.includes(`## ${label}\n_Observed by the engine._`),
                     `${label} is labelled as the engine's`,
@@ -219,8 +236,13 @@ module.exports = () => {
                 'the destination is the repository of the skill folder',
             );
             assert.deepStrictEqual(
-                [...new URL(link).searchParams.keys()],
-                ['title', 'body'],
+                [
+                    ...new URL(link).searchParams.keys(),
+                ],
+                [
+                    'title',
+                    'body',
+                ],
                 'only the title and the body',
             );
 
@@ -315,7 +337,15 @@ module.exports = () => {
                 '--code=LONG_ONE',
                 '--workflow=run',
             ];
-            for (const word of ['one', 'two', 'three', 'four', 'five', 'six', 'seven'])
+            for (const word of [
+                'one',
+                'two',
+                'three',
+                'four',
+                'five',
+                'six',
+                'seven',
+            ])
                 feedback(...long(word));
             const big = drafts
                 .createDrafts(undefined, tempDir)
@@ -432,33 +462,61 @@ module.exports = () => {
             const stub = (answers) => {
                 const calls = [];
                 const client = (args, input) => {
-                    calls.push({ args, input });
-                    const answer = answers[args[1]] ?? { status: 0, stdout: '', stderr: '' };
-                    return { missing: false, ...answer };
+                    calls.push({
+                        args,
+                        input,
+                    });
+                    const answer = answers[args[1]] ?? {
+                        status: 0,
+                        stdout: '',
+                        stderr: '',
+                    };
+                    return {
+                        missing: false,
+                        ...answer,
+                    };
                 };
-                return { calls, client };
+                return {
+                    calls,
+                    client,
+                };
             };
-            const listed = { status: 0, stdout: '[]', stderr: '' };
+            const listed = {
+                status: 0,
+                stdout: '[]',
+                stderr: '',
+            };
             const issue = 'https://github.com/teratron/magic-spec/issues/77';
             const stored = () => library.loadStore(tempDir);
 
             // Refusals: the channel, a draft that was not shown, an identifier that is no draft. Nothing reaches the client.
             let draft = fresh();
-            let probe = stub({ list: listed });
+            let probe = stub({
+                list: listed,
+            });
             setChannel('draft');
-            let result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            let result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.strictEqual(result.outcome, 'not created');
             assert.match(result.reason, /feedback channel is 'draft': the agent cannot publish/);
             setChannel('full');
             const unshown = stored();
             unshown.drafts[0].shownAt = null;
             library.saveStore(unshown, tempDir);
-            result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.match(
                 result.reason,
                 /was not shown in full; show it with `feedback draft d\d+` first/,
             );
-            result = submission.submitDraft('d99', { client: probe.client, root: tempDir });
+            result = submission.submitDraft('d99', {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.match(result.reason, /there is no draft d99/);
             assert.strictEqual(probe.calls.length, 0, 'a refusal never reaches the client');
 
@@ -468,18 +526,29 @@ module.exports = () => {
                 list: {
                     status: 0,
                     stdout: JSON.stringify([
-                        { url: 'https://github.com/teratron/magic-spec/issues/12' },
+                        {
+                            url: 'https://github.com/teratron/magic-spec/issues/12',
+                        },
                     ]),
                     stderr: '',
                 },
-                create: { status: 0, stdout: `${issue}\n`, stderr: '' },
+                create: {
+                    status: 0,
+                    stdout: `${issue}\n`,
+                    stderr: '',
+                },
             });
-            result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.strictEqual(result.outcome, 'duplicate found');
             assert.strictEqual(result.url, 'https://github.com/teratron/magic-spec/issues/12');
             assert.deepStrictEqual(
                 probe.calls.map((c) => c.args[1]),
-                ['list'],
+                [
+                    'list',
+                ],
                 'only the look-up ran',
             );
             const lookup = probe.calls[0].args;
@@ -499,11 +568,27 @@ module.exports = () => {
 
             // Created: exactly the shown text, at the one address, with no label; the draft and its notes leave the store and cannot be created again.
             draft = fresh();
-            probe = stub({ list: listed, create: { status: 0, stdout: `${issue}\n`, stderr: '' } });
-            result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            probe = stub({
+                list: listed,
+                create: {
+                    status: 0,
+                    stdout: `${issue}\n`,
+                    stderr: '',
+                },
+            });
+            result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.deepStrictEqual(
-                { outcome: result.outcome, url: result.url },
-                { outcome: 'created', url: issue },
+                {
+                    outcome: result.outcome,
+                    url: result.url,
+                },
+                {
+                    outcome: 'created',
+                    url: issue,
+                },
             );
             const create = probe.calls.find((c) => c.args[1] === 'create');
             assert.deepStrictEqual(
@@ -534,7 +619,10 @@ module.exports = () => {
             assert.strictEqual(stored().drafts.length, 0);
             assert.strictEqual(stored().notes.length, 0);
             assert.match(
-                submission.submitDraft(draft.id, { client: probe.client, root: tempDir }).reason,
+                submission.submitDraft(draft.id, {
+                    client: probe.client,
+                    root: tempDir,
+                }).reason,
                 /there is no draft/,
                 'a created draft is never created again',
             );
@@ -542,10 +630,21 @@ module.exports = () => {
             // A failed look-up never blocks the submission and is reported.
             draft = fresh();
             probe = stub({
-                list: { status: 1, stdout: '', stderr: 'boom' },
-                create: { status: 0, stdout: `${issue}\n`, stderr: '' },
+                list: {
+                    status: 1,
+                    stdout: '',
+                    stderr: 'boom',
+                },
+                create: {
+                    status: 0,
+                    stdout: `${issue}\n`,
+                    stderr: '',
+                },
             });
-            result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.strictEqual(result.outcome, 'created');
             assert.match(
                 result.lookup,
@@ -562,7 +661,10 @@ module.exports = () => {
                     stderr: 'HTTP 403: forbidden at C:\\Users\\alice\\work\\x.txt',
                 },
             });
-            result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.strictEqual(result.outcome, 'not created');
             assert.ok(
                 result.reason.includes('HTTP 403') && !result.reason.includes('alice'),
@@ -574,23 +676,48 @@ module.exports = () => {
                 1,
                 'a failed submission leaves the draft intact',
             );
-            probe = stub({ list: listed, create: { status: 0, stdout: 'done', stderr: '' } });
-            result = submission.submitDraft(draft.id, { client: probe.client, root: tempDir });
+            probe = stub({
+                list: listed,
+                create: {
+                    status: 0,
+                    stdout: 'done',
+                    stderr: '',
+                },
+            });
+            result = submission.submitDraft(draft.id, {
+                client: probe.client,
+                root: tempDir,
+            });
             assert.strictEqual(
                 result.outcome,
                 'unknown',
                 'success without an address is not claimed as created',
             );
             assert.match(result.reason, /check the tracker before retrying/);
-            probe = stub({ list: listed, create: { status: null, stdout: '', stderr: '' } });
+            probe = stub({
+                list: listed,
+                create: {
+                    status: null,
+                    stdout: '',
+                    stderr: '',
+                },
+            });
             assert.strictEqual(
-                submission.submitDraft(draft.id, { client: probe.client, root: tempDir }).outcome,
+                submission.submitDraft(draft.id, {
+                    client: probe.client,
+                    root: tempDir,
+                }).outcome,
                 'unknown',
                 'a client that never finishes is unknown',
             );
             assert.strictEqual(stored().drafts.length, 1);
             const missing = submission.submitDraft(draft.id, {
-                client: () => ({ missing: true, status: null, stdout: '', stderr: '' }),
+                client: () => ({
+                    missing: true,
+                    status: null,
+                    stdout: '',
+                    stderr: '',
+                }),
                 root: tempDir,
             });
             assert.strictEqual(missing.outcome, 'not created');
@@ -600,8 +727,17 @@ module.exports = () => {
             const executor = path.join(tempDir, 'skills', 'magicspec', 'scripts', 'executor.js');
             const redirected = spawnSync(
                 process.execPath,
-                [executor, 'feedback', 'submit', draft.id, '--repo=evil/elsewhere'],
-                { cwd: tempDir, encoding: 'utf8' },
+                [
+                    executor,
+                    'feedback',
+                    'submit',
+                    draft.id,
+                    '--repo=evil/elsewhere',
+                ],
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
             );
             assert.notStrictEqual(
                 redirected.status,
@@ -611,11 +747,19 @@ module.exports = () => {
             // The runtime's own folder is the whole PATH: the executor can start its child, and no tracker client can be found.
             const noClient = spawnSync(
                 process.execPath,
-                [executor, 'feedback', 'submit', draft.id],
+                [
+                    executor,
+                    'feedback',
+                    'submit',
+                    draft.id,
+                ],
                 {
                     cwd: tempDir,
                     encoding: 'utf8',
-                    env: { ...process.env, PATH: path.dirname(process.execPath) },
+                    env: {
+                        ...process.env,
+                        PATH: path.dirname(process.execPath),
+                    },
                 },
             );
             assert.strictEqual(noClient.status, 0);
@@ -626,9 +770,9 @@ module.exports = () => {
             // The destination is stated once, in the skill folder's own metadata, and nowhere in a script.
             const meta = JSON.parse(fs.readFileSync(path.join(scriptsDir, 'package.json'), 'utf8'));
             assert.strictEqual(meta.repository, 'https://github.com/teratron/magic-spec');
-            const addresses = listShipped('skills/magicspec/scripts', ['.js']).filter((rel) =>
-                /github\.com\/[\w.-]+\/[\w.-]+/.test(readShipped(rel)),
-            );
+            const addresses = listShipped('skills/magicspec/scripts', [
+                '.js',
+            ]).filter((rel) => /github\.com\/[\w.-]+\/[\w.-]+/.test(readShipped(rel)));
             assert.deepStrictEqual(
                 addresses,
                 [],
@@ -705,12 +849,16 @@ module.exports = () => {
 
         // The setting is in the template, and the template's own value is the default the reader assumes.
         const template = JSON.parse(readShipped('skills/magicspec/templates/workspace.json'));
-        assert.deepStrictEqual(template.feedback, { channel: 'full' });
+        assert.deepStrictEqual(template.feedback, {
+            channel: 'full',
+        });
     });
 
     test('finalize --workflow=fix: accepted, a repair finishing a maintenance phase archives it and writes a Fixed entry, a defect that changed nothing is a no-op, the help and the lists name the workflow (CS-1 finalization list)', () => {
         const repaired = makeArchivalProject();
-        const idle = makeArchivalProject(undefined, { done: false });
+        const idle = makeArchivalProject(undefined, {
+            done: false,
+        });
         try {
             const result = runEngine(repaired.dir, 'finalize', '--workflow=fix', '--workspace=ws');
             const out = result.stdout + result.stderr;
@@ -775,14 +923,23 @@ module.exports = () => {
         assert.strictEqual(bullets.deriveChangelogCategory('fix', []), 'Fixed');
         assert.strictEqual(
             bullets.buildChangelogBullet('fix', 'ws', [
-                { path: '.magicspec/ws/tasks/phase-1.md', status: 'modified' },
+                {
+                    path: '.magicspec/ws/tasks/phase-1.md',
+                    status: 'modified',
+                },
             ]),
             'Repaired a reported defect (ws)',
         );
         assert.strictEqual(
             bullets.buildChangelogBullet('fix', 'ws', [
-                { path: '.magicspec/ws/tasks/phase-1.md', status: 'modified' },
-                { path: '.magicspec/ws/tasks/phase-2.md', status: 'modified' },
+                {
+                    path: '.magicspec/ws/tasks/phase-1.md',
+                    status: 'modified',
+                },
+                {
+                    path: '.magicspec/ws/tasks/phase-2.md',
+                    status: 'modified',
+                },
             ]),
             'Repaired 2 reported defects (ws)',
         );

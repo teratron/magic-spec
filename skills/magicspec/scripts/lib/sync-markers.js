@@ -18,7 +18,10 @@ const { STATE_DIR_NAME } = require('../utils');
  * @returns {{open: string, close: string}}
  */
 function markersOf(key) {
-    return { open: `<!-- sync:${key} -->`, close: `<!-- /sync:${key} -->` };
+    return {
+        open: `<!-- sync:${key} -->`,
+        close: `<!-- /sync:${key} -->`,
+    };
 }
 
 /**
@@ -35,7 +38,12 @@ function blockRange(text, key) {
     if (at === -1) return null;
     const from = at + open.length;
     const to = text.indexOf(close, from);
-    return to === -1 ? null : { from, to };
+    return to === -1
+        ? null
+        : {
+              from,
+              to,
+          };
 }
 
 /**
@@ -64,13 +72,35 @@ function replaceRange(text, range, content) {
  */
 function sddReferences(text) {
     const classes = [
-        ['a task identifier', /\bT-\d+[A-Z]\d+(\.\d+)?\b/],
-        ['a phase designator', /\b[Pp]hase[-\s]\d+/],
-        ['an SDD system file', /\b(PLAN|TASKS|INDEX|RULES)\.md\b/],
-        ['a specification file name', /\bl[12]-[a-z0-9-]+\.md\b/],
-        ['a state-folder path', { test: (value) => value.includes(`${STATE_DIR_NAME}/`) }],
+        [
+            'a task identifier',
+            /\bT-\d+[A-Z]\d+(\.\d+)?\b/,
+        ],
+        [
+            'a phase designator',
+            /\b[Pp]hase[-\s]\d+/,
+        ],
+        [
+            'an SDD system file',
+            /\b(PLAN|TASKS|INDEX|RULES)\.md\b/,
+        ],
+        [
+            'a specification file name',
+            /\bl[12]-[a-z0-9-]+\.md\b/,
+        ],
+        [
+            'a state-folder path',
+            {
+                test: (value) => value.includes(`${STATE_DIR_NAME}/`),
+            },
+        ],
     ];
     return classes.filter(([, re]) => re.test(text)).map(([name]) => name);
 }
 
-module.exports = { markersOf, blockRange, replaceRange, sddReferences };
+module.exports = {
+    markersOf,
+    blockRange,
+    replaceRange,
+    sddReferences,
+};

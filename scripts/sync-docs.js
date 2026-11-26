@@ -67,11 +67,18 @@ const REGISTRY_EMPTY_BLOCK =
 // ───────────────────────────────────────────────────────────────────────────
 
 function defaultState() {
-    return { workflows: {}, skills: {}, contributing: null };
+    return {
+        workflows: {},
+        skills: {},
+        contributing: null,
+    };
 }
 
 function readState() {
-    const source = [stateFile, legacyStateFile].find((candidate) => fs.existsSync(candidate));
+    const source = [
+        stateFile,
+        legacyStateFile,
+    ].find((candidate) => fs.existsSync(candidate));
     if (!source) return defaultState();
     try {
         const raw = JSON.parse(fs.readFileSync(source, 'utf8'));
@@ -95,7 +102,9 @@ function writeState(state) {
  */
 function retireLegacyState() {
     if (isDryRun() || !fs.existsSync(legacyStateFile)) return;
-    fs.rmSync(legacyStateFile, { force: true });
+    fs.rmSync(legacyStateFile, {
+        force: true,
+    });
     try {
         fs.rmdirSync(legacyStateDir);
     } catch {
@@ -126,9 +135,21 @@ function readIfExists(p) {
 
 /** The blocks, in the order a missing one is appended: the key and the heading it gets. */
 const GUIDE_BLOCKS = Object.freeze([
-    { key: 'version', heading: null, inline: true },
-    { key: 'commands', heading: '### Commands', inline: false },
-    { key: 'workspaces', heading: '### Workspaces', inline: false },
+    {
+        key: 'version',
+        heading: null,
+        inline: true,
+    },
+    {
+        key: 'commands',
+        heading: '### Commands',
+        inline: false,
+    },
+    {
+        key: 'workspaces',
+        heading: '### Workspaces',
+        inline: false,
+    },
 ]);
 
 /** The heading the one-time appended section carries. */
@@ -139,7 +160,10 @@ const APPENDED_SECTION_HEADING = '## Generated reference';
  * @returns {{open: string, close: string}} The two marker lines of the block.
  */
 function blockMarkers(key) {
-    return { open: `<!-- generated:${key} -->`, close: `<!-- /generated:${key} -->` };
+    return {
+        open: `<!-- generated:${key} -->`,
+        close: `<!-- /generated:${key} -->`,
+    };
 }
 
 /**
@@ -497,7 +521,11 @@ function syncDocsFolder(targetVersion, state) {
             console.log(`  ℹ️  docs/${file} — already current`);
         }
 
-        state.workflows[wfName] = { hash: signals.wfHash, version: targetVersion, syncedAt: date };
+        state.workflows[wfName] = {
+            hash: signals.wfHash,
+            version: targetVersion,
+            syncedAt: date,
+        };
         if (signals.skillHash !== null) {
             state.skills[skillKey] = {
                 hash: signals.skillHash,

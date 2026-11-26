@@ -28,13 +28,22 @@ const { writeIfChanged } = require('./sync-report');
 function engineIntegrity() {
     const result = spawnSync(
         process.execPath,
-        [path.join(__dirname, '..', 'update-engine-meta.js'), '--check'],
-        { encoding: 'utf8', env: process.env },
+        [
+            path.join(__dirname, '..', 'update-engine-meta.js'),
+            '--check',
+        ],
+        {
+            encoding: 'utf8',
+            env: process.env,
+        },
     );
     const detail = `${result.stdout || ''}${result.stderr || ''}`
         .split('\n')
         .find((line) => /modified|missing|mismatch|drift/i.test(line));
-    return { ok: result.status === 0, detail: (detail || '').replace(/^\W+/, '').trim() };
+    return {
+        ok: result.status === 0,
+        detail: (detail || '').replace(/^\W+/, '').trim(),
+    };
 }
 
 /**
@@ -100,4 +109,6 @@ function syncProjections(ctx) {
     }
 }
 
-module.exports = { syncProjections };
+module.exports = {
+    syncProjections,
+};

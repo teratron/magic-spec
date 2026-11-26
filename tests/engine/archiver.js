@@ -89,9 +89,18 @@ module.exports = () => {
             // Lexical sort would yield phase-10* before phase-2 — the numeric
             // ordering below is what callers and the archival log rely on.
             for (const [file, phase] of [
-                ['phase-10b.md', 10],
-                ['phase-2.md', 2],
-                ['phase-10a.md', 10],
+                [
+                    'phase-10b.md',
+                    10,
+                ],
+                [
+                    'phase-2.md',
+                    2,
+                ],
+                [
+                    'phase-10a.md',
+                    10,
+                ],
             ]) {
                 fs.writeFileSync(
                     path.join(tasksDir, file),
@@ -102,7 +111,11 @@ module.exports = () => {
 
             assert.deepStrictEqual(
                 archiver.findArchiveCandidates(wsDir).map((c) => c.file),
-                ['phase-2.md', 'phase-10a.md', 'phase-10b.md'],
+                [
+                    'phase-2.md',
+                    'phase-10a.md',
+                    'phase-10b.md',
+                ],
                 'phase files sort by number first, then by track suffix',
             );
         } finally {
@@ -127,7 +140,9 @@ module.exports = () => {
             assert.deepStrictEqual(result.archived, [], 'a non-phase file is never archived');
             assert.deepStrictEqual(
                 result.unrecognized,
-                ['02-legacy-workbook.md'],
+                [
+                    '02-legacy-workbook.md',
+                ],
                 'a non-phase .md in tasks/ is surfaced, not swallowed',
             );
         } finally {
@@ -166,7 +181,13 @@ module.exports = () => {
     const requireShippingPhaseWithPlan = (tempDir) => {
         const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
         const tasksPath = makeDoneShippingPhaseFixture(tasksDir, wsDir);
-        return { archiver, wsDir, tasksDir, tasksPath, planPath: path.join(wsDir, 'PLAN.md') };
+        return {
+            archiver,
+            wsDir,
+            tasksDir,
+            tasksPath,
+            planPath: path.join(wsDir, 'PLAN.md'),
+        };
     };
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -192,7 +213,9 @@ module.exports = () => {
             const { archived } = archiver.archiveCompletedPhases(wsDir);
             assert.deepStrictEqual(
                 archived.map((a) => a.file),
-                ['phase-3.md'],
+                [
+                    'phase-3.md',
+                ],
                 'the Done phase must be archived',
             );
 
@@ -260,7 +283,9 @@ module.exports = () => {
             const { archived } = archiver.archiveCompletedPhases(wsDir);
             assert.deepStrictEqual(
                 archived.map((a) => a.file),
-                ['phase-3.md'],
+                [
+                    'phase-3.md',
+                ],
             );
 
             const plan = fs.readFileSync(planPath, 'utf8');

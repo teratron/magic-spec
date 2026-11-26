@@ -28,7 +28,10 @@ module.exports = () => {
             path.relative(repo, f).split(path.sep).join('/'),
         );
         const expected = [
-            ...['README.md', 'LICENSE'].filter((f) => fs.existsSync(path.join(repo, f))),
+            ...[
+                'README.md',
+                'LICENSE',
+            ].filter((f) => fs.existsSync(path.join(repo, f))),
             ...inFolder,
         ].sort();
         assert.deepStrictEqual(listed, expected, 'the list is the folder plus the two root files');
@@ -40,7 +43,14 @@ module.exports = () => {
         const prefix = 'magic-spec-v9.9.9/';
         const names = listed.map((f) => prefix + f);
         const good = composition.check(names, prefix);
-        assert.deepStrictEqual(good, { outside: [], missing: [] }, 'the real list passes');
+        assert.deepStrictEqual(
+            good,
+            {
+                outside: [],
+                missing: [],
+            },
+            'the real list passes',
+        );
 
         for (const stray of [
             '.magicspec/engine/INDEX.md',
@@ -50,16 +60,32 @@ module.exports = () => {
             'skills/magicspec-dev/SKILL.md',
             '.git/config',
         ]) {
-            const r = composition.check([...names, prefix + stray], prefix);
+            const r = composition.check(
+                [
+                    ...names,
+                    prefix + stray,
+                ],
+                prefix,
+            );
             assert.deepStrictEqual(
                 r.outside,
-                [prefix + stray],
+                [
+                    prefix + stray,
+                ],
                 stray + ' is outside the composition',
             );
         }
         assert.deepStrictEqual(
-            composition.check([...names, 'other-v1/README.md'], prefix).outside,
-            ['other-v1/README.md'],
+            composition.check(
+                [
+                    ...names,
+                    'other-v1/README.md',
+                ],
+                prefix,
+            ).outside,
+            [
+                'other-v1/README.md',
+            ],
             'a path under another prefix is outside',
         );
         const lacking = composition.check(
@@ -68,16 +94,26 @@ module.exports = () => {
         );
         assert.deepStrictEqual(
             lacking.missing,
-            ['skills/magicspec/.checksums'],
+            [
+                'skills/magicspec/.checksums',
+            ],
             'a required file that is missing is named',
         );
 
         // the command line does the same over stdin
         const cli = spawnSync(
             process.execPath,
-            [path.join(devScriptsDir, 'archive-composition.js'), 'check', '--prefix', prefix],
+            [
+                path.join(devScriptsDir, 'archive-composition.js'),
+                'check',
+                '--prefix',
+                prefix,
+            ],
             {
-                input: [...names, prefix + 'scripts/sync.js'].join('\n'),
+                input: [
+                    ...names,
+                    prefix + 'scripts/sync.js',
+                ].join('\n'),
                 encoding: 'utf8',
             },
         );
@@ -97,7 +133,9 @@ module.exports = () => {
         // "Extract" the archive: the listed files only, into a folder of their own.
         const archive = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-archive-'));
         for (const rel of composition.listRelease(repo)) {
-            fs.mkdirSync(path.dirname(path.join(archive, rel)), { recursive: true });
+            fs.mkdirSync(path.dirname(path.join(archive, rel)), {
+                recursive: true,
+            });
             fs.copyFileSync(path.join(repo, rel), path.join(archive, rel));
         }
         const archived = path.join(archive, 'skills', 'magicspec');
@@ -105,7 +143,9 @@ module.exports = () => {
         try {
             // SP-1: one folder is the whole engine; installing it is a copy
             const skill = path.join(dir, '.agents', 'skills', 'magicspec');
-            fs.cpSync(archived, skill, { recursive: true });
+            fs.cpSync(archived, skill, {
+                recursive: true,
+            });
             assert.ok(
                 fs.existsSync(path.join(skill, 'SKILL.md')) &&
                     fs.existsSync(path.join(skill, 'scripts', 'executor.js')),
@@ -113,7 +153,9 @@ module.exports = () => {
             );
 
             // SP-9: the shipped folder verifies against its own manifest
-            const integrity = skillExec(skill, dir, 'update-engine-meta', ['--check']);
+            const integrity = skillExec(skill, dir, 'update-engine-meta', [
+                '--check',
+            ]);
             assert.strictEqual(integrity.status, 0, 'SP-9: ' + integrity.stdout + integrity.stderr);
 
             // SP-3 and SP-4: every host is projected, and the rule is the same bytes everywhere
@@ -138,7 +180,9 @@ module.exports = () => {
             );
 
             // SP-6: every generated file carries a marker
-            for (const rel of ['.claude/rules/magicspec.md']) {
+            for (const rel of [
+                '.claude/rules/magicspec.md',
+            ]) {
                 assert.match(
                     fs.readFileSync(path.join(dir, rel), 'utf8'),
                     /<!-- magicspec-rule/,
@@ -153,9 +197,15 @@ module.exports = () => {
 
             // SP-2: the same project from a nested directory and through a link
             const nested = path.join(dir, 'src', 'deep');
-            fs.mkdirSync(nested, { recursive: true });
+            fs.mkdirSync(nested, {
+                recursive: true,
+            });
             const flight = (from, via) =>
-                JSON.parse(skillExec(via, from, 'check-prerequisites', ['--json']).stdout);
+                JSON.parse(
+                    skillExec(via, from, 'check-prerequisites', [
+                        '--json',
+                    ]).stdout,
+                );
             const here = flight(dir, skill);
             assert.deepStrictEqual(
                 flight(nested, skill).design_dir,
@@ -180,17 +230,26 @@ module.exports = () => {
                 0,
                 'SP-7: the write branch is refused in an installation',
             );
-            fs.cpSync(archived, skill, { recursive: true });
+            fs.cpSync(archived, skill, {
+                recursive: true,
+            });
 
             // SP-8: an update touches no state
             const state = (d) =>
                 walkFiles(path.join(d, '.magicspec'))
-                    .map((f) => [path.relative(d, f), fs.readFileSync(f, 'utf8')])
+                    .map((f) => [
+                        path.relative(d, f),
+                        fs.readFileSync(f, 'utf8'),
+                    ])
                     .sort();
             const before = state(dir);
-            fs.cpSync(archived, skill, { recursive: true });
+            fs.cpSync(archived, skill, {
+                recursive: true,
+            });
             assert.strictEqual(
-                skillExec(skill, dir, 'init', ['--host=claude,codex,qwen']).status,
+                skillExec(skill, dir, 'init', [
+                    '--host=claude,codex,qwen',
+                ]).status,
                 0,
             );
             assert.deepStrictEqual(
@@ -215,9 +274,16 @@ module.exports = () => {
         // SP-10: a 2.x project is migrated with this very folder, and has an engine at every moment
         const legacy = legacyProject();
         try {
-            fs.rmSync(legacy.skill, { recursive: true, force: true });
-            fs.cpSync(archived, legacy.skill, { recursive: true });
-            const run = skillExec(legacy.skill, legacy.dir, 'migrate', ['--apply']);
+            fs.rmSync(legacy.skill, {
+                recursive: true,
+                force: true,
+            });
+            fs.cpSync(archived, legacy.skill, {
+                recursive: true,
+            });
+            const run = skillExec(legacy.skill, legacy.dir, 'migrate', [
+                '--apply',
+            ]);
             assert.strictEqual(run.status, 0, 'SP-10: ' + run.stdout + run.stderr);
             assert.ok(
                 fs.existsSync(path.join(legacy.skill, 'SKILL.md')) &&
@@ -243,10 +309,17 @@ module.exports = () => {
         try {
             const skill = installSkill(dir);
             const here = lower(dir);
-            assert.strictEqual(skillExec(skill, here, 'init', ['--host=claude,codex']).status, 0);
+            assert.strictEqual(
+                skillExec(skill, here, 'init', [
+                    '--host=claude,codex',
+                ]).status,
+                0,
+            );
 
             // the second run finds the link in place, not "another folder"
-            const again = skillExec(lower(skill), here, 'init', ['--host=claude,codex']);
+            const again = skillExec(lower(skill), here, 'init', [
+                '--host=claude,codex',
+            ]);
             assert.strictEqual(again.status, 0, again.stdout + again.stderr);
             assert.doesNotMatch(again.stdout + again.stderr, /conflict|another folder/i);
 
@@ -254,7 +327,9 @@ module.exports = () => {
             const repo = path.resolve(TESTS_DIR, '..');
             const out = spawnSync(
                 process.execPath,
-                [path.join(repo, 'scripts', 'validate-hardlinks.js')],
+                [
+                    path.join(repo, 'scripts', 'validate-hardlinks.js'),
+                ],
                 {
                     cwd: lower(repo),
                     encoding: 'utf8',

@@ -23,11 +23,20 @@ module.exports = () => {
     // ───────────────────────────────────────────────────────────────────────────
     const withSyncSection = (tempDir, section) => {
         const file = path.join(tempDir, '.magicspec', 'workspace.json');
-        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.mkdirSync(path.dirname(file), {
+            recursive: true,
+        });
         fs.writeFileSync(
             file,
             JSON.stringify(
-                section === undefined ? { default: 'main' } : { default: 'main', sync: section },
+                section === undefined
+                    ? {
+                          default: 'main',
+                      }
+                    : {
+                          default: 'main',
+                          sync: section,
+                      },
             ),
         );
     };
@@ -38,19 +47,34 @@ module.exports = () => {
             const { readSyncConfig } = requireFromFixture(tempDir, 'lib', 'sync-config.js');
             assert.deepStrictEqual(
                 readSyncConfig(tempDir),
-                { versions: [], docs: [], problems: [] },
+                {
+                    versions: [],
+                    docs: [],
+                    problems: [],
+                },
                 'no workspace.json declares nothing',
             );
             withSyncSection(tempDir, undefined);
             assert.deepStrictEqual(
                 readSyncConfig(tempDir),
-                { versions: [], docs: [], problems: [] },
+                {
+                    versions: [],
+                    docs: [],
+                    problems: [],
+                },
                 'no section declares nothing',
             );
             withSyncSection(tempDir, {
                 versions: [
-                    { file: 'package.json', json: 'version' },
-                    { file: 'README.md', marker: 'version', format: 'v{version}' },
+                    {
+                        file: 'package.json',
+                        json: 'version',
+                    },
+                    {
+                        file: 'README.md',
+                        marker: 'version',
+                        format: 'v{version}',
+                    },
                 ],
                 docs: [
                     {
@@ -64,16 +88,43 @@ module.exports = () => {
             const config = readSyncConfig(tempDir);
             assert.deepStrictEqual(config.problems, []);
             assert.deepStrictEqual(
-                config.versions.map((v) => [v.file, v.json ?? null, v.marker ?? null, v.format]),
+                config.versions.map((v) => [
+                    v.file,
+                    v.json ?? null,
+                    v.marker ?? null,
+                    v.format,
+                ]),
                 [
-                    ['package.json', 'version', null, '{version}'],
-                    ['README.md', null, 'version', 'v{version}'],
+                    [
+                        'package.json',
+                        'version',
+                        null,
+                        '{version}',
+                    ],
+                    [
+                        'README.md',
+                        null,
+                        'version',
+                        'v{version}',
+                    ],
                 ],
             );
             assert.strictEqual(config.versions[0].abs, path.join(tempDir, 'package.json'));
             assert.deepStrictEqual(
-                config.docs.map((d) => [d.file, d.marker, d.from, d.fromMarker]),
-                [['docs/guide.md', 'overview', 'docs/overview.md', 'overview']],
+                config.docs.map((d) => [
+                    d.file,
+                    d.marker,
+                    d.from,
+                    d.fromMarker,
+                ]),
+                [
+                    [
+                        'docs/guide.md',
+                        'overview',
+                        'docs/overview.md',
+                        'overview',
+                    ],
+                ],
             );
             assert.strictEqual(config.docs[0].fromAbs, path.join(tempDir, 'docs', 'overview.md'));
         } finally {
@@ -87,18 +138,49 @@ module.exports = () => {
             const { readSyncConfig } = requireFromFixture(tempDir, 'lib', 'sync-config.js');
             withSyncSection(tempDir, {
                 versions: [
-                    { file: 'package.json', json: 'version' },
-                    { file: 'README.md' },
-                    { file: 'README.md', json: 'a', marker: 'b' },
-                    { file: '../outside.json', json: 'version' },
-                    { file: 'a.md', marker: 'Bad Key' },
-                    { file: 'a.md', marker: 'version', format: 'no placeholder' },
-                    { file: 'a.md', marker: 'version', colour: 'red' },
+                    {
+                        file: 'package.json',
+                        json: 'version',
+                    },
+                    {
+                        file: 'README.md',
+                    },
+                    {
+                        file: 'README.md',
+                        json: 'a',
+                        marker: 'b',
+                    },
+                    {
+                        file: '../outside.json',
+                        json: 'version',
+                    },
+                    {
+                        file: 'a.md',
+                        marker: 'Bad Key',
+                    },
+                    {
+                        file: 'a.md',
+                        marker: 'version',
+                        format: 'no placeholder',
+                    },
+                    {
+                        file: 'a.md',
+                        marker: 'version',
+                        colour: 'red',
+                    },
                     'text',
                 ],
                 docs: [
-                    { file: 'docs/guide.md', marker: 'x' },
-                    { from: 'docs/a.md', marker: 'x', file: 'docs/b.md', extra: 1 },
+                    {
+                        file: 'docs/guide.md',
+                        marker: 'x',
+                    },
+                    {
+                        from: 'docs/a.md',
+                        marker: 'x',
+                        file: 'docs/b.md',
+                        extra: 1,
+                    },
                 ],
                 other: [],
             });
@@ -139,8 +221,16 @@ module.exports = () => {
             fs.writeFileSync(path.join(tempDir, '.magicspec', 'workspace.json'), '{ not json');
             const broken = readSyncConfig(tempDir);
             assert.deepStrictEqual(
-                [broken.versions, broken.docs, broken.problems.length],
-                [[], [], 1],
+                [
+                    broken.versions,
+                    broken.docs,
+                    broken.problems.length,
+                ],
+                [
+                    [],
+                    [],
+                    1,
+                ],
                 'an unreadable file is one problem',
             );
         } finally {
@@ -157,7 +247,14 @@ module.exports = () => {
         const put = simPutter(dir);
         put(
             '.magicspec/workspace.json',
-            JSON.stringify({ default: 'ws', workspaces: { ws: { description: 'The workspace' } } }),
+            JSON.stringify({
+                default: 'ws',
+                workspaces: {
+                    ws: {
+                        description: 'The workspace',
+                    },
+                },
+            }),
         );
         put(
             '.magicspec/INDEX.md',
@@ -190,7 +287,11 @@ module.exports = () => {
         put: simPutter(dir),
         read: (rel) => fs.readFileSync(path.join(dir, rel), 'utf8'),
     });
-    const syncRun = (dir, args = []) => simExec(dir, ['sync', ...args]);
+    const syncRun = (dir, args = []) =>
+        simExec(dir, [
+            'sync',
+            ...args,
+        ]);
 
     test('sync: it rewrites the stale count and the progress counters, never the registry version, history or engine snapshot, and a second run writes nothing and says so in one line (SY-1, SY-3, SY-8)', () => {
         const dir = makeSyncFixture();
@@ -269,7 +370,9 @@ module.exports = () => {
         const dir = makeSyncFixture();
         try {
             const before = treeHashes(dir);
-            const result = syncRun(dir, ['--dry-run']);
+            const result = syncRun(dir, [
+                '--dry-run',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             const lines = result.stdout.trimEnd().split('\n');
             assert.match(lines[0], /^\[Sync\] \(dry run\) 3 to write · /);
@@ -375,8 +478,12 @@ module.exports = () => {
                 JSON.stringify({
                     default: 'ws',
                     workspaces: {
-                        ws: { description: 'The workspace' },
-                        extra: { description: 'Extra one' },
+                        ws: {
+                            description: 'The workspace',
+                        },
+                        extra: {
+                            description: 'Extra one',
+                        },
                     },
                 }),
             );
@@ -393,7 +500,9 @@ module.exports = () => {
                         '\n| gone | Old | 3 | [gone/INDEX.md](gone/INDEX.md) |\n\n## Document History',
                     ),
             );
-            const result = syncRun(dir, ['registry']);
+            const result = syncRun(dir, [
+                'registry',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             const index = fs.readFileSync(path.join(dir, '.magicspec/INDEX.md'), 'utf8');
             assert.ok(
@@ -416,14 +525,19 @@ module.exports = () => {
                 'the state area did not run',
             );
 
-            const scoped = syncRun(dir, ['extra', '--dry-run']);
+            const scoped = syncRun(dir, [
+                'extra',
+                '--dry-run',
+            ]);
             assert.strictEqual(scoped.status, 0, scoped.stderr);
             assert.ok(
                 !scoped.stdout.includes('ws/STATE.md'),
                 'a workspace argument limits the run to that workspace',
             );
 
-            const unknown = syncRun(dir, ['nothing']);
+            const unknown = syncRun(dir, [
+                'nothing',
+            ]);
             assert.strictEqual(unknown.status, 1);
             assert.match(
                 unknown.stderr,
@@ -448,7 +562,9 @@ module.exports = () => {
             put(rulePath, `${hosts.RULE_MARKER}\nan older release's rules\n`);
             const retiredDir = hosts.HOSTS.claude.retired;
             put(`${retiredDir}/old.md`, '<!-- magicspec-command old -->\nretired entry\n');
-            const result = syncRun(dir, ['projections']);
+            const result = syncRun(dir, [
+                'projections',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             assert.ok(
                 result.stdout.includes(
@@ -472,7 +588,9 @@ module.exports = () => {
                 'the retired entry is kept (SY-5)',
             );
             const before = treeHashes(dir);
-            const second = syncRun(dir, ['projections']);
+            const second = syncRun(dir, [
+                'projections',
+            ]);
             assert.ok(sameTree(before, treeHashes(dir)), 'a second run writes nothing');
             assert.match(second.stdout, /^\[Sync\] 0 written · /, second.stdout);
         } finally {
@@ -517,7 +635,10 @@ module.exports = () => {
         const dir = makeSyncFixture();
         try {
             const dry = treeHashes(dir);
-            const preview = syncRun(dir, ['graph', '--dry-run']);
+            const preview = syncRun(dir, [
+                'graph',
+                '--dry-run',
+            ]);
             assert.strictEqual(preview.status, 0, preview.stderr);
             assert.ok(
                 /would write graph: \.magicspec\/graph\/wiki\/ — \d+ pages? \(.*\), then the artifact index/.test(
@@ -534,7 +655,9 @@ module.exports = () => {
                 'no graph folder was created',
             );
 
-            const first = syncRun(dir, ['graph']);
+            const first = syncRun(dir, [
+                'graph',
+            ]);
             assert.ok(
                 /written +graph: \.magicspec\/graph\/wiki\//.test(first.stdout),
                 first.stdout,
@@ -554,7 +677,9 @@ module.exports = () => {
                     );
             const indexBefore = indexFiles();
             const before = treeHashes(dir);
-            const second = syncRun(dir, ['graph']);
+            const second = syncRun(dir, [
+                'graph',
+            ]);
             assert.strictEqual(
                 second.stdout.trim(),
                 '[Sync] in sync — nothing to write, nothing to report.',
@@ -563,7 +688,9 @@ module.exports = () => {
             assert.deepStrictEqual(indexFiles(), indexBefore, 'and does not touch the index');
 
             simPutter(dir)('.magicspec/graph/wiki/spec__ws__gone.md', '# Gone\n');
-            const stale = syncRun(dir, ['graph']);
+            const stale = syncRun(dir, [
+                'graph',
+            ]);
             assert.ok(
                 /stale {7}\.magicspec\/graph\/wiki\/spec__ws__gone\.md — no source → node .*executor\.js export-wiki/.test(
                     stale.stdout,
@@ -618,7 +745,13 @@ module.exports = () => {
     const registerSync = (dir, section) => {
         const file = path.join(dir, '.magicspec/workspace.json');
         const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-        fs.writeFileSync(file, JSON.stringify({ ...data, sync: section }));
+        fs.writeFileSync(
+            file,
+            JSON.stringify({
+                ...data,
+                sync: section,
+            }),
+        );
     };
 
     test('sync versions: the version reaches the declared anchors and nowhere else, a JSON file keeps its formatting, and a second run writes nothing (SY-3, SY-4)', () => {
@@ -635,11 +768,20 @@ module.exports = () => {
             put('README.md', readme);
             registerSync(dir, {
                 versions: [
-                    { file: 'package.json', json: 'version' },
-                    { file: 'README.md', marker: 'version', format: 'v{version}' },
+                    {
+                        file: 'package.json',
+                        json: 'version',
+                    },
+                    {
+                        file: 'README.md',
+                        marker: 'version',
+                        format: 'v{version}',
+                    },
                 ],
             });
-            const result = syncRun(dir, ['versions']);
+            const result = syncRun(dir, [
+                'versions',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             assert.ok(
                 result.stdout.includes('versions: package.json — version 2.5.0'),
@@ -657,7 +799,9 @@ module.exports = () => {
                 'a version-like string outside the anchor is untouched (SY-4)',
             );
             const before = treeHashes(dir);
-            const second = syncRun(dir, ['versions']);
+            const second = syncRun(dir, [
+                'versions',
+            ]);
             assert.strictEqual(
                 second.stdout.trim(),
                 '[Sync] in sync — nothing to write, nothing to report.',
@@ -677,14 +821,30 @@ module.exports = () => {
             put('README.md', 'No marker here.\n');
             registerSync(dir, {
                 versions: [
-                    { file: 'package.json', json: 'missing' },
-                    { file: 'README.md', marker: 'version' },
-                    { file: 'gone.json', json: 'version' },
-                    { file: 'a.json', json: 'x.version' },
-                    { file: 'package.json' },
+                    {
+                        file: 'package.json',
+                        json: 'missing',
+                    },
+                    {
+                        file: 'README.md',
+                        marker: 'version',
+                    },
+                    {
+                        file: 'gone.json',
+                        json: 'version',
+                    },
+                    {
+                        file: 'a.json',
+                        json: 'x.version',
+                    },
+                    {
+                        file: 'package.json',
+                    },
                 ],
             });
-            const noVersion = syncRun(dir, ['versions']);
+            const noVersion = syncRun(dir, [
+                'versions',
+            ]);
             assert.ok(
                 noVersion.stdout.includes(
                     '.magicspec/.version — the version file does not exist yet →',
@@ -692,7 +852,9 @@ module.exports = () => {
                 noVersion.stdout,
             );
             put('.magicspec/.version', '3.0.0\n');
-            const result = syncRun(dir, ['versions']);
+            const result = syncRun(dir, [
+                'versions',
+            ]);
             const out = result.stdout;
             assert.ok(
                 out.includes('package.json — the key `missing` is not a string in the file'),
@@ -745,7 +907,9 @@ module.exports = () => {
                     },
                 ],
             });
-            const result = syncRun(dir, ['docs']);
+            const result = syncRun(dir, [
+                'docs',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             assert.ok(
                 result.stdout.includes(
@@ -760,24 +924,43 @@ module.exports = () => {
             );
             const before = treeHashes(dir);
             assert.strictEqual(
-                syncRun(dir, ['docs']).stdout.trim(),
+                syncRun(dir, [
+                    'docs',
+                ]).stdout.trim(),
                 '[Sync] in sync — nothing to write, nothing to report.',
             );
             assert.ok(sameTree(before, treeHashes(dir)), 'a second run writes nothing');
 
             for (const [leak, text] of [
-                ['a specification file name', 'See l1-engine-core.md for details.'],
-                ['a task identifier', 'Done in T-12A03.'],
-                ['a phase designator', 'Built in Phase 20.'],
-                ['an SDD system file', 'Listed in INDEX.md.'],
-                ['a state-folder path', 'Kept in .magicspec/engine.'],
+                [
+                    'a specification file name',
+                    'See l1-engine-core.md for details.',
+                ],
+                [
+                    'a task identifier',
+                    'Done in T-12A03.',
+                ],
+                [
+                    'a phase designator',
+                    'Built in Phase 20.',
+                ],
+                [
+                    'an SDD system file',
+                    'Listed in INDEX.md.',
+                ],
+                [
+                    'a state-folder path',
+                    'Kept in .magicspec/engine.',
+                ],
             ]) {
                 put(
                     'docs/overview.md',
                     `<!-- sync:overview -->\n${text}\n<!-- /sync:overview -->\n`,
                 );
                 put('docs/guide.md', page);
-                const refused = syncRun(dir, ['docs']);
+                const refused = syncRun(dir, [
+                    'docs',
+                ]);
                 assert.ok(
                     refused.stdout.includes(
                         `docs/guide.md — the content of \`docs/overview.md\` carries ${leak}, which may not enter a product file; nothing was written`,
@@ -788,14 +971,16 @@ module.exports = () => {
             }
             fs.rmSync(path.join(dir, 'docs/overview.md'));
             assert.ok(
-                syncRun(dir, ['docs']).stdout.includes(
-                    'docs/guide.md — the source `docs/overview.md` does not exist',
-                ),
+                syncRun(dir, [
+                    'docs',
+                ]).stdout.includes('docs/guide.md — the source `docs/overview.md` does not exist'),
             );
             put('docs/overview.md', '<!-- sync:overview -->\nText.\n<!-- /sync:overview -->\n');
             put('docs/guide.md', 'No markers.\n');
             assert.ok(
-                syncRun(dir, ['docs']).stdout.includes(
+                syncRun(dir, [
+                    'docs',
+                ]).stdout.includes(
                     'docs/guide.md — the marker <!-- sync:overview --> is not in the file',
                 ),
             );
@@ -812,15 +997,35 @@ module.exports = () => {
             const cache = requireFromFixture(tempDir, 'graph-cache.js');
             const designAbs = path.join(tempDir, '.magicspec');
             const spec = path.join(designAbs, 'ws', 'specifications', 'l1-a.md');
-            fs.mkdirSync(path.dirname(spec), { recursive: true });
+            fs.mkdirSync(path.dirname(spec), {
+                recursive: true,
+            });
             fs.writeFileSync(spec, '# A\n\n## Overview\n\nText.\n');
             process.env.MAGIC_DRY_RUN = '1';
-            cache.saveCached(spec, { refs: [], parent: null, conventions: [] }, designAbs, tempDir);
+            cache.saveCached(
+                spec,
+                {
+                    refs: [],
+                    parent: null,
+                    conventions: [],
+                },
+                designAbs,
+                tempDir,
+            );
             assert.strictEqual(cache.loadCached(spec, designAbs, tempDir), null);
             assert.ok(!fs.existsSync(path.join(designAbs, 'graph')), 'no graph folder was created');
 
             delete process.env.MAGIC_DRY_RUN;
-            cache.saveCached(spec, { refs: [], parent: null, conventions: [] }, designAbs, tempDir);
+            cache.saveCached(
+                spec,
+                {
+                    refs: [],
+                    parent: null,
+                    conventions: [],
+                },
+                designAbs,
+                tempDir,
+            );
             const folder = path.join(designAbs, 'graph', '.cache');
             const stale = path.join(folder, `${'0'.repeat(64)}.json`);
             fs.writeFileSync(stale, '{}');

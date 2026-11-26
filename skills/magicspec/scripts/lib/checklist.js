@@ -61,7 +61,11 @@ const UNFINISHED_ITEM_RE = /^\s*- \[[ !]\]/m;
 function parseOpenTask(line) {
     const match = OPEN_TASK_RE.exec(line);
     if (!match) return null;
-    return { id: match[2], title: match[3], blocked: match[1] === BLOCKED_MARK };
+    return {
+        id: match[2],
+        title: match[3],
+        blocked: match[1] === BLOCKED_MARK,
+    };
 }
 
 /**

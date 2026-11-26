@@ -35,15 +35,28 @@ module.exports = () => {
         phasesDone: 1,
         started: '2026-11-12 09:00',
         criteria: [
-            { state: 'met', text: 'CSV import round-trips', check: 'scenario S-1 passes' },
-            { state: 'open', text: 'JSON import round-trips', check: 'scenario S-2 passes' },
+            {
+                state: 'met',
+                text: 'CSV import round-trips',
+                check: 'scenario S-1 passes',
+            },
+            {
+                state: 'open',
+                text: 'JSON import round-trips',
+                check: 'scenario S-2 passes',
+            },
             {
                 state: 'blocked',
                 text: 'XML import - namespaces',
                 check: 'a decision on the parser',
             },
         ],
-        consents: [{ action: 'delete the old importer', reason: 'a destructive action' }],
+        consents: [
+            {
+                action: 'delete the old importer',
+                reason: 'a destructive action',
+            },
+        ],
         premises: [
             {
                 premise: 'JSON numbers are read as decimals',
@@ -67,7 +80,10 @@ module.exports = () => {
                 `--workspace=${wsDir}`,
                 ...args,
             ],
-            { cwd: tempDir, encoding: 'utf8' },
+            {
+                cwd: tempDir,
+                encoding: 'utf8',
+            },
         );
 
     test('update-state records the goal from a file between Current Position and Progress, keeps it byte for byte under every other update, and a cleared goal leaves no section (GM-3)', () => {
@@ -117,14 +133,34 @@ module.exports = () => {
             // Every other writer leaves the block byte for byte.
             updateState(
                 wsDir,
-                { nextAction: 'Continue', task: 'T-1 something' },
-                { autoProgress: true },
+                {
+                    nextAction: 'Continue',
+                    task: 'T-1 something',
+                },
+                {
+                    autoProgress: true,
+                },
             );
-            updateState(wsDir, { decision: 'A decision' }, { addDecision: true });
             updateState(
                 wsDir,
-                { constraint: { title: 'A constraint', desc: 'never' } },
-                { addConstraint: true },
+                {
+                    decision: 'A decision',
+                },
+                {
+                    addDecision: true,
+                },
+            );
+            updateState(
+                wsDir,
+                {
+                    constraint: {
+                        title: 'A constraint',
+                        desc: 'never',
+                    },
+                },
+                {
+                    addConstraint: true,
+                },
             );
             assert.strictEqual(
                 goalSectionOf(fs.readFileSync(statePath, 'utf8')),
@@ -159,26 +195,47 @@ module.exports = () => {
         try {
             copyStateTemplate(tempDir);
             const { updateState, wsDir } = requireUpdateState(tempDir);
-            updateState(wsDir, { nextAction: 'Start' });
+            updateState(wsDir, {
+                nextAction: 'Start',
+            });
             const statePath = path.join(wsDir, 'STATE.md');
             const before = fs.readFileSync(statePath, 'utf8');
 
             const cases = {
                 'over the bound': {
                     ...GOAL_FIXTURE,
-                    criteria: Array.from({ length: 30 }, (_, i) => ({
-                        state: 'open',
-                        text: `criterion ${i}`,
-                        check: 'c',
-                    })),
+                    criteria: Array.from(
+                        {
+                            length: 30,
+                        },
+                        (_, i) => ({
+                            state: 'open',
+                            text: `criterion ${i}`,
+                            check: 'c',
+                        }),
+                    ),
                 },
-                'an unknown field': { ...GOAL_FIXTURE, owner: 'someone' },
+                'an unknown field': {
+                    ...GOAL_FIXTURE,
+                    owner: 'someone',
+                },
                 'a bad criterion state': {
                     ...GOAL_FIXTURE,
-                    criteria: [{ state: 'done', text: 'x', check: 'y' }],
+                    criteria: [
+                        {
+                            state: 'done',
+                            text: 'x',
+                            check: 'y',
+                        },
+                    ],
                 },
-                'no statement, phase or limit': { bound: 'none' },
-                'a start that is not a date': { ...GOAL_FIXTURE, started: 'yesterday-ish' },
+                'no statement, phase or limit': {
+                    bound: 'none',
+                },
+                'a start that is not a date': {
+                    ...GOAL_FIXTURE,
+                    started: 'yesterday-ish',
+                },
             };
             for (const [name, goal] of Object.entries(cases)) {
                 fs.writeFileSync(path.join(tempDir, 'goal.json'), JSON.stringify(goal));
@@ -221,9 +278,31 @@ module.exports = () => {
         try {
             copyStateTemplate(tempDir);
             const { updateState, wsDir } = requireUpdateState(tempDir);
-            updateState(wsDir, { phase: '1 — A', nextAction: 'Start' });
-            updateState(wsDir, { decision: 'D' }, { addDecision: true });
-            updateState(wsDir, { constraint: { title: 'C', desc: 'd' } }, { addConstraint: true });
+            updateState(wsDir, {
+                phase: '1 — A',
+                nextAction: 'Start',
+            });
+            updateState(
+                wsDir,
+                {
+                    decision: 'D',
+                },
+                {
+                    addDecision: true,
+                },
+            );
+            updateState(
+                wsDir,
+                {
+                    constraint: {
+                        title: 'C',
+                        desc: 'd',
+                    },
+                },
+                {
+                    addConstraint: true,
+                },
+            );
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
             assert.strictEqual(goalSectionOf(state), null, 'no goal section appears');
             assert.ok(
@@ -252,7 +331,13 @@ module.exports = () => {
             );
             const goal = normalizeGoal({
                 ...GOAL_FIXTURE,
-                criteria: [{ state: 'open', text: 'one — two', check: 'a — b' }],
+                criteria: [
+                    {
+                        state: 'open',
+                        text: 'one — two',
+                        check: 'a — b',
+                    },
+                ],
             });
             assert.strictEqual(
                 goal.criteria[0].text,
@@ -264,7 +349,9 @@ module.exports = () => {
                 goal,
             );
             // Phase and count forms record without a statement.
-            const phaseOnly = normalizeGoal({ phase: 4 });
+            const phaseOnly = normalizeGoal({
+                phase: 4,
+            });
             assert.deepStrictEqual(parseGoalSection(renderGoalSection(phaseOnly)), phaseOnly);
             assert.strictEqual(
                 parseGoalSection('# State\n\n## Goal\n\n<!-- nothing recorded -->\n'),
@@ -514,7 +601,9 @@ module.exports = () => {
         );
         assert.deepStrictEqual(untouched.warnings, [], 'and must announce nothing');
 
-        const patched = patchState(bare, { phase: '3 — Ship' });
+        const patched = patchState(bare, {
+            phase: '3 — Ship',
+        });
         assert.doesNotMatch(
             patched.after,
             /Updated/,
@@ -546,19 +635,37 @@ module.exports = () => {
                 ].join('\n'),
             );
 
-            updateState(wsDir, { status: 'Blocked' }, {});
-            const warnings = warnedBy(() => updateState(wsDir, { status: 'Active' }, {}));
+            updateState(
+                wsDir,
+                {
+                    status: 'Blocked',
+                },
+                {},
+            );
+            const warnings = warnedBy(() =>
+                updateState(
+                    wsDir,
+                    {
+                        status: 'Active',
+                    },
+                    {},
+                ),
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.deepStrictEqual(
                 after.match(/^\*\*Status:\*\*.*$/gm),
-                ['**Status:** Active'],
+                [
+                    '**Status:** Active',
+                ],
                 'one line, holding the latest value',
             );
             assert.deepStrictEqual(warnings, [], 'the second call has nothing to announce');
             assert.deepStrictEqual(
                 recordedCodes(tempDir),
-                ['STATE_FIELD_CREATED'],
+                [
+                    'STATE_FIELD_CREATED',
+                ],
                 'creation is recorded once, not per call',
             );
         } finally {
@@ -578,9 +685,13 @@ module.exports = () => {
                 '- **Task:** t',
                 '',
             ],
-            { status: 'Active' },
+            {
+                status: 'Active',
+            },
             {},
-            { eol: '\r\n' },
+            {
+                eol: '\r\n',
+            },
         );
 
         assert.match(
@@ -606,18 +717,32 @@ module.exports = () => {
         const { after, codes } = patchState(
             existing,
             {},
-            { autoProgress: true },
-            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } },
+            {
+                autoProgress: true,
+            },
+            {
+                files: {
+                    'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
+                },
+            },
         );
 
         assert.strictEqual(
             after,
-            [...existing, '## Progress', '', '```', 'Overall: [1/1] ████████ 100%', '```', ''].join(
-                '\n',
-            ),
+            [
+                ...existing,
+                '## Progress',
+                '',
+                '```',
+                'Overall: [1/1] ████████ 100%',
+                '```',
+                '',
+            ].join('\n'),
             'the section must be created at the end of the file with the recomputed counter in its fence',
         );
-        assert.deepStrictEqual(codes, ['STATE_SECTION_CREATED']);
+        assert.deepStrictEqual(codes, [
+            'STATE_SECTION_CREATED',
+        ]);
     });
 
     test('a "## Progress" heading without a fence is left untouched, and the skip is announced (SC-2)', () => {
@@ -637,8 +762,14 @@ module.exports = () => {
         const { after, warnings, codes } = patchState(
             existing,
             {},
-            { autoProgress: true },
-            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } },
+            {
+                autoProgress: true,
+            },
+            {
+                files: {
+                    'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
+                },
+            },
         );
 
         assert.strictEqual(after, existing.join('\n'), 'the block must be left exactly as it was');
@@ -646,7 +777,9 @@ module.exports = () => {
             warnings.some((w) => /Progress/.test(w)),
             'the skip must be announced on stderr',
         );
-        assert.deepStrictEqual(codes, ['PROGRESS_BLOCK_UNRECOGNISED']);
+        assert.deepStrictEqual(codes, [
+            'PROGRESS_BLOCK_UNRECOGNISED',
+        ]);
     });
 
     // §13.2 — the line-cap guard located the section with a substring search,
@@ -679,10 +812,24 @@ module.exports = () => {
         ];
 
         for (const { name, tail } of [
-            { name: 'a trailing newline', tail: [''] },
-            { name: 'no trailing newline', tail: [] },
+            {
+                name: 'a trailing newline',
+                tail: [
+                    '',
+                ],
+            },
+            {
+                name: 'no trailing newline',
+                tail: [],
+            },
         ]) {
-            const { after, warnings, codes } = patchState([...lines, ...tail], {});
+            const { after, warnings, codes } = patchState(
+                [
+                    ...lines,
+                    ...tail,
+                ],
+                {},
+            );
 
             assert.strictEqual(
                 after.trimEnd(),
@@ -697,7 +844,13 @@ module.exports = () => {
                 !warnings.some((w) => /nothing was pruned/.test(w)),
                 `${name}: and must not be reported as exhausted`,
             );
-            assert.deepStrictEqual(codes, ['STATE_DECISION_PRUNED'], name);
+            assert.deepStrictEqual(
+                codes,
+                [
+                    'STATE_DECISION_PRUNED',
+                ],
+                name,
+            );
         }
     });
 
@@ -709,14 +862,27 @@ module.exports = () => {
             ...trimmedState,
             '## Recent Decisions',
             '',
-            ...[5, 4, 3, 2, 1].map((n) => `- 2026-01-0${n} **Decision:** entry ${n}`),
+            ...[
+                5,
+                4,
+                3,
+                2,
+                1,
+            ].map((n) => `- 2026-01-0${n} **Decision:** entry ${n}`),
             '',
             '## Blocking Constraints',
             '',
             ...antiPatternLines(90),
             '',
         ];
-        const { after, warnings } = patchState(lines, {}, {}, { eol: '\r\n' });
+        const { after, warnings } = patchState(
+            lines,
+            {},
+            {},
+            {
+                eol: '\r\n',
+            },
+        );
 
         assert.doesNotMatch(after, /entry 1\b/, 'the oldest entry must actually be gone');
         assert.match(after, /entry 2\b/, 'the next-oldest must stay');
@@ -746,7 +912,9 @@ module.exports = () => {
             const candidates = archiver.findArchiveCandidates(wsDir);
             assert.deepStrictEqual(
                 candidates.map((c) => c.file),
-                ['phase-16.md'],
+                [
+                    'phase-16.md',
+                ],
                 'CRLF line endings must not hide a Done phase from archival',
             );
             assert.strictEqual(

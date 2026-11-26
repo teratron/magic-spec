@@ -46,11 +46,17 @@ function collectInFlight(wsDir) {
         const stripped = stripQuoted(text);
         for (const entry of listTrackingEntries(stripped, text)) {
             if (entry.status && /^In Progress\b/i.test(entry.status)) {
-                inFlight.push({ id: entry.id, title: entry.title, attempts: entry.attempts });
+                inFlight.push({
+                    id: entry.id,
+                    title: entry.title,
+                    attempts: entry.attempts,
+                });
             }
         }
     }
     return inFlight;
 }
 
-module.exports = { collectInFlight };
+module.exports = {
+    collectInFlight,
+};

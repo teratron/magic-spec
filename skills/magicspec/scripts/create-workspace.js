@@ -144,7 +144,11 @@ function rollback(reason) {
     for (const p of created.reverse()) {
         try {
             const stat = fs.statSync(p);
-            if (stat.isDirectory()) fs.rmSync(p, { recursive: true, force: true });
+            if (stat.isDirectory())
+                fs.rmSync(p, {
+                    recursive: true,
+                    force: true,
+                });
             else fs.unlinkSync(p);
         } catch {
             // best-effort rollback
@@ -156,7 +160,9 @@ function rollback(reason) {
 try {
     // Stage 2: provision directory tree
     for (const dir of subtree) {
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, {
+            recursive: true,
+        });
         created.push(dir);
     }
 
@@ -173,7 +179,9 @@ try {
 // Stage 3: register in workspace.json (last — easiest to roll back)
 const inferredDescription =
     description || `Workspace '${name}' (auto-created via create-workspace).`;
-workspaceData.workspaces[name] = { description: inferredDescription };
+workspaceData.workspaces[name] = {
+    description: inferredDescription,
+};
 
 if (makeDefault) {
     workspaceData.default = name;

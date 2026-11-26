@@ -77,7 +77,11 @@ function splitOnOuterCommas(text) {
  * @returns {string[]} The references as written, trimmed.
  */
 function splitPathCell(cell) {
-    const spans = [...String(cell).matchAll(/`([^`]+)`/g)].map((m) => m[1].trim()).filter(Boolean);
+    const spans = [
+        ...String(cell).matchAll(/`([^`]+)`/g),
+    ]
+        .map((m) => m[1].trim())
+        .filter(Boolean);
     if (spans.length) return spans;
     return splitOnOuterCommas(String(cell));
 }
@@ -151,4 +155,7 @@ function readTable(rows) {
     return out;
 }
 
-module.exports = { parseCanonicalRefs, splitPathCell };
+module.exports = {
+    parseCanonicalRefs,
+    splitPathCell,
+};

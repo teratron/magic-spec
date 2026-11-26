@@ -46,10 +46,18 @@ const ENGINE_POSIX = ENGINE_DIR.split(require('path').sep).join('/');
 
 const projectRoot = process.cwd();
 const ANCHOR = 'AGENTS.md';
-const SIBLINGS = ['CLAUDE.md', 'GEMINI.md', 'QWEN.md', 'CODEX.md'];
+const SIBLINGS = [
+    'CLAUDE.md',
+    'GEMINI.md',
+    'QWEN.md',
+    'CODEX.md',
+];
 // Directory links of the repository: where the host looks, and the real folder it must reach.
 const LINKS = [
-    { link: path.join('.agents', 'skills', 'magicspec'), target: ENGINE_DIR },
+    {
+        link: path.join('.agents', 'skills', 'magicspec'),
+        target: ENGINE_DIR,
+    },
     {
         link: path.join('.agents', 'skills', 'magicspec-dev'),
         target: path.join('skills', 'magicspec-dev'),
@@ -62,7 +70,9 @@ const strict = args.includes('--strict');
 function statSafe(p) {
     try {
         // BigInt: Windows file ids exceed 2^53, and two different ids must not round to one number.
-        return fs.statSync(p, { bigint: true });
+        return fs.statSync(p, {
+            bigint: true,
+        });
     } catch {
         return null;
     }
@@ -128,7 +138,11 @@ function validateAgentsLinks() {
     const anchorStat = statSafe(anchorPath);
     if (!anchorStat) {
         console.error(`   ❌ Anchor missing: ${ANCHOR}. Run /magicspec-dev:init.`);
-        return { drift: 1, missing: 0, fatal: true };
+        return {
+            drift: 1,
+            missing: 0,
+            fatal: true,
+        };
     }
 
     const anchorFp = fingerprint(anchorStat);
@@ -144,7 +158,11 @@ function validateAgentsLinks() {
             : `all ${SIBLINGS.length} siblings linked to ${ANCHOR}`;
     console.log(`   ↳ ${summary}.`);
 
-    return { drift, missing, fatal: false };
+    return {
+        drift,
+        missing,
+        fatal: false,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -187,7 +205,11 @@ function validateDirectoryLinks() {
     console.log(
         `   ↳ ${linked}/${LINKS.length} linked${missing > 0 ? `, ${missing} missing` : ''}.`,
     );
-    return { drift, missing, fatal: false };
+    return {
+        drift,
+        missing,
+        fatal: false,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -224,7 +246,11 @@ function main() {
     }
 }
 
-module.exports = { validateAgentsLinks, validateDirectoryLinks, main };
+module.exports = {
+    validateAgentsLinks,
+    validateDirectoryLinks,
+    main,
+};
 
 if (require.main === module) {
     try {

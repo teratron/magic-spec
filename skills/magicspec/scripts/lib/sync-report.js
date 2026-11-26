@@ -69,10 +69,16 @@ function writeIfChanged(report, area, abs, content, what) {
         return false;
     }
     if (!report.dryRun) {
-        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.mkdirSync(path.dirname(abs), {
+            recursive: true,
+        });
         fs.writeFileSync(abs, content, 'utf8');
     }
-    report.written.push({ area, file: report.shown(abs), what });
+    report.written.push({
+        area,
+        file: report.shown(abs),
+        what,
+    });
     return true;
 }
 
@@ -118,4 +124,9 @@ function formatReport(report, nextLine) {
     return lines.join('\n');
 }
 
-module.exports = { createReport, writeIfChanged, formatReport, routerCommandOf };
+module.exports = {
+    createReport,
+    writeIfChanged,
+    formatReport,
+    routerCommandOf,
+};

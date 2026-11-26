@@ -126,9 +126,14 @@ module.exports = () => {
             );
 
             // Defaults: --version from .magicspec/.version, --date = today (UTC).
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, '.magicspec', '.version'), '4.5.6\n');
-            const out2 = execSync(`node "${scriptPath}"`, { cwd: tempDir, encoding: 'utf8' });
+            const out2 = execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
             const today = new Date().toISOString().slice(0, 10);
             assert.match(
                 out2,
@@ -212,8 +217,16 @@ module.exports = () => {
         try {
             const graph = {
                 nodes: [
-                    { id: 'workspace:full', type: 'workspace', label: 'full' },
-                    { id: 'workspace:empty', type: 'workspace', label: 'empty' },
+                    {
+                        id: 'workspace:full',
+                        type: 'workspace',
+                        label: 'full',
+                    },
+                    {
+                        id: 'workspace:empty',
+                        type: 'workspace',
+                        label: 'empty',
+                    },
                     {
                         id: 'spec:full/a.md',
                         type: 'spec',
@@ -224,17 +237,35 @@ module.exports = () => {
                         version: '1.0.0',
                     },
                 ],
-                edges: [{ from: 'workspace:full', to: 'spec:full/a.md', relation: 'contains' }],
+                edges: [
+                    {
+                        from: 'workspace:full',
+                        to: 'spec:full/a.md',
+                        relation: 'contains',
+                    },
+                ],
                 analysis: {
-                    god_nodes: [{ id: 'spec:full/a.md', type: 'spec', label: 'a.md', degree: 3 }],
-                    orphaned_files: ['x.js'],
+                    god_nodes: [
+                        {
+                            id: 'spec:full/a.md',
+                            type: 'spec',
+                            label: 'a.md',
+                            degree: 3,
+                        },
+                    ],
+                    orphaned_files: [
+                        'x.js',
+                    ],
                 },
             };
             const graphPath = path.join(tempDir, 'graph.json');
             fs.writeFileSync(graphPath, JSON.stringify(graph));
             execSync(
                 `node "${path.join(tempDir, 'skills', 'magicspec', 'scripts', 'executor.js')}" export-wiki --from-file graph.json --out wiki`,
-                { cwd: tempDir, stdio: 'pipe' },
+                {
+                    cwd: tempDir,
+                    stdio: 'pipe',
+                },
             );
 
             const wikiDir = path.join(tempDir, 'wiki');
@@ -297,7 +328,9 @@ module.exports = () => {
                 autoChangelog: true,
             });
             const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
+            fs.mkdirSync(tasksDir, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
                 [

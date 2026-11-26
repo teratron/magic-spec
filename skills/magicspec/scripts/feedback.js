@@ -30,7 +30,14 @@ const VALUE_FLAGS = [
 ];
 
 /** The actions this command runs, in the order the help lists them. */
-const ACTIONS = ['note', 'list', 'draft', 'submit', 'keep', 'discard'];
+const ACTIONS = [
+    'note',
+    'list',
+    'draft',
+    'submit',
+    'keep',
+    'discard',
+];
 
 /**
  * Drafts the pending notes (or the problem of one note), or prints an existing draft again; every draft is printed in full.
@@ -96,7 +103,9 @@ function runDiscard(target) {
 function runCli(argv = process.argv.slice(2)) {
     const { values, flags, rest, errors } = parseFlags(argv, {
         valueFlags: VALUE_FLAGS,
-        boolFlags: ['--new'],
+        boolFlags: [
+            '--new',
+        ],
     });
     if (errors.length > 0) {
         console.warn(`[feedback] ${errors[0]}`);
@@ -118,12 +127,18 @@ function runCli(argv = process.argv.slice(2)) {
                     code: values['--code'],
                     workflow: values['--workflow'],
                 },
-                { script: values['--script'], exitStatus: values['--exit-status'] },
+                {
+                    script: values['--script'],
+                    exitStatus: values['--exit-status'],
+                },
             );
             console.log(`[feedback] ${outcome.message}`);
         } else if (action === 'list') {
             console.log(
-                [feedback.formatNotes(feedback.listNotes()), feedback.formatOpenFindings()]
+                [
+                    feedback.formatNotes(feedback.listNotes()),
+                    feedback.formatOpenFindings(),
+                ]
                     .filter(Boolean)
                     .join('\n\n'),
             );
@@ -132,7 +147,9 @@ function runCli(argv = process.argv.slice(2)) {
         } else if (action === 'submit') {
             console.log(
                 submission.formatOutcome(
-                    submission.submitDraft(target, { forceNew: flags['--new'] }),
+                    submission.submitDraft(target, {
+                        forceNew: flags['--new'],
+                    }),
                 ),
             );
         } else if (action === 'keep') {
@@ -152,4 +169,7 @@ if (require.main === module) {
     process.exit(0);
 }
 
-module.exports = { runCli, ACTIONS };
+module.exports = {
+    runCli,
+    ACTIONS,
+};

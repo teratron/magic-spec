@@ -7,10 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Completed task (engine)
-
 ## [4.0.0] - 2026-11-26
 
 The engine is one skill folder, `skills/magicspec/`, driven by one command, `/magicspec <command> [argument]`. A second workspace layout, the **4.0 document set**, now stands beside the 3.x one: small addressed units from which the engine computes what each task's builder reads. Every command works on a workspace of either layout; a workspace is on 4.0 when its entry in `workspace.json` carries `"format": "4"`. Existing 3.x workspaces keep working unchanged, and `/magicspec migrate --to 4` moves one when you ask — see [The 4.0 Document Set](docs/document-set.md) and [From 3.x to 4.0](docs/migration.md#from-3x-to-40).
@@ -20,6 +16,7 @@ The engine is one skill folder, `skills/magicspec/`, driven by one command, `/ma
 - **A workspace whose move to 4.0 is unfinished is left out of the graph, the wiki and the search over the design documents**, whichever workspace they run for; they read it again once the move is finished.
 - **The global registry's row of a 4.0 workspace links no registry it has not got.** The apply step of `migrate --to 4` writes the row without the link, and `sync` repairs a row that still has one.
 - **The way back from a move to 4.0 was incomplete.** After `git restore` the untracked copies under `archives/3x/` left the workspace reading as a move in flight, so every command stopped. The report now restores the global registry too and says to delete that folder.
+- **A reference to a component at the end of a sentence was not read** (`see hello.9.`): `check-docs` did not report it when it named nothing, and `pack` left the unit it named out of the task's pack.
 
 An improvised `/magicspec-dev:test` crisis (a fresh project walked from `status` through `spec`, `plan`, `task` and `run`) found six places where shipped text named the wrong owner or the wrong next step. A harness case under mutation control now pins each one:
 
@@ -87,6 +84,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 
 ### Changed
 
+- The repository is formatted again in the configured style, so the format check of continuous integration passes, and the two largest harness modules are split in two.
 - **`/magicspec goal` with no argument runs the active phase.** The argument is optional: with none, a recorded goal that is not finished continues, and otherwise the active phase runs to its end, one line saying which phase was taken. A finished goal is replaced without a line, and with no phase to take (the plan complete, stale or missing, or the phase blocked) nothing runs and one line says why. The argument gains a range of phases (`phase-3..5`) and the whole plan (`plan`), each one criterion over the phases open when the goal is recorded; the router row, `help`, the README and the documentation page say so, and the router has no exception left for `goal`.
 - **The first specification run of a goal takes the whole brief.** The mode ran `spec` once per uncovered criterion, so a brief with many criteria passed as many separate reviews and could end as as many fragments. The first run now takes the intent with every criterion no stable specification states, as one run; a later run takes the single criterion a later check finds.
 - **`goal` lists the choices it made and asks nothing after the intake but the consents it queued.** A fork the files do not settle is decided, noted as an assumption where the work lands, kept in the goal block (the oldest dropped and counted when the block is full, the write never refused) and listed under `Assumptions` in the one report with the command that overrides it. The block records a range of phases, and the resume line spells it as `phase-3..5`.

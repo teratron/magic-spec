@@ -14,6 +14,7 @@ describe('Magic Engine Scripts', () => {
     require('./engine/registry-and-settings')();
     require('./engine/bloat-and-prerequisites')();
     require('./engine/finalize-session')();
+    require('./engine/finalize-state')();
     require('./engine/archiver')();
     require('./engine/state-progress')();
     require('./engine/state-goal')();
@@ -39,6 +40,7 @@ describe('Magic Engine Scripts', () => {
     require('./engine/registered-folders-and-caches')();
     require('./engine/community-files')();
     require('./engine/artifact-index')();
+    require('./engine/artifact-search')();
     require('./engine/sync-command')();
     require('./engine/toolchain-and-runtime')();
     require('./engine/layout')();

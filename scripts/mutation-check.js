@@ -45,7 +45,12 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_HARNESS = path.join('tests', 'engine.js');
 
 /** Verdicts, in the order the summary lists them. */
-const VERDICTS = ['CAUGHT', 'SURVIVED', 'REFUSED', 'RESTORE FAILED'];
+const VERDICTS = [
+    'CAUGHT',
+    'SURVIVED',
+    'REFUSED',
+    'RESTORE FAILED',
+];
 
 // ───────────────────────────────────────────────────────────────────────────
 // Restore Guard
@@ -101,14 +106,18 @@ function resolveTarget(root, file) {
     const abs = path.resolve(root, file);
     const rel = path.relative(root, abs);
     if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) {
-        return { refusal: `file '${file}' is outside the root` };
+        return {
+            refusal: `file '${file}' is outside the root`,
+        };
     }
     if (rel.split(path.sep)[0] === '.magicspec') {
         return {
             refusal: `file '${file}' is under .magicspec/ — specifications are never mutated`,
         };
     }
-    return { abs };
+    return {
+        abs,
+    };
 }
 
 /**
@@ -117,7 +126,13 @@ function resolveTarget(root, file) {
  */
 function shapeProblem(entry) {
     if (entry === null || typeof entry !== 'object') return 'entry is not an object';
-    for (const key of ['name', 'file', 'needle', 'replacement', 'test']) {
+    for (const key of [
+        'name',
+        'file',
+        'needle',
+        'replacement',
+        'test',
+    ]) {
         if (typeof entry[key] !== 'string') return `'${key}' must be a string`;
     }
     if (entry.needle === '') return "'needle' must not be empty";
@@ -143,14 +158,25 @@ function shapeProblem(entry) {
 function runHarness(harness, pattern, cwd) {
     // A driver started from inside a test run inherits the runner's marker and
     // would make the nested run emit machine output instead of a report.
-    const env = { ...process.env };
+    const env = {
+        ...process.env,
+    };
     delete env.NODE_TEST_CONTEXT;
     // The report is read as the spec reporter prints it; Node 18 prints TAP by default, which this parser
     // does not read, so every entry would be REFUSED there.
     const result = spawnSync(
         process.execPath,
-        ['--test', '--test-reporter=spec', `--test-name-pattern=${pattern}`, harness],
-        { cwd, encoding: 'utf8', env },
+        [
+            '--test',
+            '--test-reporter=spec',
+            `--test-name-pattern=${pattern}`,
+            harness,
+        ],
+        {
+            cwd,
+            encoding: 'utf8',
+            env,
+        },
     );
     if (result.error) throw result.error;
     // A pattern that matches nothing still prints one line for the harness file
@@ -160,7 +186,10 @@ function runHarness(harness, pattern, cwd) {
         const named = /^\s*[✔✖] (.+) \([\d.]+ms\)$/.exec(line);
         if (named && !named[1].endsWith('.js')) cases.add(named[1]);
     }
-    return { status: result.status === null ? 1 : result.status, tests: cases.size };
+    return {
+        status: result.status === null ? 1 : result.status,
+        tests: cases.size,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -178,13 +207,20 @@ function runHarness(harness, pattern, cwd) {
  */
 function checkOne(entry, { root, harness, run }) {
     const target = resolveTarget(root, entry.file);
-    if (target.refusal) return { verdict: 'REFUSED', detail: target.refusal };
+    if (target.refusal)
+        return {
+            verdict: 'REFUSED',
+            detail: target.refusal,
+        };
 
     let bytes;
     try {
         bytes = fs.readFileSync(target.abs);
     } catch (err) {
-        return { verdict: 'REFUSED', detail: `cannot read '${entry.file}': ${err.message}` };
+        return {
+            verdict: 'REFUSED',
+            detail: `cannot read '${entry.file}': ${err.message}`,
+        };
     }
     const source = bytes.toString('utf8');
     const occurrences = source.split(entry.needle).length - 1;
@@ -195,7 +231,11 @@ function checkOne(entry, { root, harness, run }) {
         };
     }
 
-    inFlight = { abs: target.abs, bytes, hash: sha256(bytes) };
+    inFlight = {
+        abs: target.abs,
+        bytes,
+        hash: sha256(bytes),
+    };
     let outcome;
     let failure = null;
     try {
@@ -209,7 +249,11 @@ function checkOne(entry, { root, harness, run }) {
         failure = err;
     }
     // Restore before anything else is decided: the file is back on every path.
-    if (!restoreInFlight()) return { verdict: 'RESTORE FAILED', detail: entry.file };
+    if (!restoreInFlight())
+        return {
+            verdict: 'RESTORE FAILED',
+            detail: entry.file,
+        };
     if (failure) throw failure;
     if (outcome.tests === 0) {
         return {
@@ -217,7 +261,9 @@ function checkOne(entry, { root, harness, run }) {
             detail: `no harness case ran for pattern '${entry.test}' (no match, or the mutation broke the harness load)`,
         };
     }
-    return { verdict: outcome.status !== 0 ? 'CAUGHT' : 'SURVIVED' };
+    return {
+        verdict: outcome.status !== 0 ? 'CAUGHT' : 'SURVIVED',
+    };
 }
 
 /**
@@ -241,16 +287,29 @@ function checkMutations(list, options = {}) {
         let result;
         const problem = shapeProblem(entry);
         if (problem) {
-            result = { verdict: 'REFUSED', detail: problem };
+            result = {
+                verdict: 'REFUSED',
+                detail: problem,
+            };
         } else {
             try {
-                result = checkOne(entry, { root, harness, run });
+                result = checkOne(entry, {
+                    root,
+                    harness,
+                    run,
+                });
             } catch (err) {
-                result = { verdict: 'REFUSED', detail: `run failed: ${err.message}` };
+                result = {
+                    verdict: 'REFUSED',
+                    detail: `run failed: ${err.message}`,
+                };
             }
         }
         log(`${result.verdict.padEnd(15)} ${name}${result.detail ? ` — ${result.detail}` : ''}`);
-        results.push({ name, ...result });
+        results.push({
+            name,
+            ...result,
+        });
     }
 
     const counts = VERDICTS.map((v) => `${results.filter((r) => r.verdict === v).length} ${v}`);
@@ -267,7 +326,11 @@ function checkMutations(list, options = {}) {
  * @returns {{specPath: string|null, harness: string|undefined, root: string|undefined}}
  */
 function parseArgs(argv) {
-    const parsed = { specPath: null, harness: undefined, root: undefined };
+    const parsed = {
+        specPath: null,
+        harness: undefined,
+        root: undefined,
+    };
     for (let i = 0; i < argv.length; i++) {
         const arg = argv[i];
         if (arg === '--harness') parsed.harness = argv[++i];
@@ -316,12 +379,20 @@ function main(argv) {
     process.on('SIGTERM', bail);
     process.on('exit', restoreInFlight);
 
-    const results = checkMutations(list, { root, harness });
+    const results = checkMutations(list, {
+        root,
+        harness,
+    });
     // An empty list proves nothing, so it does not pass.
     return results.length > 0 && results.every((r) => r.verdict === 'CAUGHT') ? 0 : 1;
 }
 
-module.exports = { checkMutations, runHarness, resolveTarget, VERDICTS };
+module.exports = {
+    checkMutations,
+    runHarness,
+    resolveTarget,
+    VERDICTS,
+};
 
 if (require.main === module) {
     process.exit(main(process.argv.slice(2)));

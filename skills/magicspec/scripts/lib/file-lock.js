@@ -40,7 +40,9 @@ function pause(ms) {
 function withFileLock(lockPath, fn, options = {}) {
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const staleMs = options.staleMs ?? DEFAULT_STALE_MS;
-    fs.mkdirSync(path.dirname(lockPath), { recursive: true });
+    fs.mkdirSync(path.dirname(lockPath), {
+        recursive: true,
+    });
 
     const deadline = Date.now() + timeoutMs;
     let fd = null;
@@ -51,7 +53,14 @@ function withFileLock(lockPath, fn, options = {}) {
             break;
         } catch (err) {
             // On Windows a lock that is being removed can answer EPERM or EACCES instead of EEXIST.
-            if (!['EEXIST', 'EPERM', 'EACCES'].includes(err.code)) throw err;
+            if (
+                ![
+                    'EEXIST',
+                    'EPERM',
+                    'EACCES',
+                ].includes(err.code)
+            )
+                throw err;
             try {
                 if (Date.now() - fs.statSync(lockPath).mtimeMs > staleMs) {
                     fs.unlinkSync(lockPath);
@@ -85,4 +94,6 @@ function withFileLock(lockPath, fn, options = {}) {
     }
 }
 
-module.exports = { withFileLock };
+module.exports = {
+    withFileLock,
+};

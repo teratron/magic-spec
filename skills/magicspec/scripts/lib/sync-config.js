@@ -29,9 +29,22 @@ const fs = require('fs');
 const { resolveInsideProject, statePath, STATE_DIR_NAME } = require('../utils');
 
 const MARKER_KEY_RE = /^[a-z][a-z0-9-]*$/;
-const SECTION_KEYS = new Set(['versions', 'docs']);
-const VERSION_KEYS = new Set(['file', 'json', 'marker', 'format']);
-const DOC_KEYS = new Set(['file', 'marker', 'from', 'fromMarker']);
+const SECTION_KEYS = new Set([
+    'versions',
+    'docs',
+]);
+const VERSION_KEYS = new Set([
+    'file',
+    'json',
+    'marker',
+    'format',
+]);
+const DOC_KEYS = new Set([
+    'file',
+    'marker',
+    'from',
+    'fromMarker',
+]);
 const FIX = `edit the sync section of ${STATE_DIR_NAME}/workspace.json`;
 
 /**
@@ -52,7 +65,11 @@ const FIX = `edit the sync section of ${STATE_DIR_NAME}/workspace.json`;
  * @returns {SyncProblem}
  */
 function problem(at, difference) {
-    return { location: `${STATE_DIR_NAME}/workspace.json ${at}`, difference, command: FIX };
+    return {
+        location: `${STATE_DIR_NAME}/workspace.json ${at}`,
+        difference,
+        command: FIX,
+    };
 }
 
 /**
@@ -158,7 +175,14 @@ function readVersionAnchor(root, entry, at, problems) {
         return null;
     }
     if (!abs) return null;
-    return { file: entry.file, abs, json: entry.json, marker: entry.marker, format, at };
+    return {
+        file: entry.file,
+        abs,
+        json: entry.json,
+        marker: entry.marker,
+        format,
+        at,
+    };
 }
 
 /**
@@ -175,7 +199,10 @@ function readDocBlock(root, entry, at, problems) {
     if (!isKnownEntry(entry, at, shape, DOC_KEYS, problems)) return null;
     const abs = resolveRegistered(root, entry.file, at, problems);
     const fromAbs = resolveRegistered(root, entry.from, at, problems);
-    for (const key of ['marker', 'fromMarker']) {
+    for (const key of [
+        'marker',
+        'fromMarker',
+    ]) {
         if (entry[key] !== undefined && !MARKER_KEY_RE.test(String(entry[key]))) {
             problems.push(
                 problem(at, `\`${key}\` is a lowercase key of letters, digits and hyphens`),
@@ -240,13 +267,26 @@ function readSyncConfig(root) {
     } catch (error) {
         if (error && error.code !== 'ENOENT')
             problems.push(problem('', `cannot be read: ${error.message}`));
-        return { versions: [], docs: [], problems };
+        return {
+            versions: [],
+            docs: [],
+            problems,
+        };
     }
     const section = data?.sync;
-    if (section === undefined || section === null) return { versions: [], docs: [], problems };
+    if (section === undefined || section === null)
+        return {
+            versions: [],
+            docs: [],
+            problems,
+        };
     if (typeof section !== 'object' || Array.isArray(section)) {
         problems.push(problem('sync', 'must be an object with `versions` and `docs`'));
-        return { versions: [], docs: [], problems };
+        return {
+            versions: [],
+            docs: [],
+            problems,
+        };
     }
     for (const key of Object.keys(section)) {
         if (!SECTION_KEYS.has(key)) problems.push(problem('sync', `unknown key \`${key}\``));
@@ -258,4 +298,7 @@ function readSyncConfig(root) {
     };
 }
 
-module.exports = { readSyncConfig, MARKER_KEY_RE };
+module.exports = {
+    readSyncConfig,
+    MARKER_KEY_RE,
+};

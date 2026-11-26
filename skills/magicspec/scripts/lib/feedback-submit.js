@@ -18,7 +18,12 @@ const drafts = require('./feedback-draft');
 // engine stores no credential, and no outcome is claimed that the tracker did not confirm.
 
 /** The outcomes a submission can report: exactly one (§5.3). */
-const OUTCOMES = Object.freeze(['created', 'duplicate found', 'not created', 'unknown']);
+const OUTCOMES = Object.freeze([
+    'created',
+    'duplicate found',
+    'not created',
+    'unknown',
+]);
 
 /** The client of the tracker, run with an argument list and never through a shell. */
 const CLIENT = 'gh';
@@ -36,7 +41,11 @@ const ISSUE_URL = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/\d+/;
  * @returns {{status: number|null, stdout: string, stderr: string, missing: boolean}} What the client answered; `missing` when it is not installed.
  */
 function runClient(args, input) {
-    const run = spawnSync(CLIENT, args, { input, encoding: 'utf8', timeout: CLIENT_TIMEOUT_MS });
+    const run = spawnSync(CLIENT, args, {
+        input,
+        encoding: 'utf8',
+        timeout: CLIENT_TIMEOUT_MS,
+    });
     return {
         status: run.status,
         stdout: run.stdout || '',
@@ -82,7 +91,12 @@ function lookUp(slug, draft, client) {
         '--limit',
         '5',
     ]);
-    if (answer.missing) return { url: null, failed: null, missing: true };
+    if (answer.missing)
+        return {
+            url: null,
+            failed: null,
+            missing: true,
+        };
     if (answer.status !== 0)
         return {
             url: null,
@@ -100,7 +114,10 @@ function lookUp(slug, draft, client) {
             failed: null,
         };
     } catch {
-        return { url: null, failed: 'the answer of the look-up could not be read' };
+        return {
+            url: null,
+            failed: 'the answer of the look-up could not be read',
+        };
     }
 }
 
@@ -142,7 +159,16 @@ function submitDraft(id, options = {}) {
         };
     }
     const answer = client(
-        ['issue', 'create', '--repo', slug, '--title', draft.title, '--body-file', '-'],
+        [
+            'issue',
+            'create',
+            '--repo',
+            slug,
+            '--title',
+            draft.title,
+            '--body-file',
+            '-',
+        ],
         draft.body,
     );
     const lookup = found.failed
@@ -176,7 +202,11 @@ function submitDraft(id, options = {}) {
             lookup,
         };
     drafts.closeDraft(id, options.root);
-    return { outcome: 'created', url, lookup };
+    return {
+        outcome: 'created',
+        url,
+        lookup,
+    };
 }
 
 /**
@@ -184,11 +214,17 @@ function submitDraft(id, options = {}) {
  * @returns {string} The lines to print: the outcome word first, then its address or reason and recovery step.
  */
 function formatOutcome(result) {
-    const lines = [`[feedback] ${result.outcome}${result.url ? `: ${result.url}` : ''}`];
+    const lines = [
+        `[feedback] ${result.outcome}${result.url ? `: ${result.url}` : ''}`,
+    ];
     if (result.reason) lines.push(`  ${result.reason}`);
     if (result.recovery) lines.push(`  Next: ${result.recovery}`);
     if (result.lookup) lines.push(`  Note: ${result.lookup}`);
     return lines.join('\n');
 }
 
-module.exports = { OUTCOMES, submitDraft, formatOutcome };
+module.exports = {
+    OUTCOMES,
+    submitDraft,
+    formatOutcome,
+};

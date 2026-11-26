@@ -31,7 +31,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `;
 
-const VALID_CATEGORIES = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'];
+const VALID_CATEGORIES = [
+    'Added',
+    'Changed',
+    'Deprecated',
+    'Removed',
+    'Fixed',
+    'Security',
+];
 
 const APPEND_MARKER = '<!-- magic-spec: appended below; original content preserved -->';
 
@@ -110,15 +117,27 @@ function appendBullet(filePath, category, bullet) {
         ].join('\n');
         const next = (block + '\n' + original).trimEnd() + '\n';
         const written = next !== original ? writeFileSafe(filePath, next) : false;
-        return { written, deduped: false, formatWarning: true };
+        return {
+            written,
+            deduped: false,
+            formatWarning: true,
+        };
     }
 
     const next = insertIntoUnreleased(original, category, bullet).trimEnd() + '\n';
     if (next === original) {
-        return { written: false, deduped: true, formatWarning: false };
+        return {
+            written: false,
+            deduped: true,
+            formatWarning: false,
+        };
     }
     const written = writeFileSafe(filePath, next);
-    return { written, deduped: false, formatWarning: false };
+    return {
+        written,
+        deduped: false,
+        formatWarning: false,
+    };
 }
 
 /**
@@ -197,21 +216,40 @@ function insertIntoUnreleased(content, category, bullet) {
  * @returns {{written: boolean, hadUnreleased: boolean}}
  */
 function releaseUnreleased(filePath, version, date) {
-    if (!fs.existsSync(filePath)) return { written: false, hadUnreleased: false };
+    if (!fs.existsSync(filePath))
+        return {
+            written: false,
+            hadUnreleased: false,
+        };
     const original = fs.readFileSync(filePath, 'utf8');
-    if (!isKeepAChangelog(original)) return { written: false, hadUnreleased: false };
+    if (!isKeepAChangelog(original))
+        return {
+            written: false,
+            hadUnreleased: false,
+        };
 
     // `[ \t]*`, not `\s*`: the latter would swallow the blank line(s) after the
     // heading, gluing the renamed version heading to its first sub-heading.
     const unreleasedRe = /^##\s+\[Unreleased\][ \t]*$/m;
-    if (!unreleasedRe.test(original)) return { written: false, hadUnreleased: false };
+    if (!unreleasedRe.test(original))
+        return {
+            written: false,
+            hadUnreleased: false,
+        };
 
     const next =
         original.replace(unreleasedRe, `## [Unreleased]\n\n## [${version}] - ${date}`).trimEnd() +
         '\n';
-    if (next === original) return { written: false, hadUnreleased: true };
+    if (next === original)
+        return {
+            written: false,
+            hadUnreleased: true,
+        };
     const written = writeFileSafe(filePath, next);
-    return { written, hadUnreleased: true };
+    return {
+        written,
+        hadUnreleased: true,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────

@@ -1,5 +1,14 @@
 # Engine Workspace Changelog
 
+## Phase 83 — 2026-11-26 (4.0.0)
+
+- **A half-moved workspace is read by nothing.** The graph, the wiki and the search over the design documents leave it out, and the global registry stops linking a registry a moved workspace no longer has.
+- **A 4.0 workspace is documented.** A new page describes it, and the migration page covers the move from 3.x; the way back from a move is corrected.
+- **A component address at the end of a sentence is read** by the checker and the pack.
+- **The repository passes its format, type and dead-code checks again.** Two harness modules are split in two.
+- **4.0.0 is prepared and not released**, by the owner's decision.
+- **Records:** harness 540; engine 4.0.0. **Specifications:** `l2-sdd-document-set-engine` 1.7.4, `l1-sync-command` 1.1.2, `l2-spec-graph-memory` 1.4.4, `l2-artifact-memory-store` 1.3.3, `l2-test-suite` 1.48.19, `l1-product-simulation` 1.1.8, `l2-engine-toolchain` 1.2.2; registry 1.107.4.
+
 ## Phase 85 — 2026-11-26 (The Migration to 4.0)
 
 - **A 3.x workspace can be moved to 4.0.** `/magicspec migrate --to 4` previews where each file goes and what the new set still lacks, asks once, and moves the old files into `archives/3x/` and the new set into place, setting the format last. The set itself is written into `next/` by `/magicspec analyze first-time`.

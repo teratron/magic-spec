@@ -191,7 +191,12 @@ function archiveCompletedPhases(wsDir, opts = {}) {
     const dryRun = opts.dryRun || isDryRun();
     const tasksDir = path.join(wsDir, 'tasks');
 
-    if (!fs.existsSync(tasksDir)) return { archived: [], skipped: [], unrecognized: [] };
+    if (!fs.existsSync(tasksDir))
+        return {
+            archived: [],
+            skipped: [],
+            unrecognized: [],
+        };
 
     const archiveDir = path.join(wsDir, 'archives', 'tasks');
     const archived = [];
@@ -199,7 +204,12 @@ function archiveCompletedPhases(wsDir, opts = {}) {
     const unrecognized = listUnrecognizedTaskFiles(tasksDir);
     const candidates = findArchiveCandidates(wsDir);
 
-    if (candidates.length === 0) return { archived: [], skipped: [], unrecognized };
+    if (candidates.length === 0)
+        return {
+            archived: [],
+            skipped: [],
+            unrecognized,
+        };
 
     mkdirSafe(archiveDir);
 
@@ -217,7 +227,11 @@ function archiveCompletedPhases(wsDir, opts = {}) {
         } else {
             fs.renameSync(srcPath, destPath);
         }
-        archived.push({ file, phase, name });
+        archived.push({
+            file,
+            phase,
+            name,
+        });
     }
 
     if (archived.length > 0) {
@@ -242,7 +256,14 @@ function archiveCompletedPhases(wsDir, opts = {}) {
         }
     }
 
-    return { archived, skipped, unrecognized };
+    return {
+        archived,
+        skipped,
+        unrecognized,
+    };
 }
 
-module.exports = { findArchiveCandidates, archiveCompletedPhases };
+module.exports = {
+    findArchiveCandidates,
+    archiveCompletedPhases,
+};

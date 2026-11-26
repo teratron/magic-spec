@@ -40,7 +40,10 @@ function indexProject(designAbs, options = {}, record = diagnostics.record) {
             embedded: embedIfConfigured(designAbs, backend, record, options.embedFn),
         }));
     } catch (err) {
-        return { ok: false, reason: reportUnavailable('memory-index', err, record) };
+        return {
+            ok: false,
+            reason: reportUnavailable('memory-index', err, record),
+        };
     }
 }
 
@@ -52,7 +55,9 @@ function indexProject(designAbs, options = {}, record = diagnostics.record) {
 function runCli() {
     const rebuild = process.argv.slice(2).includes('--rebuild');
     const { designAbs } = resolveDesignRoot(resolveProjectRoot());
-    const result = indexProject(designAbs, { rebuild });
+    const result = indexProject(designAbs, {
+        rebuild,
+    });
     if (result.ok) {
         console.log(
             `[memory-index] ${result.backend}: ${result.sections} sections in ${result.files} files (${result.indexed} indexed, ${result.unchanged} unchanged, ${result.removed} removed).`,
@@ -76,4 +81,7 @@ if (require.main === module) {
     runCli();
 }
 
-module.exports = { indexProject, runCli };
+module.exports = {
+    indexProject,
+    runCli,
+};

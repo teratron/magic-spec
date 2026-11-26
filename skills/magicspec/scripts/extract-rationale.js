@@ -63,7 +63,12 @@ const SKIP_DIRS = new Set([
  * lies: by its real location and by the path it was started through (a link).
  */
 const ENGINE_DIRS = new Set(
-    [engineRoot(), process.env.MAGIC_ENGINE_DIR].filter(Boolean).map((d) => path.resolve(d)),
+    [
+        engineRoot(),
+        process.env.MAGIC_ENGINE_DIR,
+    ]
+        .filter(Boolean)
+        .map((d) => path.resolve(d)),
 );
 
 /** Supported source file extensions for rationale extraction. */
@@ -82,13 +87,28 @@ const SOURCE_EXTENSIONS = new Set([
 ]);
 
 /** Rationale marker keywords (upper-case canonical form). */
-const MARKERS = ['NOTE', 'WHY', 'HACK', 'IMPORTANT', 'TODO', 'FIXME', 'SAFETY', 'WARN', 'PERF'];
+const MARKERS = [
+    'NOTE',
+    'WHY',
+    'HACK',
+    'IMPORTANT',
+    'TODO',
+    'FIXME',
+    'SAFETY',
+    'WARN',
+    'PERF',
+];
 
 /**
  * Extensions that use hash-prefixed comments (`# MARKER:`).
  * All others use double-slash comments (`// MARKER:`).
  */
-const HASH_COMMENT_EXTENSIONS = new Set(['.py', '.sh', '.ps1', '.rb']);
+const HASH_COMMENT_EXTENSIONS = new Set([
+    '.py',
+    '.sh',
+    '.ps1',
+    '.rb',
+]);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -128,7 +148,9 @@ function buildPattern(ext) {
 function collectSourceFiles(dir, isIgnored, results = []) {
     let entries;
     try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
+        entries = fs.readdirSync(dir, {
+            withFileTypes: true,
+        });
     } catch {
         return results;
     }
@@ -173,7 +195,9 @@ function loadCanonicalReferences(baseDesignDir) {
     const refMap = new Map();
 
     // Collect spec dirs to search — workspace-specific + root .magicspec/
-    const specDirs = [path.join(baseDesignDir, 'specifications')];
+    const specDirs = [
+        path.join(baseDesignDir, 'specifications'),
+    ];
 
     // Also search root .magicspec/ specifications when workspace is nested
     if (baseDesignDir !== STATE_DIR_NAME) {
@@ -259,18 +283,28 @@ function checkCoverage(filePath, refMap) {
 
     // Direct match
     if (refMap.has(normalized)) {
-        return { covered: true, spec: refMap.get(normalized) };
+        return {
+            covered: true,
+            spec: refMap.get(normalized),
+        };
     }
 
     // Directory prefix match (e.g., `skills/magicspec/templates/` covers `skills/magicspec/templates/spec.md`)
     for (const [refPath, specFile] of refMap) {
         // A pattern reference (one definition: `utils.compilePathEntry`) covers what it matches.
         if (PATH_PATTERN_CHARS.test(refPath)) {
-            if (patternFor(refPath).test(normalized)) return { covered: true, spec: specFile };
+            if (patternFor(refPath).test(normalized))
+                return {
+                    covered: true,
+                    spec: specFile,
+                };
             continue;
         }
         if (refPath.endsWith('/') && normalized.startsWith(refPath)) {
-            return { covered: true, spec: specFile };
+            return {
+                covered: true,
+                spec: specFile,
+            };
         }
         // Also match if the reference is a directory without trailing slash.
         // Verify via fs.existsSync + statSync to avoid false positives on
@@ -282,7 +316,10 @@ function checkCoverage(filePath, refMap) {
         ) {
             try {
                 if (fs.existsSync(refPath) && fs.statSync(refPath).isDirectory()) {
-                    return { covered: true, spec: specFile };
+                    return {
+                        covered: true,
+                        spec: specFile,
+                    };
                 }
             } catch {
                 // Path doesn't exist or stat fails — skip
@@ -290,7 +327,10 @@ function checkCoverage(filePath, refMap) {
         }
     }
 
-    return { covered: false, spec: null };
+    return {
+        covered: false,
+        spec: null,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -320,7 +360,9 @@ function resolveScanDirs() {
             .filter(Boolean);
     }
 
-    return ['.'];
+    return [
+        '.',
+    ];
 }
 
 /**
@@ -374,7 +416,9 @@ function scan(scanDirs, refMap) {
         }
         for (const f of hits) collected.add(f);
     }
-    const allFiles = [...collected];
+    const allFiles = [
+        ...collected,
+    ];
 
     for (const absPath of allFiles) {
         const relPath = normalizePath(path.relative('.', absPath));
@@ -411,7 +455,10 @@ function scan(scanDirs, refMap) {
 
             if (!covered) {
                 if (!shadowFiles.has(relPath)) {
-                    shadowFiles.set(relPath, { count: 0, markers: new Set() });
+                    shadowFiles.set(relPath, {
+                        count: 0,
+                        markers: new Set(),
+                    });
                 }
                 const entry = shadowFiles.get(relPath);
                 entry.count++;
@@ -426,7 +473,9 @@ function scan(scanDirs, refMap) {
         shadow_logic.push({
             file,
             count: info.count,
-            markers: [...info.markers],
+            markers: [
+                ...info.markers,
+            ],
             suggestion: 'Consider creating a specification to formalize these design decisions',
         });
     }
@@ -440,11 +489,18 @@ function scan(scanDirs, refMap) {
         files_with_rationale: filesWithRationale.size,
         shadow_files: shadowFiles.size,
         marker_distribution: Object.fromEntries(
-            [...markerDist.entries()].sort((a, b) => b[1] - a[1]),
+            [
+                ...markerDist.entries(),
+            ].sort((a, b) => b[1] - a[1]),
         ),
     };
 
-    return { rationale, shadow_logic, summary, warnings };
+    return {
+        rationale,
+        shadow_logic,
+        summary,
+        warnings,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

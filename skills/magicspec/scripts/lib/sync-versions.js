@@ -76,11 +76,15 @@ function rewriteJson(text, keyPath, version) {
     try {
         data = JSON.parse(text);
     } catch (error) {
-        return { reason: `the file is not valid JSON (${error.message})` };
+        return {
+            reason: `the file is not valid JSON (${error.message})`,
+        };
     }
     const current = valueAt(data, keyPath);
     if (typeof current !== 'string')
-        return { reason: `the key \`${keyPath}\` is not a string in the file` };
+        return {
+            reason: `the key \`${keyPath}\` is not a string in the file`,
+        };
     const last = keyPath.split('.').pop();
     const pair = new RegExp(`("${escapeRe(last)}"\\s*:\\s*)"${escapeRe(current)}"`, 'g');
     const found = text.match(pair) || [];
@@ -88,7 +92,9 @@ function rewriteJson(text, keyPath, version) {
         return {
             reason: `the pair \`"${last}": "${current}"\` occurs ${found.length} times, so it cannot be told apart`,
         };
-    return { text: text.replace(pair, (_, head) => `${head}"${version}"`) };
+    return {
+        text: text.replace(pair, (_, head) => `${head}"${version}"`),
+    };
 }
 
 /**
@@ -130,8 +136,12 @@ function syncVersions(ctx) {
         } else {
             const range = blockRange(text, anchor.marker);
             next = range
-                ? { text: replaceRange(text, range, anchor.format.replace('{version}', version)) }
-                : { reason: `the marker ${markersOf(anchor.marker).open} is not in the file` };
+                ? {
+                      text: replaceRange(text, range, anchor.format.replace('{version}', version)),
+                  }
+                : {
+                      reason: `the marker ${markersOf(anchor.marker).open} is not in the file`,
+                  };
         }
         if (next.reason) {
             report.disagreements.push({
@@ -145,4 +155,7 @@ function syncVersions(ctx) {
     }
 }
 
-module.exports = { syncVersions, versionFileOf };
+module.exports = {
+    syncVersions,
+    versionFileOf,
+};

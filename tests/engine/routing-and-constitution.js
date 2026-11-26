@@ -99,7 +99,9 @@ module.exports = () => {
     // A function that sets `feedback.channel` in an existing registry and keeps the rest of it.
     const channelPatcher = (registry) => (value) => {
         const config = JSON.parse(fs.readFileSync(registry, 'utf8'));
-        config.feedback = { channel: value };
+        config.feedback = {
+            channel: value,
+        };
         fs.writeFileSync(registry, JSON.stringify(config));
     };
 
@@ -109,7 +111,12 @@ module.exports = () => {
             const library = requireFromFixture(project.dir, 'lib', 'feedback.js');
             const note = (summary) =>
                 library.addNote(
-                    { kind: 'bug', summary, tried: 't', happened: 'h' },
+                    {
+                        kind: 'bug',
+                        summary,
+                        tried: 't',
+                        happened: 'h',
+                    },
                     {},
                     project.dir,
                 );
@@ -130,7 +137,14 @@ module.exports = () => {
                 preview.stdout,
                 /### Feedback notes\n\n2 notes pending\. Offer each draft once: run `.*feedback draft`, show the person the complete report it prints and ask: submit, keep as text, or discard\./,
             );
-            assert.deepStrictEqual(offered(), [false, false], 'a preview records no offer');
+            assert.deepStrictEqual(
+                offered(),
+                [
+                    false,
+                    false,
+                ],
+                'a preview records no offer',
+            );
             assert.ok(
                 !/\[dry-run\][^\n]*feedback\.json/.test(preview.stdout),
                 'and does not even try to write the store',
@@ -156,7 +170,10 @@ module.exports = () => {
                 !first.stdout.includes('Run /magicspec fix'),
                 'outside the engine repository the notes are not a work queue: the next step is the plan state',
             );
-            assert.deepStrictEqual(offered(), [true, true]);
+            assert.deepStrictEqual(offered(), [
+                true,
+                true,
+            ]);
 
             // A later listing names them as offered and does not ask again.
             const second = finalize();
@@ -169,7 +186,12 @@ module.exports = () => {
 
             // The channel draft removes submission from the answers; off prints nothing.
             library.addNote(
-                { kind: 'docs', summary: 'third problem', tried: 't', happened: 'h' },
+                {
+                    kind: 'docs',
+                    summary: 'third problem',
+                    tried: 't',
+                    happened: 'h',
+                },
                 {},
                 project.dir,
             );
@@ -198,19 +220,31 @@ module.exports = () => {
     test("in the engine's repository the notes are a work queue: listed as fix candidates, nothing offered, the next step is the fix command unless the replan funnel comes first (EF-12)", () => {
         const project = makeArchivalProject();
         try {
-            fs.mkdirSync(path.join(project.dir, 'scripts'), { recursive: true });
+            fs.mkdirSync(path.join(project.dir, 'scripts'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(project.dir, 'scripts', 'generate-checksums.js'),
                 '// the developer predicate: the maintenance tooling is present\n',
             );
             const library = requireFromFixture(project.dir, 'lib', 'feedback.js');
             library.addNote(
-                { kind: 'bug', summary: 'a guard fires twice', tried: 't', happened: 'h' },
+                {
+                    kind: 'bug',
+                    summary: 'a guard fires twice',
+                    tried: 't',
+                    happened: 'h',
+                },
                 {},
                 project.dir,
             );
             library.addNote(
-                { kind: 'improvement', summary: 'a message is vague', tried: 't', happened: 'h' },
+                {
+                    kind: 'improvement',
+                    summary: 'a message is vague',
+                    tried: 't',
+                    happened: 'h',
+                },
                 {},
                 project.dir,
             );
@@ -223,7 +257,10 @@ module.exports = () => {
             assert.ok(!result.stdout.includes('Offer each draft once'), 'nothing is offered');
             assert.deepStrictEqual(
                 library.loadStore(project.dir).notes.map((n) => Boolean(n.offeredAt)),
-                [false, false],
+                [
+                    false,
+                    false,
+                ],
                 'nothing is marked offered',
             );
             assert.match(
@@ -264,7 +301,11 @@ module.exports = () => {
                 'a switched-off channel changes nothing',
             );
             setChannel('full');
-            for (const id of ['n1', 'n2']) library.discardNote(id, project.dir);
+            for (const id of [
+                'n1',
+                'n2',
+            ])
+                library.discardNote(id, project.dir);
             assert.strictEqual(
                 finalizeLib.workQueueFirst(
                     'ws',
@@ -363,13 +404,19 @@ module.exports = () => {
                 '4. **C14 follows every change inside the shipped folder.**',
                 '`node skills/magicspec/scripts/executor.js update-engine-meta` at once',
             ],
-            ['5. **Layer rules hold.**', '`scripts/generate-checksums.js`'],
+            [
+                '5. **Layer rules hold.**',
+                '`scripts/generate-checksums.js`',
+            ],
             [
                 '6. **The repair reaches every maintained release line the defect is present on.**',
                 'The 3.x line is `develop`',
                 'ported to `v2.1` through a disposable worktree outside the repository, without asking; nothing goes to `master`',
             ],
-            ['7. **Notes are discarded when repaired.**', 'feedback discard {id}'],
+            [
+                '7. **Notes are discarded when repaired.**',
+                'feedback discard {id}',
+            ],
         ];
         expected.forEach((needles, i) => {
             const text = extra.slice(extra.indexOf(steps[i]));
@@ -485,7 +532,10 @@ module.exports = () => {
             ),
             'the distribution page lists the set',
         );
-        for (const rel of ['skills/magicspec/SKILL.md', 'skills/magicspec/workflows/fix.md'])
+        for (const rel of [
+            'skills/magicspec/SKILL.md',
+            'skills/magicspec/workflows/fix.md',
+        ])
             assert.ok(
                 !readShipped(rel).includes('magicspec-dev'),
                 `${rel} names no maintenance command`,
@@ -644,7 +694,9 @@ module.exports = () => {
         for (const [i, at] of positions.entries())
             assert.notStrictEqual(at, -1, `the body has step ${steps[i]}`);
         assert.deepStrictEqual(
-            [...positions].sort((a, b) => a - b),
+            [
+                ...positions,
+            ].sort((a, b) => a - b),
             positions,
             'the steps run in order',
         );
@@ -676,7 +728,11 @@ module.exports = () => {
         ].map((c) => classify.indexOf(`- ${c}`));
         assert.ok(
             classes.every((at) => at !== -1) &&
-                [...classes].sort((a, b) => a - b).join() === classes.join(),
+                [
+                    ...classes,
+                ]
+                    .sort((a, b) => a - b)
+                    .join() === classes.join(),
             'the five classes, in the order of the rule',
         );
         assert.ok(
@@ -746,13 +802,27 @@ module.exports = () => {
         const row = rows.find((r) => r.name === 'fix');
         assert.ok(row, 'the router has the row');
         assert.deepStrictEqual(
-            { group: row.group, demand: row.demand, body: row.body },
-            { group: 'quality & automation', demand: 'deep', body: 'fix.md' },
+            {
+                group: row.group,
+                demand: row.demand,
+                body: row.body,
+            },
+            {
+                group: 'quality & automation',
+                demand: 'deep',
+                body: 'fix.md',
+            },
         );
         assert.ok(row.missing.startsWith('**required**'), 'a missing defect is asked for');
         assert.deepStrictEqual(
             rows.map((r) => r.name).slice(0, 5),
-            ['spec', 'plan', 'task', 'run', 'fix'],
+            [
+                'spec',
+                'plan',
+                'task',
+                'run',
+                'fix',
+            ],
             "the row follows run, as in the specification's table",
         );
         const help = readShipped('skills/magicspec/workflows/help.md');
@@ -837,7 +907,12 @@ module.exports = () => {
 
         // No page, and no shipped text, names a command the router does not list (an alias counts as listed).
         const hosts = require(path.join(scriptsDir, 'lib', 'hosts.js'));
-        const known = new Set(hosts.readCommands().flatMap((r) => [r.name, ...r.aliases]));
+        const known = new Set(
+            hosts.readCommands().flatMap((r) => [
+                r.name,
+                ...r.aliases,
+            ]),
+        );
         const phantoms = [];
         const scan = (rel) => {
             const full = path.join(repo, rel);
@@ -854,7 +929,12 @@ module.exports = () => {
                     });
             }
         };
-        for (const rel of ['skills/magicspec', 'docs', 'README.md']) scan(rel);
+        for (const rel of [
+            'skills/magicspec',
+            'docs',
+            'README.md',
+        ])
+            scan(rel);
         assert.deepStrictEqual(phantoms, [], 'every command a page names is a row of the router');
     });
 
@@ -984,11 +1064,19 @@ module.exports = () => {
             sync.indexOf('**Quarantine Release**'),
         );
         assert.ok(demoted.length > 0, 'Step 6 must define Demoted Spec before Quarantine Release');
-        for (const needle of ['## Backlog', 'Spec `{file}` is `{status}`']) {
+        for (const needle of [
+            '## Backlog',
+            'Spec `{file}` is `{status}`',
+        ]) {
             assert.ok(demoted.includes(needle), `Demoted Spec must state ${needle}`);
         }
         const release = sync.slice(sync.indexOf('**Quarantine Release**'));
-        for (const needle of ['C12', 'Demoted Spec', '`Stable`', 'returns to the active plan']) {
+        for (const needle of [
+            'C12',
+            'Demoted Spec',
+            '`Stable`',
+            'returns to the active plan',
+        ]) {
             assert.ok(release.includes(needle), `Quarantine Release must state ${needle}`);
         }
 
@@ -1006,7 +1094,10 @@ module.exports = () => {
             assert.ok(blocking.includes(needle), `the block must state ${needle}`);
         }
         const releasing = lineWith(taskSync, '**Releasing a block**');
-        for (const needle of ['quarantine reason', 'return to `Todo`']) {
+        for (const needle of [
+            'quarantine reason',
+            'return to `Todo`',
+        ]) {
             assert.ok(releasing?.includes(needle), `the release must state ${needle}`);
         }
         assert.ok(
@@ -1029,7 +1120,10 @@ module.exports = () => {
             const { designDir, specsDir } = makeSpecWorkspace(tempDir);
             const prescribed = documented[1].replace('{active-workspace}', 'app');
             const legacyForm = 'app-l1-auth.md';
-            for (const name of [prescribed, legacyForm]) {
+            for (const name of [
+                prescribed,
+                legacyForm,
+            ]) {
                 fs.writeFileSync(
                     path.join(specsDir, name),
                     '# Auth\n\n**Version:** 1.0.0\n**Status:** Stable\n',
@@ -1057,7 +1151,9 @@ module.exports = () => {
                 .map((w) => w.message.match(/^'([^']+)'/)[1]);
             assert.deepStrictEqual(
                 flagged,
-                [legacyForm],
+                [
+                    legacyForm,
+                ],
                 'the name the workflow prescribes passes the Layer Prefix rule; the workspace-first form it replaces does not',
             );
         } finally {
@@ -1170,7 +1266,10 @@ module.exports = () => {
 
         // The constitution and the template shipped to consumers state the same exception.
         const clauses = {};
-        for (const rel of ['.magicspec/RULES.md', 'skills/magicspec/templates/rules.md']) {
+        for (const rel of [
+            '.magicspec/RULES.md',
+            'skills/magicspec/templates/rules.md',
+        ]) {
             if (!fs.existsSync(path.join(shippedRoot, rel))) {
                 t.skip(`${rel} is not part of this checkout`);
                 return;
@@ -1275,7 +1374,10 @@ module.exports = () => {
         const cardsSpec = readShipped(
             '.magicspec/engine/specifications/l2-role-cards-execution.md',
         );
-        for (const line of [reread, readStep]) {
+        for (const line of [
+            reread,
+            readStep,
+        ]) {
             assert.ok(
                 cardsSpec.includes(line),
                 `the cards spec must carry the card line verbatim: ${line}`,
@@ -1384,7 +1486,11 @@ module.exports = () => {
         const workflow = 'skills/magicspec-dev/workflows/test.md';
         const skill = 'skills/magicspec-dev/workflows/test.md';
         const docs = 'docs/dev-test.md';
-        for (const rel of [workflow, skill, docs]) {
+        for (const rel of [
+            workflow,
+            skill,
+            docs,
+        ]) {
             assert.ok(
                 !approvalGate.test(readShipped(rel)),
                 `${rel} must not make a fix wait for approval`,
@@ -1392,7 +1498,10 @@ module.exports = () => {
         }
 
         // The workflow and the skill generated from it state the ladder, the selection and the record.
-        for (const rel of [workflow, skill]) {
+        for (const rel of [
+            workflow,
+            skill,
+        ]) {
             const text = readShipped(rel);
             for (const needle of [
                 '**Adjudication**',
@@ -1453,13 +1562,21 @@ module.exports = () => {
         const body = (rel) => readShipped(rel).split(/\n## (?:Document History|Sync Note)\b/)[0];
         const surfaces = [
             ...engineBodies().map(({ rel }) => rel),
-            ...listShipped('skills/magicspec/roles', ['.md']),
+            ...listShipped('skills/magicspec/roles', [
+                '.md',
+            ]),
             'skills/magicspec/templates/rules.md',
             'skills/magicspec/CONSTITUTION.md',
-            ...listShipped('workflows', ['.md']),
-            ...listShipped('skills', ['.md']),
+            ...listShipped('workflows', [
+                '.md',
+            ]),
+            ...listShipped('skills', [
+                '.md',
+            ]),
             '.magicspec/RULES.md',
-            ...listShipped('docs', ['.md']),
+            ...listShipped('docs', [
+                '.md',
+            ]),
         ];
         for (const rel of surfaces) {
             const hit = body(rel)
@@ -1541,8 +1658,14 @@ module.exports = () => {
         );
 
         // C9: the hard fork and the scan-depth gate resolve by the forecast in both constitutions.
-        for (const rel of ['.magicspec/RULES.md', 'skills/magicspec/templates/rules.md']) {
-            for (const gate of ['3. **Architectural Hard Fork**', '7. **Depth Control Limit**']) {
+        for (const rel of [
+            '.magicspec/RULES.md',
+            'skills/magicspec/templates/rules.md',
+        ]) {
+            for (const gate of [
+                '3. **Architectural Hard Fork**',
+                '7. **Depth Control Limit**',
+            ]) {
                 assert.ok(
                     lineWith(readShipped(rel), gate)?.includes('DA-10'),
                     `${rel} ${gate} must resolve by DA-10`,
@@ -1668,7 +1791,11 @@ module.exports = () => {
         // The handoff is conditional on something to run, and names the report it falls back to.
         const handoff = lineWith(task, '**One Stage**');
         assert.ok(handoff, 'task.md must carry the One Stage guard');
-        for (const needle of ['`Todo` or `In Progress` task', '`Blocked [!]`', 'Stalled Plan']) {
+        for (const needle of [
+            '`Todo` or `In Progress` task',
+            '`Blocked [!]`',
+            'Stalled Plan',
+        ]) {
             assert.ok(handoff.includes(needle), `the handoff must state ${needle}`);
         }
 
@@ -1778,7 +1905,11 @@ module.exports = () => {
         assert.notStrictEqual(review, '', 'the post-write review section must be found');
         const halt = lineWith(review, 'Practical conflict found');
         assert.ok(halt, 'the post-write review must define its HALT');
-        for (const needle of ['**HALT**', '(already written)', '`/magicspec rule amend C{N}`']) {
+        for (const needle of [
+            '**HALT**',
+            '(already written)',
+            '`/magicspec rule amend C{N}`',
+        ]) {
             assert.ok(halt.includes(needle), `the post-write HALT must state ${needle}`);
         }
         assert.ok(

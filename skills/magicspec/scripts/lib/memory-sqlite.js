@@ -86,7 +86,10 @@ function filtersOf(options) {
         where.push('s.workspace = ?');
         params.push(options.workspace);
     }
-    return { where, params };
+    return {
+        where,
+        params,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -144,13 +147,17 @@ function connect(sqlite, dbPath) {
  * @throws {Error} When FTS5 is not available or the file cannot be opened.
  */
 function openDatabase(sqlite, dbPath) {
-    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    fs.mkdirSync(path.dirname(dbPath), {
+        recursive: true,
+    });
     let db;
     try {
         db = connect(sqlite, dbPath);
     } catch (err) {
         if (!isUnusableDatabase(err)) throw err;
-        fs.rmSync(dbPath, { force: true });
+        fs.rmSync(dbPath, {
+            force: true,
+        });
         db = connect(sqlite, dbPath);
     }
     db.prepare("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)").run(
@@ -217,7 +224,13 @@ function open(dbPath, sqlite) {
             statement.putMeta.run(key, String(value));
         },
 
-        fileHashes: () => new Map(statement.hashes.all().map((r) => [r.path, r.sha256])),
+        fileHashes: () =>
+            new Map(
+                statement.hashes.all().map((r) => [
+                    r.path,
+                    r.sha256,
+                ]),
+            ),
 
         replaceFile(rel, sha256, units) {
             begin();
@@ -225,12 +238,25 @@ function open(dbPath, sqlite) {
             // its kind, version and lines are location and header, so they follow the file.
             const kept = new Map();
             for (const row of statement.ofFile.all(rel)) {
-                const key = JSON.stringify([row.heading, row.body]);
-                kept.set(key, [...(kept.get(key) ?? []), row.id]);
+                const key = JSON.stringify([
+                    row.heading,
+                    row.body,
+                ]);
+                kept.set(key, [
+                    ...(kept.get(key) ?? []),
+                    row.id,
+                ]);
             }
             const fresh = [];
             for (const u of units) {
-                const id = kept.get(JSON.stringify([u.heading, u.body]))?.shift();
+                const id = kept
+                    .get(
+                        JSON.stringify([
+                            u.heading,
+                            u.body,
+                        ]),
+                    )
+                    ?.shift();
                 if (id === undefined) fresh.push(u);
                 else {
                     statement.refile.run(
@@ -273,9 +299,13 @@ function open(dbPath, sqlite) {
 
         sectionMeta: () =>
             new Map(
-                statement.meta
-                    .all()
-                    .map((r) => [Number(r.id), { kind: r.kind, workspace: r.workspace }]),
+                statement.meta.all().map((r) => [
+                    Number(r.id),
+                    {
+                        kind: r.kind,
+                        workspace: r.workspace,
+                    },
+                ]),
             ),
 
         sectionsByIds(ids) {
@@ -287,13 +317,19 @@ function open(dbPath, sqlite) {
                         `SELECT id, path, heading, kind, workspace, status, version, ordinal, line_start AS lineStart, line_end AS lineEnd, body FROM sections WHERE id IN (${chunk.map(() => '?').join(', ')})`,
                     )
                     .all(...chunk);
-                for (const row of rows) found.set(Number(row.id), { ...row });
+                for (const row of rows)
+                    found.set(Number(row.id), {
+                        ...row,
+                    });
             }
             return found;
         },
 
         pendingVectors: (model, dim, limit) =>
-            statement.pending.all(model, dim, limit).map((r) => ({ ...r, id: Number(r.id) })),
+            statement.pending.all(model, dim, limit).map((r) => ({
+                ...r,
+                id: Number(r.id),
+            })),
 
         putVectors(model, dim, entries) {
             begin();
@@ -347,7 +383,9 @@ function open(dbPath, sqlite) {
                      ORDER BY score DESC, s.id ASC LIMIT ?`,
                 )
                 .all(matchOf(phrases), ...params, options.limit ?? 10);
-            return rows.map((row) => ({ ...row }));
+            return rows.map((row) => ({
+                ...row,
+            }));
         },
 
         /**
@@ -417,11 +455,18 @@ function openBackend(cacheDir, options = {}) {
         const absent =
             err?.code === 'ERR_UNKNOWN_BUILTIN_MODULE' || err?.code === 'MODULE_NOT_FOUND';
         if (!absent) reason = err.message;
-        if (!existed) fs.rmSync(dbPath, { force: true });
+        if (!existed)
+            fs.rmSync(dbPath, {
+                force: true,
+            });
     }
     const backend = require('./memory-fallback').open(path.join(cacheDir, 'memory.json'));
     backend.fallbackReason = reason;
     return backend;
 }
 
-module.exports = { open, openBackend, SCHEMA_VERSION };
+module.exports = {
+    open,
+    openBackend,
+    SCHEMA_VERSION,
+};

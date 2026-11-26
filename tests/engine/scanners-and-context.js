@@ -27,7 +27,9 @@ module.exports = () => {
         try {
             // Real design content (must always be scanned).
             const designDir = path.join(tempDir, '.magicspec');
-            fs.mkdirSync(designDir, { recursive: true });
+            fs.mkdirSync(designDir, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n');
             fs.writeFileSync(
                 path.join(designDir, 'real-a.md'),
@@ -37,7 +39,9 @@ module.exports = () => {
 
             // Fixture subtree that must vanish once `*tmp/` is gitignored.
             const tmpDir = path.join(tempDir, '.tmp');
-            fs.mkdirSync(tmpDir, { recursive: true });
+            fs.mkdirSync(tmpDir, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tmpDir, 'fix-a.md'), '# Fix A\n[Fix B](./fix-b.md)\n');
             fs.writeFileSync(path.join(tmpDir, 'fix-b.md'), '# Fix B\n');
 
@@ -87,7 +91,9 @@ module.exports = () => {
 
             // Real source file — must always be scanned.
             const srcDir = path.join(tempDir, 'src');
-            fs.mkdirSync(srcDir, { recursive: true });
+            fs.mkdirSync(srcDir, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(srcDir, 'main.rs'), '// NOTE: genuine design rationale\n');
 
             // Generated artifact tree — must vanish once generated/ is gitignored.
@@ -102,7 +108,9 @@ module.exports = () => {
                 'core',
                 'result',
             );
-            fs.mkdirSync(artifactDir, { recursive: true });
+            fs.mkdirSync(artifactDir, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(artifactDir, 'enum.Result.js'),
                 '// NOTE: generated artifact, not authored rationale\n',
@@ -117,7 +125,10 @@ module.exports = () => {
             );
             const run = () =>
                 JSON.parse(
-                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }),
+                    execSync(`node "${scriptPath}" --json`, {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    }),
                 );
 
             // Control — no .gitignore: `generated` is absent from SKIP_DIRS, so the artifact IS scanned.
@@ -264,7 +275,10 @@ module.exports = () => {
                 'analyze-coverage.js',
             );
             const out = JSON.parse(
-                execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }),
+                execSync(`node "${scriptPath}" --json`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                }),
             );
             const files = out.coverage.map((c) => c.file);
 
@@ -289,8 +303,12 @@ module.exports = () => {
     test('generate-context.js prunes gitignored entries from the tree but honors negation', () => {
         const tempDir = createTempWorkspace();
         try {
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
-            fs.mkdirSync(path.join(tempDir, 'buildout'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
+            fs.mkdirSync(path.join(tempDir, 'buildout'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, 'buildout', 'artifact.bin'), 'x');
             fs.writeFileSync(path.join(tempDir, '.env'), 'SECRET=1\n');
             fs.writeFileSync(path.join(tempDir, '.env.example'), 'SECRET=\n');
@@ -303,7 +321,10 @@ module.exports = () => {
                 'scripts',
                 'generate-context.js',
             );
-            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
             const context = fs.readFileSync(path.join(tempDir, '.magicspec', 'CONTEXT.md'), 'utf8');
 
             assert.ok(
@@ -349,11 +370,34 @@ module.exports = () => {
             // Regression guard: every scanner derives its skip list from the shared
             // floor instead of re-hardcoding a private copy (the pre-unification state).
             const consumers = [
-                ['skills', 'magicspec', 'scripts', 'detect-communities.js'],
-                ['skills', 'magicspec', 'scripts', 'extract-rationale.js'],
-                ['skills', 'magicspec', 'scripts', 'analyze-coverage.js'],
-                ['skills', 'magicspec', 'scripts', 'generate-context.js'],
-                ['scripts', 'benchmark.js'],
+                [
+                    'skills',
+                    'magicspec',
+                    'scripts',
+                    'detect-communities.js',
+                ],
+                [
+                    'skills',
+                    'magicspec',
+                    'scripts',
+                    'extract-rationale.js',
+                ],
+                [
+                    'skills',
+                    'magicspec',
+                    'scripts',
+                    'analyze-coverage.js',
+                ],
+                [
+                    'skills',
+                    'magicspec',
+                    'scripts',
+                    'generate-context.js',
+                ],
+                [
+                    'scripts',
+                    'benchmark.js',
+                ],
             ];
             for (const parts of consumers) {
                 const src = fs.readFileSync(path.join(tempDir, ...parts), 'utf8');
@@ -389,7 +433,10 @@ module.exports = () => {
             const coverage = JSON.parse(
                 execSync(
                     `node "${path.join(tempDir, 'skills', 'magicspec', 'scripts', 'analyze-coverage.js')}" --json`,
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 ),
             );
             const covFiles = coverage.coverage.map((c) => c.file);
@@ -403,7 +450,10 @@ module.exports = () => {
             const rationale = JSON.parse(
                 execSync(
                     `node "${path.join(tempDir, 'skills', 'magicspec', 'scripts', 'extract-rationale.js')}" --json`,
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 ),
             );
             assert.ok(
@@ -431,7 +481,10 @@ module.exports = () => {
                 JSON.parse(
                     execSync(
                         `node "${path.join(tempDir, 'skills', 'magicspec', 'scripts', 'detect-communities.js')}" --include-md --json`,
-                        { cwd: tempDir, encoding: 'utf8' },
+                        {
+                            cwd: tempDir,
+                            encoding: 'utf8',
+                        },
                     ),
                 );
             const before = runGraph();
@@ -461,23 +514,52 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             const { parseFlags } = requireFromFixture(tempDir, 'utils.js');
-            const spec = { valueFlags: ['--workspace', '--workflow'], boolFlags: ['--json'] };
+            const spec = {
+                valueFlags: [
+                    '--workspace',
+                    '--workflow',
+                ],
+                boolFlags: [
+                    '--json',
+                ],
+            };
 
             // Both forms yield the same value.
             assert.strictEqual(
-                parseFlags(['--workspace=docs'], spec).values['--workspace'],
+                parseFlags(
+                    [
+                        '--workspace=docs',
+                    ],
+                    spec,
+                ).values['--workspace'],
                 'docs',
             );
             assert.strictEqual(
-                parseFlags(['--workspace', 'docs'], spec).values['--workspace'],
+                parseFlags(
+                    [
+                        '--workspace',
+                        'docs',
+                    ],
+                    spec,
+                ).values['--workspace'],
                 'docs',
             );
 
             // Unrecognized tokens pass through untouched (executor forwards them to the child).
-            const proxied = parseFlags(['--json', '--require-tasks', '--workspace', 'docs'], spec);
+            const proxied = parseFlags(
+                [
+                    '--json',
+                    '--require-tasks',
+                    '--workspace',
+                    'docs',
+                ],
+                spec,
+            );
             assert.deepStrictEqual(
                 proxied.rest,
-                ['--require-tasks'],
+                [
+                    '--require-tasks',
+                ],
                 'unknown tokens survive in rest',
             );
             assert.strictEqual(
@@ -490,25 +572,51 @@ module.exports = () => {
 
             // Fail closed — the four silent-fallback shapes.
             assert.ok(
-                parseFlags(['--workspace'], spec).errors.length,
+                parseFlags(
+                    [
+                        '--workspace',
+                    ],
+                    spec,
+                ).errors.length,
                 'bare flag at end of argv is an error',
             );
             assert.ok(
-                parseFlags(['--workspace', '--json'], spec).errors.length,
+                parseFlags(
+                    [
+                        '--workspace',
+                        '--json',
+                    ],
+                    spec,
+                ).errors.length,
                 'a following flag is not a value',
             );
             assert.ok(
-                parseFlags(['--workspace='], spec).errors.length,
+                parseFlags(
+                    [
+                        '--workspace=',
+                    ],
+                    spec,
+                ).errors.length,
                 'an empty value is an error',
             );
             assert.ok(
-                parseFlags(['--json=1'], spec).errors.length,
+                parseFlags(
+                    [
+                        '--json=1',
+                    ],
+                    spec,
+                ).errors.length,
                 'a boolean flag rejects a value',
             );
 
             // An embedded '=' must reach the caller's validation, never be truncated to `a`.
             assert.strictEqual(
-                parseFlags(['--workspace=a=b'], spec).values['--workspace'],
+                parseFlags(
+                    [
+                        '--workspace=a=b',
+                    ],
+                    spec,
+                ).values['--workspace'],
                 'a=b',
                 "split('=')[1] truncation must not resurface",
             );
@@ -526,12 +634,23 @@ module.exports = () => {
     test('executor.js routes --workspace <name> identically to --workspace=<name>', () => {
         const tempDir = createTempWorkspace();
         try {
-            for (const ws of ['main', 'docs']) {
-                fs.mkdirSync(path.join(tempDir, '.magicspec', ws), { recursive: true });
+            for (const ws of [
+                'main',
+                'docs',
+            ]) {
+                fs.mkdirSync(path.join(tempDir, '.magicspec', ws), {
+                    recursive: true,
+                });
             }
             fs.writeFileSync(
                 path.join(tempDir, '.magicspec', 'workspace.json'),
-                JSON.stringify({ default: 'main', workspaces: { main: {}, docs: {} } }),
+                JSON.stringify({
+                    default: 'main',
+                    workspaces: {
+                        main: {},
+                        docs: {},
+                    },
+                }),
             );
 
             const executorPath = path.join(
@@ -543,7 +662,10 @@ module.exports = () => {
             );
             const contextOf = (ws) => path.join(tempDir, '.magicspec', ws, 'CONTEXT.md');
             const clearContexts = () => {
-                for (const ws of ['main', 'docs']) {
+                for (const ws of [
+                    'main',
+                    'docs',
+                ]) {
                     if (fs.existsSync(contextOf(ws))) fs.unlinkSync(contextOf(ws));
                 }
             };
@@ -736,12 +858,20 @@ module.exports = () => {
     test('generate-context.js always shows the design and engine roots (landmarks)', () => {
         const tempDir = createTempWorkspace();
         try {
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
-            fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
+            fs.mkdirSync(path.join(tempDir, 'src'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, 'src', 'a.js'), 'var a = 1;\n');
-            fs.mkdirSync(path.join(tempDir, 'other'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, 'other'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, 'other', 'b.js'), 'var b = 1;\n');
-            fs.mkdirSync(path.join(tempDir, 'dist'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, 'dist'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, 'dist', 'bundle.js'), 'var d = 1;\n');
             // A user project may legitimately gitignore its design dir — the
             // map must still anchor on it.
@@ -758,7 +888,10 @@ module.exports = () => {
                 fs.readFileSync(path.join(tempDir, '.magicspec', 'CONTEXT.md'), 'utf8');
 
             // (a) No scope: gitignored .magicspec stays visible; dist/ (floor) is hidden.
-            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
             let context = read();
             assert.ok(
                 context.includes('.magicspec/'),
@@ -778,7 +911,10 @@ module.exports = () => {
             execSync(`node "${scriptPath}"`, {
                 cwd: tempDir,
                 stdio: 'pipe',
-                env: { ...process.env, MAGIC_WORKSPACE_SCOPE: '["src"]' },
+                env: {
+                    ...process.env,
+                    MAGIC_WORKSPACE_SCOPE: '["src"]',
+                },
             });
             context = read();
             assert.ok(context.includes('src/'), 'scoped dir must be visible');
@@ -800,7 +936,9 @@ module.exports = () => {
     test('generate-context.js demotes the embedded changelog headings (single H1)', () => {
         const tempDir = createTempWorkspace();
         try {
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(tempDir, '.magicspec', 'CHANGELOG.md'),
                 '# Journal\n\nIntro.\n\n## Phase 3\n\n```sh\n# not a heading\n```\n\n- item\n',
@@ -813,7 +951,13 @@ module.exports = () => {
                 if (l.startsWith('```')) inFence = !inFence;
                 return !inFence && /^# /.test(l);
             });
-            assert.deepStrictEqual(h1, ['# Project Context'], 'only the document title may be H1');
+            assert.deepStrictEqual(
+                h1,
+                [
+                    '# Project Context',
+                ],
+                'only the document title may be H1',
+            );
             assert.ok(
                 context.includes('\n### Journal\n'),
                 'changelog title nests under Recent Changes',

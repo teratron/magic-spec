@@ -35,7 +35,9 @@ const VOLATILE_STATE_FILES = new Set([
  * the location is written: the maintenance-layout step changes this line and nothing
  * else. The scripts are never `require`d from the engine, only probed for and run.
  */
-const MAINTENANCE_SCRIPTS_DIR = ['scripts'];
+const MAINTENANCE_SCRIPTS_DIR = [
+    'scripts',
+];
 
 /** The line that shows which pre-commit hooks the installer wrote (and `remove` may delete). */
 const HOOK_MARKER = '# Magic Spec Pre-commit Hook';
@@ -159,7 +161,9 @@ function mkdirSafe(dirPath) {
         console.log(`  🧪 [dry-run] would create dir: ${rel}`);
         return false;
     }
-    fs.mkdirSync(dirPath, { recursive: true });
+    fs.mkdirSync(dirPath, {
+        recursive: true,
+    });
     return true;
 }
 
@@ -269,7 +273,13 @@ function describeManifestDelta(filePath, expectedHash) {
  * @param {string[]} [arrayOfFiles=[]] - Accumulator for recursive calls.
  * @returns {string[]} Array of absolute file paths.
  */
-function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
+function getAllFiles(
+    dirPath,
+    ignoreDirs = [
+        'history',
+    ],
+    arrayOfFiles = [],
+) {
     const files = fs.readdirSync(dirPath);
     const path = require('path');
 
@@ -374,7 +384,9 @@ function isSkippedDir(skipNames, name, relPath) {
 function walkFiles(dir, filters = {}, result = []) {
     let entries;
     try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
+        entries = fs.readdirSync(dir, {
+            withFileTypes: true,
+        });
     } catch {
         return result;
     }
@@ -632,8 +644,15 @@ function graphPaths(designAbs) {
 
 /** Which earlier locations each graph writer replaces (base names inside the state folder). */
 const LEGACY_GRAPH_GROUPS = Object.freeze({
-    wiki: ['.graph-cache', 'wiki', 'graph-snapshot.json', 'graph-before.json'],
-    page: ['spec-graph.html'],
+    wiki: [
+        '.graph-cache',
+        'wiki',
+        'graph-snapshot.json',
+        'graph-before.json',
+    ],
+    page: [
+        'spec-graph.html',
+    ],
 });
 
 /**
@@ -666,10 +685,15 @@ function retireLegacyGraph(designAbs, rootDir, group) {
         if (isDryRun()) continue;
         const target = moved[name];
         if (target && !fs.existsSync(target)) {
-            fs.mkdirSync(path.dirname(target), { recursive: true });
+            fs.mkdirSync(path.dirname(target), {
+                recursive: true,
+            });
             fs.renameSync(legacyPath, target);
         } else {
-            fs.rmSync(legacyPath, { recursive: true, force: true });
+            fs.rmSync(legacyPath, {
+                recursive: true,
+                force: true,
+            });
         }
     }
     return retired;
@@ -813,7 +837,12 @@ function parseFlags(argv, spec = {}) {
         values[key] = value;
     }
 
-    return { values, flags, rest, errors };
+    return {
+        values,
+        flags,
+        rest,
+        errors,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -1034,7 +1063,13 @@ function normalizePathEntry(entry) {
 function compilePathEntry(entry) {
     const source = normalizePathEntry(entry);
     if (source === '') {
-        return { entry, source, isPattern: false, staticPrefix: '', test: () => true };
+        return {
+            entry,
+            source,
+            isPattern: false,
+            staticPrefix: '',
+            test: () => true,
+        };
     }
     const isPattern = PATH_PATTERN_CHARS.test(source);
     const segments = source.split('/');
@@ -1050,7 +1085,13 @@ function compilePathEntry(entry) {
         };
     }
     const re = new RegExp(`^(?:${globToRegexSource(source)})(?:/.*)?$`);
-    return { entry, source, isPattern, staticPrefix, test: (p) => re.test(p) };
+    return {
+        entry,
+        source,
+        isPattern,
+        staticPrefix,
+        test: (p) => re.test(p),
+    };
 }
 
 /**
@@ -1107,13 +1148,22 @@ function resolveDesignRoot(rootDir) {
     const envDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
     const candidate = path.resolve(rootDir, envDir);
     if (fs.existsSync(path.join(candidate, 'workspace.json'))) {
-        return { designDir: envDir, designAbs: candidate };
+        return {
+            designDir: envDir,
+            designAbs: candidate,
+        };
     }
     const parent = path.dirname(candidate);
     if (parent !== candidate && fs.existsSync(path.join(parent, 'workspace.json'))) {
-        return { designDir: path.relative(rootDir, parent), designAbs: parent };
+        return {
+            designDir: path.relative(rootDir, parent),
+            designAbs: parent,
+        };
     }
-    return { designDir: envDir, designAbs: candidate };
+    return {
+        designDir: envDir,
+        designAbs: candidate,
+    };
 }
 
 module.exports = {

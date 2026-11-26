@@ -148,4 +148,9 @@ function listTrackingEntries(content, rawContent = content) {
     return entries;
 }
 
-module.exports = { getTrackingBlock, readField, countAttempts, listTrackingEntries };
+module.exports = {
+    getTrackingBlock,
+    readField,
+    countAttempts,
+    listTrackingEntries,
+};

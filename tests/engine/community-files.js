@@ -50,17 +50,29 @@ module.exports = () => {
             ].join('\n'),
         );
         if (guide !== null) fs.writeFileSync(path.join(dir, 'CONTRIBUTING.md'), guide);
-        fs.mkdirSync(path.join(dir, 'scripts', 'templates'), { recursive: true });
+        fs.mkdirSync(path.join(dir, 'scripts', 'templates'), {
+            recursive: true,
+        });
         fs.writeFileSync(
             path.join(dir, 'scripts', 'templates', 'contributing.md'),
             '# Contributing to {{project_name}}\n\nSeed prose.\n\n<!-- generated:commands -->\n<!-- /generated:commands -->\n',
         );
         const run = () =>
-            execFileSync(process.execPath, [path.join(dir, 'scripts', 'sync-docs.js')], {
-                cwd: dir,
-                stdio: 'pipe',
-            });
-        return { dir, run, guidePath: path.join(dir, 'CONTRIBUTING.md') };
+            execFileSync(
+                process.execPath,
+                [
+                    path.join(dir, 'scripts', 'sync-docs.js'),
+                ],
+                {
+                    cwd: dir,
+                    stdio: 'pipe',
+                },
+            );
+        return {
+            dir,
+            run,
+            guidePath: path.join(dir, 'CONTRIBUTING.md'),
+        };
     };
     const withoutBlockBodies = (text) =>
         text.replace(/(<!-- generated:([a-z]+) -->)[\s\S]*?(<!-- \/generated:\2 -->)/g, '$1$3');
@@ -132,7 +144,11 @@ module.exports = () => {
             run();
             const after = fs.readFileSync(guidePath, 'utf8');
             assert.ok(after.startsWith(guide), 'the prose is kept byte for byte');
-            for (const key of ['version', 'commands', 'workspaces']) {
+            for (const key of [
+                'version',
+                'commands',
+                'workspaces',
+            ]) {
                 assert.strictEqual(
                     after.split(`<!-- generated:${key} -->`).length - 1,
                     1,
@@ -208,19 +224,34 @@ module.exports = () => {
     const readIssueForm = (file) => {
         const text = fs.readFileSync(file, 'utf8');
         return {
-            keys: [...text.matchAll(/^([a-z_]+):/gm)].map((m) => m[1]),
-            labels: [...text.matchAll(/^ {6}label: (.+)$/gm)].map((m) => m[1].trim()),
+            keys: [
+                ...text.matchAll(/^([a-z_]+):/gm),
+            ].map((m) => m[1]),
+            labels: [
+                ...text.matchAll(/^ {6}label: (.+)$/gm),
+            ].map((m) => m[1].trim()),
             text,
         };
     };
     const issueFormsDir = path.resolve(TESTS_DIR, '..', '.github', 'ISSUE_TEMPLATE');
 
     test("the issue forms carry the sections the engine's reports and the policy name, and the chooser disables blank issues", () => {
-        const keys = ['name', 'description', 'title', 'labels', 'body'];
+        const keys = [
+            'name',
+            'description',
+            'title',
+            'labels',
+            'body',
+        ];
         const bug = readIssueForm(path.join(issueFormsDir, 'bug-report.yml'));
         const change = readIssueForm(path.join(issueFormsDir, 'change-proposal.yml'));
         const feedback = readIssueForm(path.join(issueFormsDir, 'agent-feedback.yml'));
-        for (const form of [bug, change, feedback]) assert.deepStrictEqual(form.keys, keys);
+        for (const form of [
+            bug,
+            change,
+            feedback,
+        ])
+            assert.deepStrictEqual(form.keys, keys);
 
         // The bug form asks for the version, the host, the command, the steps, the expectation and the outcome.
         assert.deepStrictEqual(bug.labels, [
@@ -254,7 +285,9 @@ module.exports = () => {
         );
         if (fs.existsSync(spec)) {
             const specText = fs.readFileSync(spec, 'utf8');
-            const specLines = [...specText.matchAll(/^ {2}## (.+)$/gm)].map((m) => m[1]);
+            const specLines = [
+                ...specText.matchAll(/^ {2}## (.+)$/gm),
+            ].map((m) => m[1]);
             assert.strictEqual(
                 specLines.length,
                 layout.length,
@@ -270,7 +303,10 @@ module.exports = () => {
 
         // The chooser: blank issues off, the private reporting page linked, no Discussions page.
         const config = readIssueForm(path.join(issueFormsDir, 'config.yml'));
-        assert.deepStrictEqual(config.keys, ['blank_issues_enabled', 'contact_links']);
+        assert.deepStrictEqual(config.keys, [
+            'blank_issues_enabled',
+            'contact_links',
+        ]);
         assert.match(config.text, /^blank_issues_enabled: false$/m);
         assert.ok(
             config.text.includes('/security/advisories/new'),
@@ -324,10 +360,21 @@ module.exports = () => {
         const guide = fs.readFileSync(path.join(repo, 'CONTRIBUTING.md'), 'utf8');
 
         // The five sections, in the order the contract states.
-        const headings = [...guide.matchAll(/^## (\d)\. (.+)$/gm)].map((m) => [Number(m[1]), m[2]]);
+        const headings = [
+            ...guide.matchAll(/^## (\d)\. (.+)$/gm),
+        ].map((m) => [
+            Number(m[1]),
+            m[2],
+        ]);
         assert.deepStrictEqual(
             headings.map(([n]) => n),
-            [1, 2, 3, 4, 5],
+            [
+                1,
+                2,
+                3,
+                4,
+                5,
+            ],
         );
         const patterns = [
             /report a bug.*propose a change/i,
@@ -339,7 +386,11 @@ module.exports = () => {
         for (const [index, [, title]] of headings.entries()) assert.match(title, patterns[index]);
 
         // The three generated blocks are present and paired.
-        for (const key of ['version', 'commands', 'workspaces']) {
+        for (const key of [
+            'version',
+            'commands',
+            'workspaces',
+        ]) {
             assert.ok(
                 guide.includes(`<!-- generated:${key} -->`) &&
                     guide.includes(`<!-- /generated:${key} -->`),
@@ -377,9 +428,9 @@ module.exports = () => {
             guide.indexOf('<!-- generated:commands -->'),
             guide.indexOf('<!-- /generated:commands -->'),
         );
-        const guideCommands = [...block.matchAll(/^\| `\/magicspec ([a-z-]+)` \|/gm)].map(
-            (m) => m[1],
-        );
+        const guideCommands = [
+            ...block.matchAll(/^\| `\/magicspec ([a-z-]+)` \|/gm),
+        ].map((m) => m[1]);
         assert.deepStrictEqual(
             guideCommands,
             routerCommands,
@@ -405,7 +456,12 @@ module.exports = () => {
         ]) {
             assert.ok(text.includes(needle), `the template carries: ${needle}`);
         }
-        for (const variant of ['edge input', 'error path', 'permission boundary', 'interruption']) {
+        for (const variant of [
+            'edge input',
+            'error path',
+            'permission boundary',
+            'interruption',
+        ]) {
             assert.ok(text.includes(variant), `a scenario names the variant: ${variant}`);
         }
         for (const needle of [
@@ -440,7 +496,10 @@ module.exports = () => {
             !template.includes('Skeptic persona (dev-only'),
             'the shipped template carries no developer row',
         );
-        for (const text of [constitution, template]) {
+        for (const text of [
+            constitution,
+            template,
+        ]) {
             const registryLine = lineWith(text, 'Full registry:');
             assert.ok(
                 registryLine?.includes('16 registered role cards'),
@@ -622,8 +681,16 @@ module.exports = () => {
         const row = routerRows().find((r) => r.name === 'simulate');
         assert.ok(row, 'the router lists simulate');
         assert.deepStrictEqual(
-            { group: row.group, demand: row.demand, file: row.file },
-            { group: 'quality & automation', demand: 'standard', file: 'simulate' },
+            {
+                group: row.group,
+                demand: row.demand,
+                file: row.file,
+            },
+            {
+                group: 'quality & automation',
+                demand: 'standard',
+                file: 'simulate',
+            },
         );
         assert.ok(
             row.missing.startsWith('optional'),
@@ -661,8 +728,12 @@ module.exports = () => {
                 '```',
                 '',
             ].join('\n');
-        const failing = makeArchivalProject(undefined, { done: false });
-        const clean = makeArchivalProject(undefined, { done: false });
+        const failing = makeArchivalProject(undefined, {
+            done: false,
+        });
+        const clean = makeArchivalProject(undefined, {
+            done: false,
+        });
         try {
             writeTreeFiles(failing.dir, {
                 '.magicspec/ws/simulations/checkout.md': scenarioFile([
@@ -774,14 +845,23 @@ module.exports = () => {
         assert.strictEqual(bullets.deriveChangelogCategory('simulate', []), 'Changed');
         assert.strictEqual(
             bullets.buildChangelogBullet('simulate', 'ws', [
-                { path: '.magicspec/ws/simulations/a.md', status: 'modified' },
+                {
+                    path: '.magicspec/ws/simulations/a.md',
+                    status: 'modified',
+                },
             ]),
             'Ran the user scenarios (ws)',
         );
         assert.strictEqual(
             bullets.buildChangelogBullet('simulate', 'ws', [
-                { path: '.magicspec/ws/simulations/a.md', status: 'modified' },
-                { path: '.magicspec/ws/simulations/b.md', status: 'added' },
+                {
+                    path: '.magicspec/ws/simulations/a.md',
+                    status: 'modified',
+                },
+                {
+                    path: '.magicspec/ws/simulations/b.md',
+                    status: 'added',
+                },
             ]),
             'Ran the user scenarios of 2 areas (ws)',
         );
@@ -789,7 +869,9 @@ module.exports = () => {
             requireFromFixture(path.resolve(TESTS_DIR, '..'), 'lib', 'significance.js').WHITELIST[
                 'magic.simulate'
             ],
-            ['.magicspec/{ws}/simulations/**/*.md'],
+            [
+                '.magicspec/{ws}/simulations/**/*.md',
+            ],
         );
 
         // The rule kernel names the workflow and stays within its budget; the fix body says where the findings are read.
@@ -950,7 +1032,10 @@ module.exports = () => {
         ]) {
             assert.ok(section.includes(needle), `the interface section carries: ${needle}`);
         }
-        for (const template of [design, spec]) {
+        for (const template of [
+            design,
+            spec,
+        ]) {
             assert.ok(
                 !/\bl[12]-[a-z0-9-]+\.md\b/.test(template.replace(/\{l1-layer-1-file\.md\}/g, '')),
                 'a shipped template names no specification file of this repository',
@@ -1055,7 +1140,10 @@ module.exports = () => {
             task.indexOf('- **Testing (Mandatory)**') < task.indexOf(scenarios),
             'after the validation task rule',
         );
-        for (const line of ['  ☐ Scenarios (SM-3):', '  ☐ Interface tasks (UI-5, UI-6):']) {
+        for (const line of [
+            '  ☐ Scenarios (SM-3):',
+            '  ☐ Interface tasks (UI-5, UI-6):',
+        ]) {
             assert.ok(task.includes(line), `the checklist has: ${line}`);
         }
         assert.ok(
@@ -1105,7 +1193,10 @@ module.exports = () => {
             ),
             'the QA review asks for both',
         );
-        for (const line of ['  ☐ Scenario upkeep (SM-4):', '  ☐ Interface (UI-6, UI-7):']) {
+        for (const line of [
+            '  ☐ Scenario upkeep (SM-4):',
+            '  ☐ Interface (UI-6, UI-7):',
+        ]) {
             assert.ok(run.includes(line), `the checklist has: ${line}`);
         }
         assert.ok(

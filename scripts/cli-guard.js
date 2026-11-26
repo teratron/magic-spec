@@ -32,7 +32,10 @@ const MAINTENANCE_COMMANDS = {
                 kind: 'space',
                 help: 'Version being released (default: the content of skills/magicspec/.version)',
             },
-            '--policy': { kind: 'space', help: 'Policy file (default: SECURITY.md)' },
+            '--policy': {
+                kind: 'space',
+                help: 'Policy file (default: SECURITY.md)',
+            },
         },
     },
     'sync-manifests': {
@@ -44,21 +47,36 @@ const MAINTENANCE_COMMANDS = {
     'generate-checksums': {
         summary: 'Rebuild the integrity manifest (.checksums) of an engine folder.',
         options: {
-            '--dir': { kind: 'value', help: 'Engine folder (default: skills/magicspec)' },
+            '--dir': {
+                kind: 'value',
+                help: 'Engine folder (default: skills/magicspec)',
+            },
         },
     },
     'validate-hardlinks': {
         summary: 'Check the links and hardlinks the repository keeps for agent hosts.',
         options: {
-            '--strict': { kind: 'bool', help: 'Exit non-zero on any drift' },
+            '--strict': {
+                kind: 'bool',
+                help: 'Exit non-zero on any drift',
+            },
         },
     },
     benchmark: {
         summary: 'Compare the token cost of graph queries with reading the raw specifications.',
         options: {
-            '--depth': { kind: 'space', help: 'Breadth-first depth for graph queries (default 2)' },
-            '--top': { kind: 'space', help: 'How many god nodes seed the queries (default 5)' },
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+            '--depth': {
+                kind: 'space',
+                help: 'Breadth-first depth for graph queries (default 2)',
+            },
+            '--top': {
+                kind: 'space',
+                help: 'How many god nodes seed the queries (default 5)',
+            },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON',
+            },
         },
     },
 };
@@ -99,4 +117,7 @@ function guardCli(name, scriptModule) {
     }
 }
 
-module.exports = { MAINTENANCE_COMMANDS, guardCli };
+module.exports = {
+    MAINTENANCE_COMMANDS,
+    guardCli,
+};

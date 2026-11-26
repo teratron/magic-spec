@@ -27,11 +27,26 @@ const path = require('path');
 
 const DEFAULT_WARN = 300000;
 const BUCKETS = [
-    ['<100K', 100e3],
-    ['100-200K', 200e3],
-    ['200-400K', 400e3],
-    ['400-700K', 700e3],
-    ['>700K', Infinity],
+    [
+        '<100K',
+        100e3,
+    ],
+    [
+        '100-200K',
+        200e3,
+    ],
+    [
+        '200-400K',
+        400e3,
+    ],
+    [
+        '400-700K',
+        700e3,
+    ],
+    [
+        '>700K',
+        Infinity,
+    ],
 ];
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -82,7 +97,10 @@ function turnsOf(entries) {
         const key = `${message.id}:${message.usage.output_tokens}`;
         if (message.id && seen.has(key)) continue;
         seen.add(key);
-        turns.push({ ...message.usage, model: message.model });
+        turns.push({
+            ...message.usage,
+            model: message.model,
+        });
     }
     return turns;
 }
@@ -104,7 +122,12 @@ function summarize(turns) {
         written: 0,
         read: 0,
         output: 0,
-        buckets: Object.fromEntries(BUCKETS.map(([name]) => [name, 0])),
+        buckets: Object.fromEntries(
+            BUCKETS.map(([name]) => [
+                name,
+                0,
+            ]),
+        ),
     };
     for (const turn of turns) {
         const ctx = contextOf(turn);
@@ -170,7 +193,11 @@ function table(dir, sinceMs) {
     const files = fs
         .readdirSync(dir)
         .filter((f) => f.endsWith('.jsonl'))
-        .map((f) => ({ f, p: path.join(dir, f), mtime: fs.statSync(path.join(dir, f)).mtimeMs }))
+        .map((f) => ({
+            f,
+            p: path.join(dir, f),
+            mtime: fs.statSync(path.join(dir, f)).mtimeMs,
+        }))
         .filter((x) => x.mtime >= sinceMs)
         .sort((a, b) => a.mtime - b.mtime);
     let read = 0;
@@ -235,7 +262,10 @@ function hook(payload) {
     const advice = `Context is ${fmt(ctx)} tokens and every turn re-reads all of it. Tell the user once that /clear or /compact at the next boundary is cheaper; the project state is saved and resume-state restores it.`;
     process.stdout.write(
         JSON.stringify({
-            hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: advice },
+            hookSpecificOutput: {
+                hookEventName: 'UserPromptSubmit',
+                additionalContext: advice,
+            },
         }),
     );
 }
@@ -261,6 +291,12 @@ function main(argv) {
     table(dir, Date.parse(value('--since') || '1970-01-01'));
 }
 
-module.exports = { readTranscript, turnsOf, contextOf, summarize, largestResults };
+module.exports = {
+    readTranscript,
+    turnsOf,
+    contextOf,
+    summarize,
+    largestResults,
+};
 
 if (require.main === module) main(process.argv.slice(2));

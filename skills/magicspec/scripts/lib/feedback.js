@@ -27,10 +27,19 @@ const {
 // every fault and report it as one line.
 
 /** The closed set of note kinds (EF-7). */
-const KINDS = Object.freeze(['bug', 'missing-capability', 'improvement', 'docs']);
+const KINDS = Object.freeze([
+    'bug',
+    'missing-capability',
+    'improvement',
+    'docs',
+]);
 
 /** The impact an author may state (the report's Impact section). */
-const IMPACTS = Object.freeze(['blocked', 'workaround', 'minor']);
+const IMPACTS = Object.freeze([
+    'blocked',
+    'workaround',
+    'minor',
+]);
 
 /** The commands a note may name as the workflow it was recorded in. */
 const WORKFLOWS = Object.freeze([
@@ -48,7 +57,11 @@ const WORKFLOWS = Object.freeze([
 ]);
 
 /** The channel settings (EF-10). The default is the first. */
-const CHANNELS = Object.freeze(['full', 'draft', 'off']);
+const CHANNELS = Object.freeze([
+    'full',
+    'draft',
+    'off',
+]);
 
 /**
  * The fixed bounds of the channel (EF-5). A text over its limit is rejected and the
@@ -93,11 +106,22 @@ function readChannel(root) {
             fs.readFileSync(statePath(root || resolveProjectRoot(), 'workspace.json'), 'utf8'),
         );
     } catch {
-        return { channel: CHANNELS[0], warning: null };
+        return {
+            channel: CHANNELS[0],
+            warning: null,
+        };
     }
     const value = registry?.feedback?.channel;
-    if (value === undefined) return { channel: CHANNELS[0], warning: null };
-    if (CHANNELS.includes(value)) return { channel: value, warning: null };
+    if (value === undefined)
+        return {
+            channel: CHANNELS[0],
+            warning: null,
+        };
+    if (CHANNELS.includes(value))
+        return {
+            channel: value,
+            warning: null,
+        };
     return {
         channel: 'draft',
         warning: `feedback.channel '${String(value).slice(0, 40)}' is not one of ${CHANNELS.join(', ')}; the channel is 'draft' (text and link only).`,
@@ -118,7 +142,13 @@ function storePath(root) {
 
 /** @returns {{version: number, nextId: number, nextDraftId: number, notes: Object[], drafts: Object[]}} An empty store. */
 function emptyStore() {
-    return { version: STORE_VERSION, nextId: 1, nextDraftId: 1, notes: [], drafts: [] };
+    return {
+        version: STORE_VERSION,
+        nextId: 1,
+        nextDraftId: 1,
+        notes: [],
+        drafts: [],
+    };
 }
 
 /**
@@ -194,7 +224,10 @@ function saveStore(store, root) {
     const tmp = `${file}.tmp`;
     const wrote = writeFileSafe(tmp, `${JSON.stringify(store, null, 2)}\n`);
     if (wrote) fs.renameSync(tmp, file);
-    return { saved: wrote, trimmed };
+    return {
+        saved: wrote,
+        trimmed,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -221,9 +254,16 @@ function overLimit(name, value, limit) {
  */
 function validateNote(fields) {
     if (!KINDS.includes(fields.kind)) {
-        return { ok: false, error: `kind must be one of ${KINDS.join(', ')}.` };
+        return {
+            ok: false,
+            error: `kind must be one of ${KINDS.join(', ')}.`,
+        };
     }
-    for (const required of ['summary', 'tried', 'happened']) {
+    for (const required of [
+        'summary',
+        'tried',
+        'happened',
+    ]) {
         if (!fields[required] || !String(fields[required]).trim()) {
             return {
                 ok: false,
@@ -237,7 +277,10 @@ function validateNote(fields) {
         tried: String(fields.tried).trim(),
         happened: String(fields.happened).trim(),
     };
-    for (const optional of ['expected', 'suggestion']) {
+    for (const optional of [
+        'expected',
+        'suggestion',
+    ]) {
         if (fields[optional]) note[optional] = String(fields[optional]).trim();
     }
     const limits = [
@@ -247,16 +290,26 @@ function validateNote(fields) {
         overLimit('expected', note.expected, LIMITS.expected),
         overLimit('suggestion', note.suggestion, LIMITS.suggestion),
     ].filter(Boolean);
-    if (limits.length > 0) return { ok: false, error: limits[0] };
+    if (limits.length > 0)
+        return {
+            ok: false,
+            error: limits[0],
+        };
 
     if (fields.impact) {
         if (!IMPACTS.includes(fields.impact))
-            return { ok: false, error: `impact must be one of ${IMPACTS.join(', ')}.` };
+            return {
+                ok: false,
+                error: `impact must be one of ${IMPACTS.join(', ')}.`,
+            };
         note.impact = fields.impact;
     }
     if (fields.workflow) {
         if (!WORKFLOWS.includes(fields.workflow))
-            return { ok: false, error: `workflow must be one of ${WORKFLOWS.join(', ')}.` };
+            return {
+                ok: false,
+                error: `workflow must be one of ${WORKFLOWS.join(', ')}.`,
+            };
         note.workflow = fields.workflow;
     }
     if (fields.code) {
@@ -280,7 +333,10 @@ function validateNote(fields) {
         }
         note.engineFile = file;
     }
-    return { ok: true, note };
+    return {
+        ok: true,
+        note,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -358,7 +414,11 @@ function addNote(fields, observed = {}, root) {
         };
 
     const checked = validateNote(fields);
-    if (!checked.ok) return { recorded: false, message: `Note rejected: ${checked.error}` };
+    if (!checked.ok)
+        return {
+            recorded: false,
+            message: `Note rejected: ${checked.error}`,
+        };
 
     const store = loadStore(root);
     if (store.notes.length >= LIMITS.notes) {
@@ -436,7 +496,10 @@ function discardNote(id, root) {
     const store = loadStore(root);
     const index = store.notes.findIndex((note) => note.id === id);
     if (index === -1)
-        return { removed: false, message: `No note ${id || '(none given)'} is pending.` };
+        return {
+            removed: false,
+            message: `No note ${id || '(none given)'} is pending.`,
+        };
     const [removed] = store.notes.splice(index, 1);
     if (removed.draftId) {
         const draft = store.drafts.find((entry) => entry.id === removed.draftId);
@@ -489,7 +552,10 @@ function pendingBlock({ developer, dryRun = false, root }) {
 
     const fresh = store.notes.filter((note) => !note.offeredAt && !note.draftId);
     const freshDrafts = store.drafts.filter((draft) => !draft.offeredAt);
-    const lines = ['### Feedback notes', ''];
+    const lines = [
+        '### Feedback notes',
+        '',
+    ];
     if (fresh.length + freshDrafts.length > 0) {
         const answers =
             channel === 'draft'

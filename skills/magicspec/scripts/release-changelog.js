@@ -25,8 +25,13 @@ const { readVersion } = require('./lib/project-version');
 function runCli() {
     const args = process.argv.slice(2);
     const { values, flags, rest, errors } = parseFlags(args, {
-        valueFlags: ['--version', '--date'],
-        boolFlags: ['--help'],
+        valueFlags: [
+            '--version',
+            '--date',
+        ],
+        boolFlags: [
+            '--help',
+        ],
     });
 
     if (flags['--help']) {
@@ -89,4 +94,6 @@ if (require.main === module) {
     runCli();
 }
 
-module.exports = { runCli };
+module.exports = {
+    runCli,
+};

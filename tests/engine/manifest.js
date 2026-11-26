@@ -23,7 +23,9 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             const scriptPath = path.join(tempDir, 'scripts', 'generate-checksums.js');
-            execSync(`node "${scriptPath}"`, { cwd: tempDir });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+            });
 
             const checksumsPath = path.join(tempDir, 'skills', 'magicspec', '.checksums');
             assert.ok(fs.existsSync(checksumsPath), '.checksums should exist');
@@ -46,7 +48,11 @@ module.exports = () => {
     // ───────────────────────────────────────────────────────────────────────────
     test('engine kernel must not ship volatile state caches in skills/magicspec/', () => {
         const magicRoot = path.join(TESTS_DIR, '..', 'skills', 'magicspec');
-        const forbidden = ['.docs-state.json', '.project-meta-state.json', '.finalize-state.json'];
+        const forbidden = [
+            '.docs-state.json',
+            '.project-meta-state.json',
+            '.finalize-state.json',
+        ];
         for (const name of forbidden) {
             assert.ok(
                 !fs.existsSync(path.join(magicRoot, name)),
@@ -91,7 +97,9 @@ module.exports = () => {
             .filter(Boolean);
         assert.deepStrictEqual(
             committable,
-            [relPath],
+            [
+                relPath,
+            ],
             `${relPath} exists but is IGNORED or untracked — it will be missing from the release archive. Check .gitignore, then: git add ${relPath}`,
         );
     });
@@ -144,7 +152,9 @@ module.exports = () => {
         const repoRoot = path.resolve(TESTS_DIR, '..');
         const found = [];
         const skipped = /[\\/](?:history|\.git|node_modules)[\\/]/;
-        for (const dir of [path.join('skills', 'magicspec')]) {
+        for (const dir of [
+            path.join('skills', 'magicspec'),
+        ]) {
             for (const full of listFilesUnder(path.join(repoRoot, dir), (f) => !skipped.test(f))) {
                 const at = fs.readFileSync(full).indexOf(0);
                 if (at !== -1)
@@ -172,7 +182,9 @@ module.exports = () => {
             fs.writeFileSync(path.join(tempDir, '.gitignore'), '.foreign-cache/\n');
 
             const strayDir = path.join(tempDir, 'skills', 'magicspec', '.foreign-cache');
-            fs.mkdirSync(strayDir, { recursive: true });
+            fs.mkdirSync(strayDir, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(strayDir, 'data.bin'), 'volatile third-party cache content');
 
             generateChecksums(tempDir);
@@ -206,7 +218,9 @@ module.exports = () => {
             // v2.1.86. A consumer install has no scripts/generate-checksums.js
             // to clear resulting drift, so this must never be flagged at all.
             const strayDir = path.join(tempDir, 'skills', 'magicspec', '.foreign-cache');
-            fs.mkdirSync(strayDir, { recursive: true });
+            fs.mkdirSync(strayDir, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(strayDir, 'data.bin'), 'volatile');
 
             const after = runEngineMetaCheck(tempDir);

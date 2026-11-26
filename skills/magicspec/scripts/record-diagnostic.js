@@ -26,7 +26,14 @@ const { record } = require('./lib/diagnostics');
 function runCli() {
     const args = process.argv.slice(2);
     const { values, errors } = parseFlags(args, {
-        valueFlags: ['--severity', '--code', '--message', '--locus', '--remedy', '--source'],
+        valueFlags: [
+            '--severity',
+            '--code',
+            '--message',
+            '--locus',
+            '--remedy',
+            '--source',
+        ],
     });
 
     if (errors.length > 0) {
@@ -56,4 +63,6 @@ if (require.main === module) {
     runCli();
 }
 
-module.exports = { runCli };
+module.exports = {
+    runCli,
+};

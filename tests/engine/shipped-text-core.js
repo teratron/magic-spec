@@ -36,7 +36,10 @@ module.exports = () => {
 
     test('shipped text advertises no phantom command, and the scan flags one when it is planted (H10a)', () => {
         // The detector, on synthetic text.
-        const wrappers = new Set(['run', 'task']);
+        const wrappers = new Set([
+            'run',
+            'task',
+        ]);
         const sample = [
             {
                 rel: 'sample.md',
@@ -75,10 +78,23 @@ module.exports = () => {
             "the command set is read from the skill folder's workflows/",
         );
         const scanned = [
-            ...listShipped('skills/magicspec', ['.md', '.js', '.json']),
-            ...listShipped('docs', ['.md']),
-            ...(fs.existsSync(path.join(shippedRoot, 'README.md')) ? ['README.md'] : []),
-        ].map((rel) => ({ rel, text: readShipped(rel) }));
+            ...listShipped('skills/magicspec', [
+                '.md',
+                '.js',
+                '.json',
+            ]),
+            ...listShipped('docs', [
+                '.md',
+            ]),
+            ...(fs.existsSync(path.join(shippedRoot, 'README.md'))
+                ? [
+                      'README.md',
+                  ]
+                : []),
+        ].map((rel) => ({
+            rel,
+            text: readShipped(rel),
+        }));
         assert.ok(
             scanned.length > 30,
             `the scan must actually see the shipped tree (saw ${scanned.length} files)`,
@@ -124,9 +140,17 @@ module.exports = () => {
         }
 
         const scanned = [
-            ...listShipped('skills/magicspec', ['.md', '.js', '.json']),
-            ...listShipped('docs', ['.md']),
-            ...listShipped('scripts', ['.js']),
+            ...listShipped('skills/magicspec', [
+                '.md',
+                '.js',
+                '.json',
+            ]),
+            ...listShipped('docs', [
+                '.md',
+            ]),
+            ...listShipped('scripts', [
+                '.js',
+            ]),
             'README.md',
             'CONTRIBUTING.md',
         ].filter((rel) => fs.existsSync(path.join(shippedRoot, rel)));
@@ -345,20 +369,30 @@ module.exports = () => {
         const re = new RegExp(`\\b(${registered.join('|')})\\.md\\b`, 'g');
         const hits = [];
         text.split(/\r?\n/).forEach((line, i) => {
-            for (const m of line.matchAll(re)) hits.push({ line: i + 1, name: m[0] });
+            for (const m of line.matchAll(re))
+                hits.push({
+                    line: i + 1,
+                    name: m[0],
+                });
         });
         return hits;
     };
 
     test('shipped text: the registered-specification citation detector flags and spares correctly', () => {
-        const registered = ['l1-alpha', 'l2-beta-gamma'];
+        const registered = [
+            'l1-alpha',
+            'l2-beta-gamma',
+        ];
         const flagged = specCitations(
             'ok\nsee `l2-beta-gamma.md` §3 and l1-alpha.md.\n',
             registered,
         );
         assert.deepStrictEqual(
             flagged.map((h) => `${h.line}:${h.name}`),
-            ['2:l2-beta-gamma.md', '2:l1-alpha.md'],
+            [
+                '2:l2-beta-gamma.md',
+                '2:l1-alpha.md',
+            ],
             'a registered name is flagged wherever it stands, with its line',
         );
         assert.deepStrictEqual(
@@ -382,10 +416,19 @@ module.exports = () => {
             .filter((f) => f.endsWith('.md'))
             .map((f) => f.slice(0, -'.md'.length));
         const files = [
-            ...listShipped('skills/magicspec', ['.md', '.js']),
-            ...listShipped('workflows', ['.md']),
-            ...listShipped('skills', ['.md']),
-            ...listShipped('rules', ['.md']),
+            ...listShipped('skills/magicspec', [
+                '.md',
+                '.js',
+            ]),
+            ...listShipped('workflows', [
+                '.md',
+            ]),
+            ...listShipped('skills', [
+                '.md',
+            ]),
+            ...listShipped('rules', [
+                '.md',
+            ]),
         ];
         const found = [];
         for (const rel of files) {
@@ -417,7 +460,10 @@ module.exports = () => {
                 }
             });
         }
-        return { seen, bare };
+        return {
+            seen,
+            bare,
+        };
     };
 
     test('shipped text: every check-prerequisites command in an engine body names its workspace, and the scan flags a bare one when it is planted (T239)', () => {
@@ -435,10 +481,16 @@ module.exports = () => {
             ],
             'check-prerequisites',
         );
-        assert.deepStrictEqual(planted.seen, ['planted.md:1', 'planted.md:2', 'planted.md:3']);
+        assert.deepStrictEqual(planted.seen, [
+            'planted.md:1',
+            'planted.md:2',
+            'planted.md:3',
+        ]);
         assert.deepStrictEqual(
             planted.bare,
-            ['planted.md:2'],
+            [
+                'planted.md:2',
+            ],
             'only the command without the flag may be flagged',
         );
 
@@ -470,17 +522,30 @@ module.exports = () => {
             ],
             'finalize',
         );
-        assert.deepStrictEqual(planted.seen, ['planted.md:1', 'planted.md:2', 'planted.md:3']);
+        assert.deepStrictEqual(planted.seen, [
+            'planted.md:1',
+            'planted.md:2',
+            'planted.md:3',
+        ]);
         assert.deepStrictEqual(
             planted.bare,
-            ['planted.md:2', 'planted.md:3'],
+            [
+                'planted.md:2',
+                'planted.md:3',
+            ],
             'a command in a fenced block counts too, and only the flagged one may pass',
         );
 
         // Workflow bodies (each opens with the entry section that used to be a wrapper) and the ambient rule carry the command.
-        const read = (rel) => ({ rel, text: readShipped(rel) });
+        const read = (rel) => ({
+            rel,
+            text: readShipped(rel),
+        });
         const { seen, bare } = bareWorkspaceCommands(
-            [...engineBodies(), read('skills/magicspec/CONSTITUTION.md')],
+            [
+                ...engineBodies(),
+                read('skills/magicspec/CONSTITUTION.md'),
+            ],
             'finalize',
         );
         assert.ok(
@@ -574,7 +639,10 @@ module.exports = () => {
         const task = readShipped('skills/magicspec/workflows/task.md');
         const template = readShipped('skills/magicspec/templates/tasks.md');
         for (const [needle, what] of [
-            ['**Plan Gate (PL-4)**: the plan is missing, or stale', 'the stale-plan stop'],
+            [
+                '**Plan Gate (PL-4)**: the plan is missing, or stale',
+                'the stale-plan stop',
+            ],
             [
                 'check-prerequisites --json --require-specs --require-plan --workspace={active-workspace}',
                 'the missing plan is reported by the script, not left to the reader',
@@ -583,14 +651,26 @@ module.exports = () => {
                 'decomposes nothing, writes nothing and ends with `/magicspec plan {workspace}` as its next step, naming why',
                 'it names plan and why',
             ],
-            ['(which version moved, which specification is unplanned)', 'the reasons it names'],
-            ['**Findings Go Back (PL-8)**', 'the directive rule'],
-            ['a specification too large for one phase', 'the first finding class'],
+            [
+                '(which version moved, which specification is unplanned)',
+                'the reasons it names',
+            ],
+            [
+                '**Findings Go Back (PL-8)**',
+                'the directive rule',
+            ],
+            [
+                'a specification too large for one phase',
+                'the first finding class',
+            ],
             [
                 'a dependency between specifications the plan does not state',
                 'the second finding class',
             ],
-            ["a phase order that the tasks' dependencies contradict", 'the third finding class'],
+            [
+                "a phase order that the tasks' dependencies contradict",
+                'the third finding class',
+            ],
             [
                 'a specification whose content leaves a task without a verifiable outcome',
                 'the fourth finding class',
@@ -599,17 +679,38 @@ module.exports = () => {
                 'ends with `/magicspec plan {workspace} "{directive}"` as its next step',
                 'the next step carries the directive',
             ],
-            ['## Replan Directive', 'the section in the ledger'],
-            ['`**Plan version:**`', 'it records the plan version'],
+            [
+                '## Replan Directive',
+                'the section in the ledger',
+            ],
+            [
+                '`**Plan version:**`',
+                'it records the plan version',
+            ],
             [
                 "It is pending only while `PLAN.md`'s version equals the recorded one",
                 'and retires when the plan is rewritten',
             ],
-            ['`plan` never writes this file', 'the plan never writes the ledger'],
-            ['`update` — an alias of `/magicspec plan`', 'the update alias'],
-            ['carries the flag `stabilizes: {spec-file}`', 'the flag'],
-            ['the plan marks `[Stabilize]`', "from the plan's marker"],
-            ['never from the request in the conversation', 'and never from the conversation'],
+            [
+                '`plan` never writes this file',
+                'the plan never writes the ledger',
+            ],
+            [
+                '`update` — an alias of `/magicspec plan`',
+                'the update alias',
+            ],
+            [
+                'carries the flag `stabilizes: {spec-file}`',
+                'the flag',
+            ],
+            [
+                'the plan marks `[Stabilize]`',
+                "from the plan's marker",
+            ],
+            [
+                'never from the request in the conversation',
+                'and never from the conversation',
+            ],
         ]) {
             assert.ok(task.includes(needle), what);
         }
@@ -693,7 +794,11 @@ module.exports = () => {
         );
 
         // No replan sentence names the task stage as the step (the old spelling).
-        for (const text of [rules, replan, finalization]) {
+        for (const text of [
+            rules,
+            replan,
+            finalization,
+        ]) {
             assert.ok(
                 !/replan[^\n]*\/magicspec task\b|\/magicspec task\b[^\n]*revalidate the plan\b/.test(
                     text,
@@ -949,7 +1054,9 @@ module.exports = () => {
 
         // The six stop conditions, closed, in order, with the definition of progress.
         const stops = body.slice(body.indexOf('6. **Stop condition**'), body.indexOf('## Report'));
-        const conditions = [...stops.matchAll(/^ {3}(\d)\. \*\*([^*]+)\*\*/gm)].map((m) => m[2]);
+        const conditions = [
+            ...stops.matchAll(/^ {3}(\d)\. \*\*([^*]+)\*\*/gm),
+        ].map((m) => m[2]);
         assert.deepStrictEqual(conditions, [
             'Done',
             'Consent queued',
@@ -1203,8 +1310,14 @@ module.exports = () => {
         assert.ok(analyze.includes('`→ /magicspec plan {ws}` to plan a containment-cleanup task'));
         assert.ok(analyze.includes('- **Plan repairs** → `/magicspec plan`'));
         for (const [name, text] of [
-            ['spec.md', spec],
-            ['analyze.md', analyze],
+            [
+                'spec.md',
+                spec,
+            ],
+            [
+                'analyze.md',
+                analyze,
+            ],
         ]) {
             assert.ok(
                 !/automatically invoke|Auto-Handoff|invoking \/magicspec (?:task|plan)/i.test(text),
@@ -1233,9 +1346,22 @@ module.exports = () => {
         for (const [text, tokens] of [
             [
                 statusStep,
-                ['/magicspec spec', '/magicspec plan', '/magicspec task', '/magicspec run'],
+                [
+                    '/magicspec spec',
+                    '/magicspec plan',
+                    '/magicspec task',
+                    '/magicspec run',
+                ],
             ],
-            [helpStep, ['→ `spec`', '→ `plan`', '→ `task`', '→ `run`']],
+            [
+                helpStep,
+                [
+                    '→ `spec`',
+                    '→ `plan`',
+                    '→ `task`',
+                    '→ `run`',
+                ],
+            ],
         ]) {
             const at = orderOf(text, tokens);
             assert.ok(
@@ -1305,7 +1431,10 @@ module.exports = () => {
             const end = text.indexOf('\n### ', start + 5);
             return text.slice(start, end === -1 ? undefined : end);
         };
-        for (const id of ['C2', 'C9']) {
+        for (const id of [
+            'C2',
+            'C9',
+        ]) {
             assert.strictEqual(
                 sectionOf(template, id),
                 sectionOf(constitution, id),
@@ -1334,7 +1463,10 @@ module.exports = () => {
             assert.ok(c9.includes(needle), `C9 states: ${needle}`);
         }
         assert.ok(!c9.includes('executes the full SDD lifecycle'), 'the old sentence is gone');
-        for (const text of [constitution, template]) {
+        for (const text of [
+            constitution,
+            template,
+        ]) {
             assert.ok(
                 text.includes(
                     '| `plan.md` | Before `Plan Write-back` | `@role:planner` | `roles/planner.md` |',

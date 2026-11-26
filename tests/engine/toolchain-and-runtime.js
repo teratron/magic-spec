@@ -32,7 +32,10 @@ module.exports = () => {
         ].map((m) => m[1]);
         assert.deepStrictEqual(
             jobs,
-            ['toolchain', 'harness'],
+            [
+                'toolchain',
+                'harness',
+            ],
             'exactly the two jobs of the specification',
         );
         const toolchain = workflow.slice(
@@ -112,23 +115,43 @@ module.exports = () => {
             undefined,
             'nothing is a runtime dependency of the repository',
         );
-        for (const tool of ['@biomejs/biome', 'fallow', 'typescript', '@types/node']) {
+        for (const tool of [
+            '@biomejs/biome',
+            'fallow',
+            'typescript',
+            '@types/node',
+        ]) {
             assert.ok(root.devDependencies[tool], tool + ' is a development dependency');
         }
-        for (const script of ['lint', 'typecheck', 'audit', 'test'])
+        for (const script of [
+            'lint',
+            'typecheck',
+            'audit',
+            'test',
+        ])
             assert.ok(root.scripts[script], 'the script ' + script + ' exists');
 
         const skillManifest = repoJson('skills/magicspec/scripts/package.json');
         assert.deepStrictEqual(
             Object.keys(skillManifest).sort(),
-            ['engines', 'repository', 'type'],
+            [
+                'engines',
+                'repository',
+                'type',
+            ],
             "the skill folder's manifest keeps only its type, its engines and its repository",
         );
 
         const listed = execFileSync(
             process.execPath,
-            [path.join(shippedRoot, 'scripts', 'archive-composition.js'), 'list'],
-            { cwd: shippedRoot, encoding: 'utf8' },
+            [
+                path.join(shippedRoot, 'scripts', 'archive-composition.js'),
+                'list',
+            ],
+            {
+                cwd: shippedRoot,
+                encoding: 'utf8',
+            },
         )
             .split('\n')
             .filter(Boolean);
@@ -160,13 +183,19 @@ module.exports = () => {
         const biome = repoJson('biome.json');
         assert.deepStrictEqual(
             biome.files.includes,
-            ['**/*.js', '**/*.cjs', '**/*.mjs', '**/*.json'],
+            [
+                '**/*.js',
+                '**/*.cjs',
+                '**/*.mjs',
+                '**/*.json',
+            ],
             'Markdown and YAML are out of scope (§5.3)',
         );
         const biggest = Math.max(
-            ...['tests/engine.js', 'skills/magicspec/scripts/finalize.js'].map(
-                (f) => fs.statSync(path.join(shippedRoot, f)).size,
-            ),
+            ...[
+                'tests/engine.js',
+                'skills/magicspec/scripts/finalize.js',
+            ].map((f) => fs.statSync(path.join(shippedRoot, f)).size),
         );
         assert.ok(
             biome.files.maxSize > biggest,
@@ -174,7 +203,10 @@ module.exports = () => {
         );
 
         const ts = repoJson('tsconfig.json');
-        for (const option of ['allowJs', 'noEmit'])
+        for (const option of [
+            'allowJs',
+            'noEmit',
+        ])
             assert.strictEqual(ts.compilerOptions[option], true, option);
         // The check is not strict and covers the files that carry the pragma (§2, §5.2).
         assert.strictEqual(
@@ -188,9 +220,9 @@ module.exports = () => {
             'a file is checked by its own pragma',
         );
         const pragma = /^\/\/ @ts-check$/m;
-        const checked = listShipped('skills/magicspec/scripts', ['.js']).filter((rel) =>
-            pragma.test(readRepo(rel).split('\n', 4).join('\n')),
-        );
+        const checked = listShipped('skills/magicspec/scripts', [
+            '.js',
+        ]).filter((rel) => pragma.test(readRepo(rel).split('\n', 4).join('\n')));
         assert.ok(
             checked.length > 0,
             'the checked set is not empty: the skill folder has files that carry the pragma',
@@ -203,7 +235,12 @@ module.exports = () => {
         );
         assert.deepStrictEqual(
             ts.include.map((glob) => glob.split('/**')[0]),
-            ['skills/magicspec/scripts', 'skills/magicspec-dev', 'scripts', 'tests'],
+            [
+                'skills/magicspec/scripts',
+                'skills/magicspec-dev',
+                'scripts',
+                'tests',
+            ],
             'the four directories of the specification',
         );
 
@@ -235,13 +272,28 @@ module.exports = () => {
         try {
             simPutter(dir)(
                 '.magicspec/workspace.json',
-                JSON.stringify({ default: 'ws', workspaces: { ws: {} } }),
+                JSON.stringify({
+                    default: 'ws',
+                    workspaces: {
+                        ws: {},
+                    },
+                }),
             );
             // A PATH with no node on it: a child named "node" cannot be found, one started by the
             // runtime's own path can. This is also what happens when another Node is first on PATH.
-            const result = simExec(dir, ['resume-state', '--workspace=ws'], {
-                env: { PATH: empty, Path: empty },
-            });
+            const result = simExec(
+                dir,
+                [
+                    'resume-state',
+                    '--workspace=ws',
+                ],
+                {
+                    env: {
+                        PATH: empty,
+                        Path: empty,
+                    },
+                },
+            );
             assert.strictEqual(result.status, 0, 'the executor ran its script: ' + result.stderr);
             assert.ok(!/ENOENT|not found|spawn/i.test(result.stderr), result.stderr);
         } finally {
@@ -262,19 +314,20 @@ module.exports = () => {
             'the executor starts a script with the runtime path',
         );
         assert.ok(!sources.executor.includes("command = 'node'"), 'and never by name');
+        // The arguments of a call may sit on their own lines.
         assert.ok(
-            sources.diagnostics.includes('execFileSync(process.execPath,'),
+            /execFileSync\(\s*process\.execPath,/.test(sources.diagnostics),
             'the diagnostics recheck uses the runtime path',
         );
-        assert.ok(!/execFileSync\('node'/.test(sources.diagnostics));
+        assert.ok(!/execFileSync\(\s*'node'/.test(sources.diagnostics));
         assert.ok(
-            sources.wrapper.includes('spawn(process.execPath,') &&
-                !sources.wrapper.includes("spawn('node'"),
+            /spawn\(\s*process\.execPath,/.test(sources.wrapper) &&
+                !/spawn\(\s*'node'/.test(sources.wrapper),
             'the maintenance executor wrapper',
         );
         assert.ok(
-            sources.pipeline.includes('execFileSync(process.execPath,') &&
-                !sources.pipeline.includes('execSync(' + String.fromCharCode(96) + 'node'),
+            /execFileSync\(\s*process\.execPath,/.test(sources.pipeline) &&
+                !/execSync\(\s*`node/.test(sources.pipeline),
             'the maintenance pipeline',
         );
     });

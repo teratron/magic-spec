@@ -40,9 +40,17 @@ module.exports = () => {
                 'analyze-coverage.js',
             );
             const out = JSON.parse(
-                execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }),
+                execSync(`node "${scriptPath}" --json`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                }),
             );
-            const byFile = new Map(out.coverage.map((c) => [c.file, c]));
+            const byFile = new Map(
+                out.coverage.map((c) => [
+                    c.file,
+                    c,
+                ]),
+            );
 
             assert.strictEqual(
                 byFile.get('.magicspec/PLAN.md').confidence,
@@ -157,7 +165,14 @@ module.exports = () => {
         const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
         mk(
             '.magicspec/workspace.json',
-            JSON.stringify({ default: 'main', workspaces: { main: { description: 'm' } } }),
+            JSON.stringify({
+                default: 'main',
+                workspaces: {
+                    main: {
+                        description: 'm',
+                    },
+                },
+            }),
         );
         mk('.magicspec/INDEX.md', '# Index\n');
         mk('.magicspec/RULES.md', '# Rules\n');
@@ -199,7 +214,10 @@ module.exports = () => {
     const runFixtureScript = (tempDir, script, args = []) =>
         execFileSync(
             process.execPath,
-            [path.join(tempDir, 'skills', 'magicspec', 'scripts', script), ...args],
+            [
+                path.join(tempDir, 'skills', 'magicspec', 'scripts', script),
+                ...args,
+            ],
             {
                 cwd: tempDir,
                 encoding: 'utf8',
@@ -215,7 +233,11 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             writeAliasPathFixture(tempDir);
-            const out = JSON.parse(runFixtureScript(tempDir, 'extract-rationale.js', ['--json']));
+            const out = JSON.parse(
+                runFixtureScript(tempDir, 'extract-rationale.js', [
+                    '--json',
+                ]),
+            );
             const safety = out.rationale.find((r) => r.file === 'src/cli_runner.rs');
             assert.ok(safety, 'the SAFETY comment is found');
             assert.strictEqual(
@@ -234,9 +256,18 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             writeAliasPathFixture(tempDir);
-            const cov = JSON.parse(runFixtureScript(tempDir, 'analyze-coverage.js', ['--json']));
+            const cov = JSON.parse(
+                runFixtureScript(tempDir, 'analyze-coverage.js', [
+                    '--json',
+                ]),
+            );
             assert.deepStrictEqual(cov.shadow_specs, [], 'both paths of the cell exist');
-            const byFile = new Map(cov.coverage.map((c) => [c.file, c]));
+            const byFile = new Map(
+                cov.coverage.map((c) => [
+                    c.file,
+                    c,
+                ]),
+            );
             for (const file of [
                 'src/tools/game.rs',
                 'src/tools/game/mod.rs',
@@ -247,7 +278,9 @@ module.exports = () => {
             assert.strictEqual(byFile.get('src/lonely.rs').confidence, 'INFERRED');
 
             const rationale = JSON.parse(
-                runFixtureScript(tempDir, 'extract-rationale.js', ['--json']),
+                runFixtureScript(tempDir, 'extract-rationale.js', [
+                    '--json',
+                ]),
             );
             assert.ok(
                 rationale.rationale.every(
@@ -268,13 +301,21 @@ module.exports = () => {
                 'lib',
                 'canonical-refs.js',
             );
-            assert.deepStrictEqual(splitPathCell('`a/b.js`, `c/`'), ['a/b.js', 'c/']);
-            assert.deepStrictEqual(splitPathCell('a/b.js, c/d.js'), ['a/b.js', 'c/d.js']);
+            assert.deepStrictEqual(splitPathCell('`a/b.js`, `c/`'), [
+                'a/b.js',
+                'c/',
+            ]);
+            assert.deepStrictEqual(splitPathCell('a/b.js, c/d.js'), [
+                'a/b.js',
+                'c/d.js',
+            ]);
             assert.deepStrictEqual(splitPathCell('src/{a,b}/*.js, x.md'), [
                 'src/{a,b}/*.js',
                 'x.md',
             ]);
-            assert.deepStrictEqual(splitPathCell('`a.js` (main entry)'), ['a.js']);
+            assert.deepStrictEqual(splitPathCell('`a.js` (main entry)'), [
+                'a.js',
+            ]);
 
             const doc = (table) =>
                 `# S\n\n## Canonical References\n\n${table}\n\n## Next\n\n| \`ignored.js\` | x |\n`;
@@ -284,19 +325,26 @@ module.exports = () => {
                         '| Purpose | Alias | Path |\n| --- | --- | --- |\n| p | `[A]` | `x/y.js` |',
                     ),
                 ),
-                ['x/y.js'],
+                [
+                    'x/y.js',
+                ],
                 'the Path column is found by its header, not by its position',
             );
             assert.deepStrictEqual(
                 parseCanonicalRefs(
                     doc('| File | Notes |\n| :--- | :--- |\n| `lib/a.js` | n |\n| lib/b.js | n |'),
                 ),
-                ['lib/a.js', 'lib/b.js'],
+                [
+                    'lib/a.js',
+                    'lib/b.js',
+                ],
                 'a table whose header names no Path is read through its first column',
             );
             assert.deepStrictEqual(
                 parseCanonicalRefs(doc('| Path | Description |\n| `lib/a.js` | n |')),
-                ['lib/a.js'],
+                [
+                    'lib/a.js',
+                ],
                 'a header without its separator row is still the header',
             );
         } finally {
@@ -316,8 +364,17 @@ module.exports = () => {
             } catch {
                 linked = false; // no permission to create a link on this host
             }
-            const cov = JSON.parse(runFixtureScript(tempDir, 'analyze-coverage.js', ['--json']));
-            const byFile = new Map(cov.coverage.map((c) => [c.file, c]));
+            const cov = JSON.parse(
+                runFixtureScript(tempDir, 'analyze-coverage.js', [
+                    '--json',
+                ]),
+            );
+            const byFile = new Map(
+                cov.coverage.map((c) => [
+                    c.file,
+                    c,
+                ]),
+            );
             for (const file of [
                 '.magicspec/INDEX.md',
                 '.magicspec/RULES.md',
@@ -344,7 +401,9 @@ module.exports = () => {
             if (linked) {
                 assert.ok(!byFile.has('linked-tools'), 'a linked directory is not one more file');
                 assert.ok(
-                    ![...byFile.keys()].some((f) => f.startsWith('linked-tools/')),
+                    ![
+                        ...byFile.keys(),
+                    ].some((f) => f.startsWith('linked-tools/')),
                     'a link is not followed',
                 );
             }
@@ -392,19 +451,27 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             const { finalize, wsDir, tasksPath, writePhase } = requireFinalizePlan(tempDir);
-            writePhase(['- [!] [T-1A01] First task'], {
-                rest: [
-                    '## Detailed Tracking',
-                    '',
-                    '### [T-1A01] First task',
-                    '',
-                    '- **Status:** Blocked',
-                    '- **Assignment:** Agent',
-                    '',
+            writePhase(
+                [
+                    '- [!] [T-1A01] First task',
                 ],
-            });
+                {
+                    rest: [
+                        '## Detailed Tracking',
+                        '',
+                        '### [T-1A01] First task',
+                        '',
+                        '- **Status:** Blocked',
+                        '- **Assignment:** Agent',
+                        '',
+                    ],
+                },
+            );
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'all-excluded');
-            for (const workflow of ['task', 'run']) {
+            for (const workflow of [
+                'task',
+                'run',
+            ]) {
                 const next = finalize.computeNextAction(workflow, 'engine', wsDir);
                 assert.match(next, /T-1A01/, workflow);
                 assert.match(next, /re-run \/magicspec plan engine$/, workflow);
@@ -413,9 +480,19 @@ module.exports = () => {
 
             // a blocked phase file takes the same exit
             fs.writeFileSync(tasksPath, registryTable('Blocked'));
-            writePhase(['- [ ] [T-1A01] First task'], { status: 'Blocked' });
+            writePhase(
+                [
+                    '- [ ] [T-1A01] First task',
+                ],
+                {
+                    status: 'Blocked',
+                },
+            );
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'blocked-phase');
-            for (const workflow of ['task', 'run']) {
+            for (const workflow of [
+                'task',
+                'run',
+            ]) {
                 const next = finalize.computeNextAction(workflow, 'engine', wsDir);
                 assert.match(next, /re-run \/magicspec plan engine$/, workflow);
                 assert.doesNotMatch(next, /\/magicspec run/, workflow);
@@ -423,7 +500,9 @@ module.exports = () => {
 
             // control: a plan with work to do still goes to execution
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
-            writePhase(['- [ ] [T-1A01] First task']);
+            writePhase([
+                '- [ ] [T-1A01] First task',
+            ]);
             assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/);
         } finally {
             cleanup(tempDir);
@@ -460,16 +539,27 @@ module.exports = () => {
             const target = path.join(tempDir, 'skills', 'magicspec');
             const devLink = path.join(tempDir, '.agents', 'skills', 'magicspec-dev');
             const devTarget = path.join(tempDir, 'skills', 'magicspec-dev');
-            fs.mkdirSync(path.dirname(link), { recursive: true });
-            fs.mkdirSync(devTarget, { recursive: true });
+            fs.mkdirSync(path.dirname(link), {
+                recursive: true,
+            });
+            fs.mkdirSync(devTarget, {
+                recursive: true,
+            });
             fs.symlinkSync(devTarget, devLink, 'junction');
 
             const validatorScript = path.join(tempDir, 'scripts', 'validate-hardlinks.js');
             const run = (...flags) => {
-                const r = spawnSync(process.execPath, [validatorScript, ...flags], {
-                    cwd: tempDir,
-                    encoding: 'utf8',
-                });
+                const r = spawnSync(
+                    process.execPath,
+                    [
+                        validatorScript,
+                        ...flags,
+                    ],
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
+                );
                 return {
                     failed: r.status !== 0,
                     output: String(r.stdout || '') + String(r.stderr || ''),
@@ -496,21 +586,29 @@ module.exports = () => {
 
             // A copy where the link belongs is drift: editing the host's folder would not edit the engine.
             fs.rmdirSync(link);
-            fs.mkdirSync(link, { recursive: true });
+            fs.mkdirSync(link, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(link, 'SKILL.md'), 'copy\n');
             const copy = run();
             assert.strictEqual(copy.failed, true, 'a copy must fail');
             assert.match(copy.output, /Drift:.*is a copy, not a link/);
 
             // A missing link is a warning, and an error under --strict.
-            fs.rmSync(link, { recursive: true, force: true });
+            fs.rmSync(link, {
+                recursive: true,
+                force: true,
+            });
             const missing = run();
             assert.strictEqual(missing.failed, false, 'a missing link is a warning');
             assert.match(missing.output, /Missing:.*magicspec/);
             const strict = run('--strict');
             assert.strictEqual(strict.failed, true, 'a missing link fails under --strict');
         } finally {
-            for (const name of ['magicspec', 'magicspec-dev']) {
+            for (const name of [
+                'magicspec',
+                'magicspec-dev',
+            ]) {
                 try {
                     fs.rmdirSync(path.join(tempDir, '.agents', 'skills', name));
                 } catch {

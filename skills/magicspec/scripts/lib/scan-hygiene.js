@@ -37,4 +37,6 @@ function stripQuoted(content) {
     return content.replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, blank).replace(/`[^`]*`/g, blank);
 }
 
-module.exports = { stripQuoted };
+module.exports = {
+    stripQuoted,
+};

@@ -82,7 +82,10 @@ function citationOf(row, designRel) {
     return {
         file: `${designRel}/${row.path}`,
         heading: row.heading,
-        lines: [row.lineStart, row.lineEnd],
+        lines: [
+            row.lineStart,
+            row.lineEnd,
+        ],
     };
 }
 
@@ -146,7 +149,9 @@ function modesLine(answer) {
  * @returns {string} Text for stdout.
  */
 function renderText(answer) {
-    const lines = [modesLine(answer)];
+    const lines = [
+        modesLine(answer),
+    ];
     if (answer.results.length === 0) {
         lines.push(
             answer.total === 0
@@ -195,13 +200,21 @@ function rankRows(backend, designAbs, request, phrases, record) {
     const lexicalTotal = backend.count(phrases, filters);
     const historyLeftOut = !request.history && !request.kinds?.length;
     const historyTotal = historyLeftOut
-        ? backend.count(phrases, { kinds: HISTORY_KINDS, workspace: request.workspace })
+        ? backend.count(phrases, {
+              kinds: HISTORY_KINDS,
+              workspace: request.workspace,
+          })
         : null;
     const plain = () => ({
         rows: backend
-            .query(phrases, { ...filters, limit: Math.min(lexicalTotal, offset + limit) })
+            .query(phrases, {
+                ...filters,
+                limit: Math.min(lexicalTotal, offset + limit),
+            })
             .slice(offset),
-        modes: ['lexical'],
+        modes: [
+            'lexical',
+        ],
         sent: null,
         total: lexicalTotal,
         byMeaning: 0,
@@ -219,25 +232,49 @@ function rankRows(backend, designAbs, request, phrases, record) {
     const vectors = backend.vectors(setting.model, setting.dimensions);
     if (vectors.size === 0) return plain();
     try {
-        const [queryVector] = (request.embedFn ?? embed)(setting, [request.text]);
+        const [queryVector] = (request.embedFn ?? embed)(setting, [
+            request.text,
+        ]);
         const meta = backend.sectionMeta();
         const lexical =
-            lexicalTotal === 0 ? [] : backend.query(phrases, { ...filters, limit: lexicalTotal });
+            lexicalTotal === 0
+                ? []
+                : backend.query(phrases, {
+                      ...filters,
+                      limit: lexicalTotal,
+                  });
         const vectorIds = rankByVector(
             queryVector,
             vectors,
             (id) => matchesFilters(meta.get(id) ?? {}, filters),
             VECTOR_POOL,
         ).map((r) => r.id);
-        const pool = fuse([lexical.map((r) => r.id), vectorIds]);
+        const pool = fuse([
+            lexical.map((r) => r.id),
+            vectorIds,
+        ]);
         const page = pool.slice(offset, offset + limit);
-        const known = new Map(lexical.map((r) => [r.id, r]));
+        const known = new Map(
+            lexical.map((r) => [
+                r.id,
+                r,
+            ]),
+        );
         const missing = page.map((f) => f.id).filter((id) => !known.has(id));
         for (const [id, row] of backend.sectionsByIds(missing)) known.set(id, row);
         return {
-            rows: page.map((f) => ({ ...known.get(f.id), score: f.score })),
-            modes: ['lexical', 'vector'],
-            sent: { host: hostOf(setting), texts: 1 },
+            rows: page.map((f) => ({
+                ...known.get(f.id),
+                score: f.score,
+            })),
+            modes: [
+                'lexical',
+                'vector',
+            ],
+            sent: {
+                host: hostOf(setting),
+                texts: 1,
+            },
             total: pool.length,
             byMeaning: pool.length - lexicalTotal,
             historyTotal,
@@ -262,40 +299,49 @@ function queryProject(rootDir, designAbs, request, record = diagnostics.record) 
     const phrases = parseQuery(request.text);
     const designRel = normalizePath(path.relative(rootDir, designAbs));
     try {
-        return withFreshIndex(designAbs, { loader: request.loader }, (backend) => {
-            const { rows, modes, sent, total, byMeaning, historyTotal } = rankRows(
-                backend,
-                designAbs,
-                request,
-                phrases,
-                record,
-            );
-            const offset = request.offset ?? 0;
-            return {
-                ok: true,
-                backend: backend.name,
-                modes,
-                query: request.text,
-                sent,
-                total,
-                byMeaning,
-                historyTotal,
-                offset,
-                next: offset + rows.length < total ? offset + rows.length : null,
-                results: rows.map((row) => ({
-                    ...citationOf(row, designRel),
-                    kind: row.kind,
-                    workspace: row.workspace,
-                    status: row.status,
-                    version: row.version,
-                    score: row.score,
-                    tokens: tokensOf(row.body.length),
-                    snippet: snippetOf(row.body, phrases),
-                })),
-            };
-        });
+        return withFreshIndex(
+            designAbs,
+            {
+                loader: request.loader,
+            },
+            (backend) => {
+                const { rows, modes, sent, total, byMeaning, historyTotal } = rankRows(
+                    backend,
+                    designAbs,
+                    request,
+                    phrases,
+                    record,
+                );
+                const offset = request.offset ?? 0;
+                return {
+                    ok: true,
+                    backend: backend.name,
+                    modes,
+                    query: request.text,
+                    sent,
+                    total,
+                    byMeaning,
+                    historyTotal,
+                    offset,
+                    next: offset + rows.length < total ? offset + rows.length : null,
+                    results: rows.map((row) => ({
+                        ...citationOf(row, designRel),
+                        kind: row.kind,
+                        workspace: row.workspace,
+                        status: row.status,
+                        version: row.version,
+                        score: row.score,
+                        tokens: tokensOf(row.body.length),
+                        snippet: snippetOf(row.body, phrases),
+                    })),
+                };
+            },
+        );
     } catch (err) {
-        return { ok: false, reason: reportUnavailable('memory-query', err, record) };
+        return {
+            ok: false,
+            reason: reportUnavailable('memory-query', err, record),
+        };
     }
 }
 
@@ -308,35 +354,58 @@ function queryProject(rootDir, designAbs, request, record = diagnostics.record) 
  */
 function parseRequest(argv, env = process.env) {
     const { values, flags, rest, errors } = parseFlags(argv, {
-        valueFlags: ['--kind', '--k', '--offset', '--workspace'],
-        boolFlags: ['--history', '--json'],
+        valueFlags: [
+            '--kind',
+            '--k',
+            '--offset',
+            '--workspace',
+        ],
+        boolFlags: [
+            '--history',
+            '--json',
+        ],
     });
-    if (errors.length > 0) return { error: errors[0] };
+    if (errors.length > 0)
+        return {
+            error: errors[0],
+        };
     const text = rest
         .filter((token) => !token.startsWith('--'))
         .join(' ')
         .trim();
-    if (text === '') return { error: 'give the text to search for, in quotation marks.' };
+    if (text === '')
+        return {
+            error: 'give the text to search for, in quotation marks.',
+        };
 
     const kinds = values['--kind'] ? values['--kind'].split(',').map((k) => k.trim()) : undefined;
     const unknown = (kinds ?? []).filter((k) => !KINDS.includes(k));
     if (unknown.length > 0) {
-        return { error: `unknown kind '${unknown[0]}'; the kinds are ${KINDS.join(', ')}.` };
+        return {
+            error: `unknown kind '${unknown[0]}'; the kinds are ${KINDS.join(', ')}.`,
+        };
     }
     const limit = values['--k'] === undefined ? DEFAULT_LIMIT : Number(values['--k']);
     if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
-        return { error: `--k must be a whole number from 1 to ${MAX_LIMIT}.` };
+        return {
+            error: `--k must be a whole number from 1 to ${MAX_LIMIT}.`,
+        };
     }
     const offset = values['--offset'] === undefined ? 0 : Number(values['--offset']);
     if (!Number.isInteger(offset) || offset < 0) {
-        return { error: '--offset must be a whole number, 0 or more.' };
+        return {
+            error: '--offset must be a whole number, 0 or more.',
+        };
     }
 
     // The executor consumes `--workspace` and hands its child the folder; a workspace the caller
     // did not name (the registry's default) must not narrow the search.
     const named =
         values['--workspace'] ??
-        (['argument', 'environment'].includes(env.MAGIC_WORKSPACE_SOURCE) && env.MAGIC_DESIGN_DIR
+        ([
+            'argument',
+            'environment',
+        ].includes(env.MAGIC_WORKSPACE_SOURCE) && env.MAGIC_DESIGN_DIR
             ? path.basename(env.MAGIC_DESIGN_DIR)
             : undefined);
     return {
@@ -370,7 +439,15 @@ function runCli() {
     if (!answer.ok) {
         console.log(
             parsed.json
-                ? JSON.stringify({ unavailable: answer.reason, modes: [], results: [] }, null, 2)
+                ? JSON.stringify(
+                      {
+                          unavailable: answer.reason,
+                          modes: [],
+                          results: [],
+                      },
+                      null,
+                      2,
+                  )
                 : `[memory-query] The artifact index is unavailable: ${answer.reason}. Search the text with grep instead.`,
         );
         return;

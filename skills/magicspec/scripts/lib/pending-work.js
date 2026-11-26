@@ -101,14 +101,21 @@ function firstUndecomposedPhase(planContent, tasksContent) {
     const region = planContent.match(/## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/);
     if (!region) return null;
     const registered = new Set(
-        [...tasksContent.matchAll(/^\|\s*\[Phase (\d+)\]/gm)].map((m) => m[1]),
+        [
+            ...tasksContent.matchAll(/^\|\s*\[Phase (\d+)\]/gm),
+        ].map((m) => m[1]),
     );
-    const heads = [...region[1].matchAll(/^### Phase (\d+) [—-] ([^\r\n]+)$/gm)];
+    const heads = [
+        ...region[1].matchAll(/^### Phase (\d+) [—-] ([^\r\n]+)$/gm),
+    ];
     for (let i = 0; i < heads.length; i++) {
         const end = i + 1 < heads.length ? heads[i + 1].index : region[1].length;
         const block = stripQuoted(region[1].slice(heads[i].index, end));
         if (/^\s*- \[ \]/m.test(block) && !registered.has(heads[i][1])) {
-            return { phase: heads[i][1], name: heads[i][2].trim() };
+            return {
+                phase: heads[i][1],
+                name: heads[i][2].trim(),
+            };
         }
     }
     return null;
@@ -137,7 +144,12 @@ function pendingReplanDirective(tasksContent, planContent) {
     const planVersion = planContent.match(/^\*\*Version:\*\*\s+([0-9][0-9.]*)/m);
     if (!version || !text || !planVersion || planVersion[1] !== version[1]) return null;
     const directive = text[1].replace(/\s+/g, ' ').trim();
-    return directive ? { planVersion: version[1], directive } : null;
+    return directive
+        ? {
+              planVersion: version[1],
+              directive,
+          }
+        : null;
 }
 
 /**
@@ -160,7 +172,10 @@ function constitutionGap(designDir, planContent) {
     if (!fs.existsSync(rulesPath)) return null;
     const current = fs.readFileSync(rulesPath, 'utf8').match(/^\*\*Version:\*\*\s+([0-9][0-9.]*)/m);
     return current && current[1] !== recorded[1]
-        ? { planBasedOn: recorded[1], rulesVersion: current[1] }
+        ? {
+              planBasedOn: recorded[1],
+              rulesVersion: current[1],
+          }
         : null;
 }
 
@@ -217,9 +232,9 @@ function findPendingWork(designDir) {
         const planStripped = stripQuoted(plan);
         const indexSpecs = [
             ...new Set(
-                [...stripQuoted(index).matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))].map(
-                    (m) => m[1],
-                ),
+                [
+                    ...stripQuoted(index).matchAll(new RegExp(SPEC_FILENAME_SRC, 'g')),
+                ].map((m) => m[1]),
             ),
         ];
         result.orphanedSpecs = indexSpecs.filter((spec) => !planStripped.includes(spec));
@@ -227,7 +242,10 @@ function findPendingWork(designDir) {
         const indexVersion = index.match(/^\*\*Version:\*\*\s+([0-9.]+)/m);
         const planBasedOn = plan.match(/^\*\*Based on:\*\*\s+.*?v([0-9.]+)/m);
         if (indexVersion && planBasedOn && indexVersion[1] !== planBasedOn[1]) {
-            result.syncGap = { planBasedOn: planBasedOn[1], indexVersion: indexVersion[1] };
+            result.syncGap = {
+                planBasedOn: planBasedOn[1],
+                indexVersion: indexVersion[1],
+            };
         }
         result.registryEvaluated = true;
     }

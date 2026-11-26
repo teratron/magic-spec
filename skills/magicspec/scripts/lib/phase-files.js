@@ -40,7 +40,11 @@ const PHASE_FILE_RE = /^phase-(\d+)([a-z]*)\.md$/i;
 function parsePhaseFileName(file) {
     const m = PHASE_FILE_RE.exec(file);
     if (!m) return null;
-    return { file, number: parseInt(m[1], 10), suffix: (m[2] || '').toLowerCase() };
+    return {
+        file,
+        number: parseInt(m[1], 10),
+        suffix: (m[2] || '').toLowerCase(),
+    };
 }
 
 /**

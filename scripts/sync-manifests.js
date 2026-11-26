@@ -96,7 +96,10 @@ function applyEdits(content, edits) {
             content = content.replace(edit.regex, edit.replace);
         }
     }
-    return { content, matchedAny };
+    return {
+        content,
+        matchedAny,
+    };
 }
 
 function syncOneTarget(target, targetVersion) {

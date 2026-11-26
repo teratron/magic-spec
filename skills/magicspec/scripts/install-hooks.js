@@ -125,10 +125,18 @@ function isSymbolicLink(target) {
  * @returns {string|null} The redirecting directory, or null when git reads `.git/hooks`.
  */
 function redirectedHooksPath() {
-    const result = spawnSync('git', ['config', '--get', 'core.hooksPath'], {
-        cwd: projectRoot,
-        encoding: 'utf8',
-    });
+    const result = spawnSync(
+        'git',
+        [
+            'config',
+            '--get',
+            'core.hooksPath',
+        ],
+        {
+            cwd: projectRoot,
+            encoding: 'utf8',
+        },
+    );
     if (result.error || result.status !== 0) return null;
     const configured = result.stdout.trim();
     if (configured === '') return null;

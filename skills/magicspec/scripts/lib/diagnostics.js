@@ -28,9 +28,21 @@ const projectRoot = (() => {
 })();
 const sinkPath = statePath(projectRoot, '.cache', 'diagnostics.jsonl');
 
-const SEVERITIES = new Set(['error', 'warning', 'fix']);
-const SEVERITY_RANK = { error: 0, warning: 1, fix: 2 };
-const SEVERITY_GLYPH = { error: '❌', warning: '⚠️', fix: '🔧' };
+const SEVERITIES = new Set([
+    'error',
+    'warning',
+    'fix',
+]);
+const SEVERITY_RANK = {
+    error: 0,
+    warning: 1,
+    fix: 2,
+};
+const SEVERITY_GLYPH = {
+    error: '❌',
+    warning: '⚠️',
+    fix: '🔧',
+};
 
 /** Sink retention ceiling (DG-4.5 / §4.5) — independent of the render cap below. */
 const MAX_SINK_ENTRIES = 200;
@@ -48,7 +60,9 @@ const SCRIPT_NAME_RE = /^[a-z][a-z0-9-]*$/;
  * planted finding run `remove`, `migrate` or `init`. The only script production code records is
  * `check-prerequisites`; the set is exported so a harness can admit a fixture of its own.
  */
-const RECHECK_SCRIPTS = new Set(['check-prerequisites']);
+const RECHECK_SCRIPTS = new Set([
+    'check-prerequisites',
+]);
 
 /**
  * DG-10: a recheck may set only the engine's own variables, by exact name. A finding is read back
@@ -56,7 +70,9 @@ const RECHECK_SCRIPTS = new Set(['check-prerequisites']);
  * or a loader that a spawned `node` would obey. The only key production code records is
  * `MAGIC_DESIGN_DIR`.
  */
-const RECHECK_ENV_KEYS = new Set(['MAGIC_DESIGN_DIR']);
+const RECHECK_ENV_KEYS = new Set([
+    'MAGIC_DESIGN_DIR',
+]);
 
 /**
  * @param {string} key - Variable name.
@@ -109,13 +125,32 @@ const RECHECK_TIMEOUT_MS = 5000;
  */
 function normalize(finding) {
     if (!finding || typeof finding !== 'object') {
-        return { ok: false, reason: 'finding must be an object' };
+        return {
+            ok: false,
+            reason: 'finding must be an object',
+        };
     }
     const { severity, source, code, message, locus, remedy, recheck } = finding;
-    if (!SEVERITIES.has(severity)) return { ok: false, reason: `invalid severity '${severity}'` };
-    if (!source || typeof source !== 'string') return { ok: false, reason: 'missing source' };
-    if (!code || typeof code !== 'string') return { ok: false, reason: 'missing code' };
-    if (!message || typeof message !== 'string') return { ok: false, reason: 'missing message' };
+    if (!SEVERITIES.has(severity))
+        return {
+            ok: false,
+            reason: `invalid severity '${severity}'`,
+        };
+    if (!source || typeof source !== 'string')
+        return {
+            ok: false,
+            reason: 'missing source',
+        };
+    if (!code || typeof code !== 'string')
+        return {
+            ok: false,
+            reason: 'missing code',
+        };
+    if (!message || typeof message !== 'string')
+        return {
+            ok: false,
+            reason: 'missing message',
+        };
 
     // A finding is one JSONL line — an embedded newline would corrupt the
     // format the sink's append-safety and bounded-corruption guarantees rest on.
@@ -144,7 +179,10 @@ function normalize(finding) {
             env: safeRecheckEnv(recheck.env),
         };
     }
-    return { ok: true, value };
+    return {
+        ok: true,
+        value,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -296,12 +334,19 @@ function runRecheck(recheck) {
             MAGIC_DIAGNOSTICS_SUPPRESS: '1',
         });
 
-        const stdout = execFileSync(process.execPath, [scriptPath, ...args], {
-            cwd: projectRoot,
-            env,
-            encoding: 'utf8',
-            timeout: RECHECK_TIMEOUT_MS,
-        });
+        const stdout = execFileSync(
+            process.execPath,
+            [
+                scriptPath,
+                ...args,
+            ],
+            {
+                cwd: projectRoot,
+                env,
+                encoding: 'utf8',
+                timeout: RECHECK_TIMEOUT_MS,
+            },
+        );
         const parsed = JSON.parse(stdout);
         const warnings = Array.isArray(parsed.warnings) ? parsed.warnings : [];
         return new Set(warnings.map((w) => w.type));
@@ -342,7 +387,11 @@ function revalidate(findings) {
             args: f.recheck.args || [],
             env: f.recheck.env || {},
         });
-        if (!groups.has(key)) groups.set(key, { recheck: f.recheck, items: [] });
+        if (!groups.has(key))
+            groups.set(key, {
+                recheck: f.recheck,
+                items: [],
+            });
         groups.get(key).items.push(f);
     }
 
@@ -386,11 +435,16 @@ function dedupe(findings) {
         if (existing) {
             existing.count += 1;
         } else {
-            groups.set(key, { ...f, count: 1 });
+            groups.set(key, {
+                ...f,
+                count: 1,
+            });
         }
     }
 
-    return [...groups.values()].sort((a, b) => {
+    return [
+        ...groups.values(),
+    ].sort((a, b) => {
         const rankDiff = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity];
         if (rankDiff !== 0) return rankDiff;
         if (a.source !== b.source) return a.source < b.source ? -1 : 1;
@@ -408,7 +462,12 @@ function dedupe(findings) {
  */
 function summarize(findings) {
     const groups = dedupe(findings);
-    const counts = { error: 0, warning: 0, fix: 0, total: groups.length };
+    const counts = {
+        error: 0,
+        warning: 0,
+        fix: 0,
+        total: groups.length,
+    };
     for (const g of groups) counts[g.severity] += 1;
     return counts;
 }
@@ -427,7 +486,11 @@ function formatDigest(findings) {
     const groups = dedupe(findings);
     if (groups.length === 0) return [];
 
-    const counts = { error: 0, warning: 0, fix: 0 };
+    const counts = {
+        error: 0,
+        warning: 0,
+        fix: 0,
+    };
     for (const g of groups) counts[g.severity] += 1;
 
     const summaryParts = [];
@@ -437,7 +500,12 @@ function formatDigest(findings) {
         summaryParts.push(`${counts.warning} warning${counts.warning !== 1 ? 's' : ''}`);
     if (counts.fix > 0) summaryParts.push(`${counts.fix} fix${counts.fix !== 1 ? 'es' : ''}`);
 
-    const lines = ['### Engine diagnostics', '', `**${summaryParts.join(' · ')}**`, ''];
+    const lines = [
+        '### Engine diagnostics',
+        '',
+        `**${summaryParts.join(' · ')}**`,
+        '',
+    ];
 
     const capped = groups.slice(0, MAX_RENDERED_FINDINGS);
     const omitted = groups.length - capped.length;

@@ -90,8 +90,14 @@ module.exports = () => {
                 'workspace-index.md',
                 '<!-- Description: what the specification is for and when to open it',
             ],
-            ['global-index.md', '<!-- Description: what the workspace is for and when to open it'],
-            ['tasks.md', '<!-- Describes this file, not the plan'],
+            [
+                'global-index.md',
+                '<!-- Description: what the workspace is for and when to open it',
+            ],
+            [
+                'tasks.md',
+                '<!-- Describes this file, not the plan',
+            ],
         ];
         for (const [file, comment] of expected) {
             const lines = fs
@@ -207,7 +213,10 @@ module.exports = () => {
                 i++;
             }
         }
-        return { code, withStrings };
+        return {
+            code,
+            withStrings,
+        };
     };
 
     // The names a script reads off an object: `.name`, and `['name']`.
@@ -246,30 +255,44 @@ module.exports = () => {
                 !Array.isArray(value) &&
                 Object.keys(value).length > 0
             ) {
-                for (const [k, v] of Object.entries(value)) walkValue(v, [...parts, k]);
+                for (const [k, v] of Object.entries(value))
+                    walkValue(v, [
+                        ...parts,
+                        k,
+                    ]);
             } else {
                 leaves.push(parts);
             }
         };
         for (const [k, v] of Object.entries(JSON.parse(text))) {
             if (k === 'default' || k === 'workspaces') continue;
-            walkValue(v, [k]);
+            walkValue(v, [
+                k,
+            ]);
         }
         return leaves.map((parts) => {
             const from = lines.findIndex((l) => l.includes(`"${parts[0]}"`));
             const at = lines.findIndex(
                 (l, i) => i >= from && l.includes(`"${parts[parts.length - 1]}"`),
             );
-            return { file: rel, line: at + 1, key: parts.join('.') };
+            return {
+                file: rel,
+                line: at + 1,
+                key: parts.join('.'),
+            };
         });
     };
 
     // Every dotted key path that a line of shipped text names together with
     // `workspace.json`. File names (`a.md`, `b.js`) are not paths.
     const textSettings = (root) => {
-        const files = ['skills', 'magicspec', 'docs', 'workflows', 'rules'].flatMap((d) =>
-            listFilesUnder(path.join(root, d), (f) => f.endsWith('.md')),
-        );
+        const files = [
+            'skills',
+            'magicspec',
+            'docs',
+            'workflows',
+            'rules',
+        ].flatMap((d) => listFilesUnder(path.join(root, d), (f) => f.endsWith('.md')));
         const readme = path.join(root, 'README.md');
         if (fs.existsSync(readme)) files.push(readme);
         const found = [];
@@ -284,7 +307,11 @@ module.exports = () => {
                     );
                     for (const m of paths) {
                         if (SETTING_FILE_EXTENSIONS.has(m[1].split('.').pop())) continue;
-                        found.push({ file: rel, line: index + 1, key: m[1] });
+                        found.push({
+                            file: rel,
+                            line: index + 1,
+                            key: m[1],
+                        });
                     }
                 });
         }
@@ -293,9 +320,10 @@ module.exports = () => {
 
     const settingParityFindings = (root) => {
         const readers = settingReaders(root);
-        return [...templateSettings(root), ...textSettings(root)].filter(
-            (setting) => !hasSettingReader(setting.key, readers),
-        );
+        return [
+            ...templateSettings(root),
+            ...textSettings(root),
+        ].filter((setting) => !hasSettingReader(setting.key, readers));
     };
 
     const makeSettingTree = (files) => {
@@ -307,8 +335,17 @@ module.exports = () => {
     const describeFinding = (f) => `${f.file}:${f.line} → ${f.key}`;
 
     test('archival opt-out: archival.enabled false keeps a finished phase in tasks/ and says so, while the version bump, the changelog entry and the state update still run', () => {
-        const kept = makeArchivalProject({ enabled: false });
-        const idle = makeArchivalProject({ enabled: false }, { done: false });
+        const kept = makeArchivalProject({
+            enabled: false,
+        });
+        const idle = makeArchivalProject(
+            {
+                enabled: false,
+            },
+            {
+                done: false,
+            },
+        );
         try {
             const result = runEngine(kept.dir, 'finalize', '--workflow=run', '--workspace=ws');
             const out = result.stdout + result.stderr;
@@ -365,7 +402,17 @@ module.exports = () => {
     });
 
     test('archival opt-out: archival stays on for an absent key, a section without the key, true, the string "false" and null, and the explicit archive-phases command archives with the key off', () => {
-        const variants = [undefined, {}, { enabled: true }, { enabled: 'false' }, null];
+        const variants = [
+            undefined,
+            {},
+            {
+                enabled: true,
+            },
+            {
+                enabled: 'false',
+            },
+            null,
+        ];
         for (const archival of variants) {
             const project = makeArchivalProject(archival);
             try {
@@ -392,7 +439,9 @@ module.exports = () => {
             }
         }
 
-        const off = makeArchivalProject({ enabled: false });
+        const off = makeArchivalProject({
+            enabled: false,
+        });
         try {
             const preview = runEngine(off.dir, 'archive-phases', '--dry-run', '--workspace=ws');
             assert.strictEqual(preview.status, 0, preview.stdout + preview.stderr);
@@ -418,11 +467,24 @@ module.exports = () => {
             'skills/magicspec/templates/workspace.json': JSON.stringify(
                 {
                     default: 'main',
-                    workspaces: { main: { description: 'x' } },
-                    alpha: { on: true, level: 1 },
-                    beta: { x: 1 },
-                    gamma: { g: 1 },
-                    epsilon: { enabled: true },
+                    workspaces: {
+                        main: {
+                            description: 'x',
+                        },
+                    },
+                    alpha: {
+                        on: true,
+                        level: 1,
+                    },
+                    beta: {
+                        x: 1,
+                    },
+                    gamma: {
+                        g: 1,
+                    },
+                    epsilon: {
+                        enabled: true,
+                    },
                 },
                 null,
                 2,
@@ -444,7 +506,11 @@ module.exports = () => {
                 settingParityFindings(root)
                     .map((f) => f.key)
                     .sort(),
-                ['beta.x', 'epsilon.enabled', 'gamma.g'],
+                [
+                    'beta.x',
+                    'epsilon.enabled',
+                    'gamma.g',
+                ],
                 'the commented, quoted, out-of-tree and section-less keys are flagged, and the two read keys are not',
             );
 
@@ -456,7 +522,10 @@ module.exports = () => {
                 settingParityFindings(root)
                     .map((f) => f.key)
                     .sort(),
-                ['epsilon.enabled', 'gamma.g'],
+                [
+                    'epsilon.enabled',
+                    'gamma.g',
+                ],
                 'a shipped reader clears beta.x',
             );
         } finally {
@@ -467,7 +536,15 @@ module.exports = () => {
     test('setting parity: a dotted path that shipped text names with workspace.json needs a reader, reported with its file and line', () => {
         const root = makeSettingTree({
             'skills/magicspec/templates/workspace.json': JSON.stringify(
-                { default: 'main', workspaces: { main: {} }, alpha: { on: true } },
+                {
+                    default: 'main',
+                    workspaces: {
+                        main: {},
+                    },
+                    alpha: {
+                        on: true,
+                    },
+                },
                 null,
                 2,
             ),
@@ -482,7 +559,10 @@ module.exports = () => {
         try {
             assert.deepStrictEqual(
                 settingParityFindings(root).map(describeFinding).sort(),
-                ['README.md:1 → ghost.thing', 'docs/page.md:2 → alpha.off'],
+                [
+                    'README.md:1 → ghost.thing',
+                    'docs/page.md:2 → alpha.off',
+                ],
                 'a path with no reader is reported where it is named; file names and untied keys are not paths',
             );
         } finally {
@@ -600,8 +680,14 @@ module.exports = () => {
         const paragraph = rules.slice(start, rules.indexOf('\n\n', start)).replace(/\s+/g, ' ');
 
         for (const [where, text] of [
-            ['step 6a', stepLine],
-            ['skills/magicspec/references/rules/containment.md', paragraph],
+            [
+                'step 6a',
+                stepLine,
+            ],
+            [
+                'skills/magicspec/references/rules/containment.md',
+                paragraph,
+            ],
         ]) {
             assert.doesNotMatch(
                 text,

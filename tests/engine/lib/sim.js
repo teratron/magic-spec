@@ -39,7 +39,9 @@ const sha256Hex = (text) => require('crypto').createHash('sha256').update(text).
 const listFilesUnder = (dir, accept) => {
     if (!fs.existsSync(dir)) return [];
     const found = [];
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(dir, {
+        withFileTypes: true,
+    })) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) found.push(...listFilesUnder(full, accept));
         else if (accept(full)) found.push(full);
@@ -50,7 +52,9 @@ const listFilesUnder = (dir, accept) => {
 const writeTreeFiles = (root, files) => {
     for (const [rel, content] of Object.entries(files)) {
         const full = path.join(root, rel);
-        fs.mkdirSync(path.dirname(full), { recursive: true });
+        fs.mkdirSync(path.dirname(full), {
+            recursive: true,
+        });
         fs.writeFileSync(full, content);
     }
 };
@@ -64,8 +68,17 @@ const makeArchivalProject = (archival, { done = true } = {}) => {
         recursive: true,
     });
     const ws = path.join(dir, '.magicspec', 'ws');
-    fs.mkdirSync(path.join(ws, 'tasks'), { recursive: true });
-    const config = { default: 'ws', workspaces: { ws: { description: 'fixture' } } };
+    fs.mkdirSync(path.join(ws, 'tasks'), {
+        recursive: true,
+    });
+    const config = {
+        default: 'ws',
+        workspaces: {
+            ws: {
+                description: 'fixture',
+            },
+        },
+    };
     if (archival !== undefined) config.archival = archival;
     writeTreeFiles(dir, {
         '.gitignore': 'skills/magicspec/\n',
@@ -85,14 +98,24 @@ const makeArchivalProject = (archival, { done = true } = {}) => {
     });
     commitAllInFixture(dir);
     fs.appendFileSync(path.join(ws, 'tasks', 'phase-1.md'), '\n<!-- touched -->\n');
-    return { dir, ws };
+    return {
+        dir,
+        ws,
+    };
 };
 
 const runEngine = (dir, ...args) =>
-    spawnSync('node', ['skills/magicspec/scripts/executor.js', ...args], {
-        cwd: dir,
-        encoding: 'utf8',
-    });
+    spawnSync(
+        'node',
+        [
+            'skills/magicspec/scripts/executor.js',
+            ...args,
+        ],
+        {
+            cwd: dir,
+            encoding: 'utf8',
+        },
+    );
 
 // A STATE.md an agent has trimmed by hand keeps its header fields,
 // `## Current Position` and the `## Progress` fence, and loses the list
@@ -154,7 +177,11 @@ const patchState = (lines, patch, options = {}, { eol = '\n', files = {} } = {})
     }
 };
 
-const gitIn = (dir, ...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+const gitIn = (dir, ...args) =>
+    spawnSync('git', args, {
+        cwd: dir,
+        encoding: 'utf8',
+    });
 
 // ───────────────────────────────────────────────────────────────────────────
 // 16a-2. lib/diagnostics.js — revalidation before render (DG-10)
@@ -258,9 +285,16 @@ const writeResumeFixture = (tempDir, workspaces, { eol = '\n', defaultWorkspace 
     const toEol = (text) => text.replace(/\n/g, eol);
     const registry = {};
     for (const [name, def] of Object.entries(workspaces)) {
-        registry[name] = { description: name, scope: ['.magicspec'] };
+        registry[name] = {
+            description: name,
+            scope: [
+                '.magicspec',
+            ],
+        };
         const wsDir = path.join(designDir, name);
-        fs.mkdirSync(path.join(wsDir, 'tasks'), { recursive: true });
+        fs.mkdirSync(path.join(wsDir, 'tasks'), {
+            recursive: true,
+        });
         fs.writeFileSync(
             path.join(wsDir, 'STATE.md'),
             toEol(
@@ -343,10 +377,19 @@ const readShipped = (rel) => fs.readFileSync(path.join(shippedRoot, rel), 'utf8'
 const listShipped = (dir, extensions) => {
     const found = [];
     const walk = (current) => {
-        for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+        for (const entry of fs.readdirSync(current, {
+            withFileTypes: true,
+        })) {
             const full = path.join(current, entry.name);
             if (entry.isDirectory()) {
-                if (!['history', '.git', 'node_modules'].includes(entry.name)) walk(full);
+                if (
+                    ![
+                        'history',
+                        '.git',
+                        'node_modules',
+                    ].includes(entry.name)
+                )
+                    walk(full);
             } else if (extensions.includes(path.extname(entry.name))) {
                 found.push(path.relative(shippedRoot, full).split(path.sep).join('/'));
             }
@@ -358,9 +401,14 @@ const listShipped = (dir, extensions) => {
 
 // The shipped engine bodies (`workflows/*.md` and `references/*.md`), not the templates and role cards.
 const engineBodies = () =>
-    listShipped('skills/magicspec', ['.md'])
+    listShipped('skills/magicspec', [
+        '.md',
+    ])
         .filter((rel) => /^skills\/magicspec\/(workflows|references)\/[^/]+$/.test(rel))
-        .map((rel) => ({ rel, text: readShipped(rel) }));
+        .map((rel) => ({
+            rel,
+            text: readShipped(rel),
+        }));
 
 // The text of one numbered workflow step: its own line plus the indented
 // lines beneath it, up to the next step or heading.
@@ -403,22 +451,41 @@ const cardLine = (rel, prefix) =>
 const feedbackRunner = (tempDir) => {
     const executor = path.join(tempDir, 'skills', 'magicspec', 'scripts', 'executor.js');
     const feedback = (...args) =>
-        spawnSync(process.execPath, [executor, 'feedback', ...args], {
-            cwd: tempDir,
-            encoding: 'utf8',
-        });
-    return { executor, feedback };
+        spawnSync(
+            process.execPath,
+            [
+                executor,
+                'feedback',
+                ...args,
+            ],
+            {
+                cwd: tempDir,
+                encoding: 'utf8',
+            },
+        );
+    return {
+        executor,
+        feedback,
+    };
 };
 
 // A function that writes the `feedback.channel` setting of a fixture's registry.
 const channelSetter = (registry) => (value) => {
-    fs.mkdirSync(path.dirname(registry), { recursive: true });
+    fs.mkdirSync(path.dirname(registry), {
+        recursive: true,
+    });
     fs.writeFileSync(
         registry,
         JSON.stringify({
             default: 'engine',
-            workspaces: { engine: { description: 'x' } },
-            feedback: { channel: value },
+            workspaces: {
+                engine: {
+                    description: 'x',
+                },
+            },
+            feedback: {
+                channel: value,
+            },
         }),
     );
 };
@@ -434,11 +501,20 @@ const runScript = (
     if (mode === 'executor') {
         return spawnSync(
             process.execPath,
-            [path.join(tempDir, 'skills', 'magicspec', 'scripts', 'executor.js'), script, ...args],
-            { cwd, encoding: 'utf8' },
+            [
+                path.join(tempDir, 'skills', 'magicspec', 'scripts', 'executor.js'),
+                script,
+                ...args,
+            ],
+            {
+                cwd,
+                encoding: 'utf8',
+            },
         );
     }
-    const env = { ...process.env };
+    const env = {
+        ...process.env,
+    };
     delete env.MAGIC_ROOT;
     if (designDir) env.MAGIC_DESIGN_DIR = designDir;
     else delete env.MAGIC_DESIGN_DIR;
@@ -448,7 +524,11 @@ const runScript = (
             path.join(tempDir, 'skills', 'magicspec', 'scripts', `${script}.js`),
             ...args.filter((a) => !a.startsWith('--workspace=')),
         ],
-        { cwd, encoding: 'utf8', env },
+        {
+            cwd,
+            encoding: 'utf8',
+            env,
+        },
     );
 };
 
@@ -457,20 +537,31 @@ const runScript = (
 const makeRootFixture = () => {
     const tempDir = createTempWorkspace(true);
     writeResumeFixture(tempDir, {
-        engine: { entries: [trackingEntry('T-1A01', 'Probe the root', 'In Progress')] },
+        engine: {
+            entries: [
+                trackingEntry('T-1A01', 'Probe the root', 'In Progress'),
+            ],
+        },
     });
     // A registry entry and a source file with a rationale marker: commands that read
     // them see something only when they read the project, not the caller's directory.
     fs.writeFileSync(path.join(tempDir, '.magicspec', 'engine', 'INDEX.md'), '# Registry\n');
-    fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
+    fs.mkdirSync(path.join(tempDir, 'src'), {
+        recursive: true,
+    });
     fs.writeFileSync(
         path.join(tempDir, 'src', 'probe.js'),
         '// WHY: the probe needs a rationale to find\nmodule.exports = 1;\n',
     );
     commitFixture(tempDir);
     const nested = path.join(tempDir, 'a', 'b');
-    fs.mkdirSync(nested, { recursive: true });
-    return { tempDir, nested };
+    fs.mkdirSync(nested, {
+        recursive: true,
+    });
+    return {
+        tempDir,
+        nested,
+    };
 };
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -483,29 +574,57 @@ const skillSrc = path.resolve(TESTS_DIR, '..', 'skills', 'magicspec');
 const makeConsumer = () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-skill-'));
     for (const args of [
-        ['init', '-q', '-b', 'master'],
-        ['config', 'user.email', 'test@example.com'],
-        ['config', 'user.name', 'Test User'],
+        [
+            'init',
+            '-q',
+            '-b',
+            'master',
+        ],
+        [
+            'config',
+            'user.email',
+            'test@example.com',
+        ],
+        [
+            'config',
+            'user.name',
+            'Test User',
+        ],
     ]) {
-        spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        spawnSync('git', args, {
+            cwd: dir,
+            encoding: 'utf8',
+        });
     }
     return dir;
 };
 
 const installSkill = (dir, rel = '.agents/skills/magicspec') => {
     const target = path.join(dir, ...rel.split('/'));
-    fs.cpSync(skillSrc, target, { recursive: true });
+    fs.cpSync(skillSrc, target, {
+        recursive: true,
+    });
     return target;
 };
 
 const skillExec = (skillDir, cwd, script, args = []) =>
-    spawnSync(process.execPath, [path.join(skillDir, 'scripts', 'executor.js'), script, ...args], {
-        cwd,
-        encoding: 'utf8',
-    });
+    spawnSync(
+        process.execPath,
+        [
+            path.join(skillDir, 'scripts', 'executor.js'),
+            script,
+            ...args,
+        ],
+        {
+            cwd,
+            encoding: 'utf8',
+        },
+    );
 
 const initAllHosts = (skillDir, cwd) =>
-    skillExec(skillDir, cwd, 'init', ['--host=claude,codex,qwen']);
+    skillExec(skillDir, cwd, 'init', [
+        '--host=claude,codex,qwen',
+    ]);
 
 // The rule copies init writes for the hosts must be byte copies of the always-on rule source,
 // which is returned. `describe` words the failure for a given copy.
@@ -515,7 +634,10 @@ const assertRuleCopies = (
     describe = (rel) => `${rel}: a byte copy of the source`,
 ) => {
     const source = fs.readFileSync(path.join(skillDir, 'CONSTITUTION.md'), 'utf8');
-    for (const rel of ['.claude/rules/magicspec.md', '.qwen/rules/magicspec.md']) {
+    for (const rel of [
+        '.claude/rules/magicspec.md',
+        '.qwen/rules/magicspec.md',
+    ]) {
         assert.strictEqual(fs.readFileSync(path.join(cwd, rel), 'utf8'), source, describe(rel));
     }
     return source;
@@ -524,10 +646,16 @@ const assertRuleCopies = (
 // Links are not followed or listed: a junction is a name, not a second copy of what it leads to.
 const walkFiles = (dir) =>
     fs
-        .readdirSync(dir, { withFileTypes: true })
+        .readdirSync(dir, {
+            withFileTypes: true,
+        })
         .filter((e) => !e.isSymbolicLink())
         .flatMap((e) =>
-            e.isDirectory() ? walkFiles(path.join(dir, e.name)) : [path.join(dir, e.name)],
+            e.isDirectory()
+                ? walkFiles(path.join(dir, e.name))
+                : [
+                      path.join(dir, e.name),
+                  ],
         );
 
 // The commands the router lists, from its table: command (and its alias), group, what it does,
@@ -594,7 +722,14 @@ const legacyProject = ({ manifest = true, hostCopy = true, version = '2.1.100' }
         OLD_STATE + '/workspace.json',
         JSON.stringify({
             default: 'main',
-            workspaces: { main: { scope: [OLD_STATE, 'src'] } },
+            workspaces: {
+                main: {
+                    scope: [
+                        OLD_STATE,
+                        'src',
+                    ],
+                },
+            },
         }),
     );
     put(OLD_STATE + '/INDEX.md', '# index\n');
@@ -604,11 +739,16 @@ const legacyProject = ({ manifest = true, hostCopy = true, version = '2.1.100' }
     put('skills/mine/SKILL.md', "the project's own skill\n");
     put('rules/own.md', "the project's own rule\n");
     const skill = installSkill(dir);
-    return { dir, skill };
+    return {
+        dir,
+        skill,
+    };
 };
 // Writes a file of a migration fixture, creating its folders.
 const putFile = (dir, rel, text) => {
-    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+    fs.mkdirSync(path.dirname(path.join(dir, rel)), {
+        recursive: true,
+    });
     fs.writeFileSync(path.join(dir, rel), text);
 };
 
@@ -622,10 +762,15 @@ const snapshot = (dir) =>
                 ),
         )
         .sort()
-        .map((f) => [path.relative(dir, f), fs.readFileSync(f, 'utf8')]);
+        .map((f) => [
+            path.relative(dir, f),
+            fs.readFileSync(f, 'utf8'),
+        ]);
 
 const cleanLink = (dir) => {
-    for (const rel of ['.claude/skills/magicspec']) {
+    for (const rel of [
+        '.claude/skills/magicspec',
+    ]) {
         try {
             fs.rmdirSync(path.join(dir, rel));
         } catch {
@@ -651,38 +796,75 @@ const SIM_ENGINE_REL = '.agents/skills/magicspec';
 
 /** The environment of a consumer: no ambient `MAGIC_*` override reaches the engine under test. */
 const simEnv = (extra = {}) => {
-    const env = { ...process.env };
+    const env = {
+        ...process.env,
+    };
     for (const key of Object.keys(env)) if (key.startsWith('MAGIC_')) delete env[key];
-    return { ...env, ...extra };
+    return {
+        ...env,
+        ...extra,
+    };
 };
 
 /** A consumer project: a git repository with the engine copied where a host reads skills. */
 const makeSimConsumer = () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-sim-'));
     for (const args of [
-        ['init', '-q', '-b', 'master'],
-        ['config', 'user.email', 'test@example.com'],
-        ['config', 'user.name', 'Test User'],
-        ['config', 'core.autocrlf', 'false'],
+        [
+            'init',
+            '-q',
+            '-b',
+            'master',
+        ],
+        [
+            'config',
+            'user.email',
+            'test@example.com',
+        ],
+        [
+            'config',
+            'user.name',
+            'Test User',
+        ],
+        [
+            'config',
+            'core.autocrlf',
+            'false',
+        ],
     ]) {
-        spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        spawnSync('git', args, {
+            cwd: dir,
+            encoding: 'utf8',
+        });
     }
-    fs.cpSync(SIM_SKILL, path.join(dir, ...SIM_ENGINE_REL.split('/')), { recursive: true });
+    fs.cpSync(SIM_SKILL, path.join(dir, ...SIM_ENGINE_REL.split('/')), {
+        recursive: true,
+    });
     return dir;
 };
 
 const simExec = (dir, args, opts = {}) =>
     spawnSync(
         process.execPath,
-        [path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts', 'executor.js'), ...args],
-        { cwd: dir, encoding: 'utf8', env: simEnv(opts.env), input: opts.input ?? '' },
+        [
+            path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts', 'executor.js'),
+            ...args,
+        ],
+        {
+            cwd: dir,
+            encoding: 'utf8',
+            env: simEnv(opts.env),
+            input: opts.input ?? '',
+        },
     );
 
 /** Every file under a folder (the git object store aside) with its content hash. */
 const treeHashes = (root) => {
     const out = new Map();
     const walk = (dir) => {
-        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        for (const entry of fs.readdirSync(dir, {
+            withFileTypes: true,
+        })) {
             const full = path.join(dir, entry.name);
             const rel = path.relative(root, full).split(path.sep).join('/');
             if (rel === '.git/objects' || rel === '.git/index' || rel.startsWith('.git/logs'))
@@ -701,11 +883,22 @@ const treeHashes = (root) => {
 const simPutter =
     (dir) =>
     (rel, body = '') => {
-        fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+        fs.mkdirSync(path.dirname(path.join(dir, rel)), {
+            recursive: true,
+        });
         fs.writeFileSync(path.join(dir, rel), body);
     };
 const sameTree = (before, after) =>
-    JSON.stringify([...before].sort()) === JSON.stringify([...after].sort());
+    JSON.stringify(
+        [
+            ...before,
+        ].sort(),
+    ) ===
+    JSON.stringify(
+        [
+            ...after,
+        ].sort(),
+    );
 
 // ═══════════════════════════════════════════════════════════════════════
 // 30. resolve-workspace — every command routes by one chain the engine computes
@@ -720,12 +913,24 @@ const routingRegistry = (extra = {}) => ({
     workspaces: {
         web: {
             description: 'Web storefront and checkout flow',
-            scope: ['apps/web', 'packages/ui'],
+            scope: [
+                'apps/web',
+                'packages/ui',
+            ],
         },
-        api: { description: 'Backend service for orders', scope: ['apps/api', 'packages'] },
+        api: {
+            description: 'Backend service for orders',
+            scope: [
+                'apps/api',
+                'packages',
+            ],
+        },
         docs: {
             description: 'Documentation guides and tutorials',
-            scope: ['docs', 'README.md'],
+            scope: [
+                'docs',
+                'README.md',
+            ],
         },
     },
     ...extra,
@@ -733,9 +938,13 @@ const routingRegistry = (extra = {}) => ({
 
 const writeRoutingFixture = (dir, registry = routingRegistry()) => {
     const designDir = path.join(dir, '.magicspec');
-    fs.mkdirSync(designDir, { recursive: true });
+    fs.mkdirSync(designDir, {
+        recursive: true,
+    });
     for (const name of Object.keys(registry.workspaces)) {
-        fs.mkdirSync(path.join(designDir, name, 'specifications'), { recursive: true });
+        fs.mkdirSync(path.join(designDir, name, 'specifications'), {
+            recursive: true,
+        });
     }
     fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify(registry, null, 2));
     return designDir;
@@ -743,7 +952,9 @@ const writeRoutingFixture = (dir, registry = routingRegistry()) => {
 
 // The ambient choice of the caller's own shell never leaks into a case.
 const routingEnv = (extra = {}) => {
-    const env = { ...process.env };
+    const env = {
+        ...process.env,
+    };
     for (const key of [
         'MAGIC_WORKSPACE',
         'MAGIC_WORKSPACE_SOURCE',
@@ -752,17 +963,107 @@ const routingEnv = (extra = {}) => {
     ]) {
         delete env[key];
     }
-    return { ...env, ...extra };
+    return {
+        ...env,
+        ...extra,
+    };
 };
 
 // What `executor.js --help` prints: the list of commands, from the command table.
 const executorListing = (dir) =>
     spawnSync(
         process.execPath,
-        [path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js'), '--help'],
-        { cwd: dir, encoding: 'utf8' },
+        [
+            path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js'),
+            '--help',
+        ],
+        {
+            cwd: dir,
+            encoding: 'utf8',
+        },
     ).stdout;
 const stateFolderOfRepo = path.resolve(TESTS_DIR, '..', '.magicspec');
+// ───────────────────────────────────────────────────────────────────────────
+// The artifact index (shared by the index domain and the search domain)
+// ───────────────────────────────────────────────────────────────────────────
+
+const memorySectionsPath = path.join(scriptsDir, 'lib', 'memory-sections.js');
+
+const memoryFallbackPath = path.join(scriptsDir, 'lib', 'memory-fallback.js');
+
+const memorySqlitePath = path.join(scriptsDir, 'lib', 'memory-sqlite.js');
+
+/** Whether this runtime can run the SQLite backend: the module loads and makes an FTS5 table. */
+const memorySqliteWorks = (() => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-memory-probe-'));
+    try {
+        const backend = require(memorySqlitePath).openBackend(dir);
+        const works = backend.name === 'sqlite';
+        backend.close();
+        return works;
+    } catch {
+        return false;
+    } finally {
+        fs.rmSync(dir, {
+            recursive: true,
+            force: true,
+        });
+    }
+})();
+const needsSqlite = {
+    skip: memorySqliteWorks ? false : 'node:sqlite with FTS5 is not available on this runtime',
+};
+
+/** A consumer project with a small state folder: two workspaces, a plan, an archive and a changelog. */
+const makeMemoryFixture = () => {
+    const dir = makeSimConsumer();
+    const put = simPutter(dir);
+    put(
+        '.magicspec/workspace.json',
+        JSON.stringify({
+            default: 'ws',
+            workspaces: {
+                ws: {
+                    scope: [
+                        'src',
+                    ],
+                },
+                other: {
+                    scope: [
+                        'lib',
+                    ],
+                },
+            },
+        }),
+    );
+    put('.magicspec/INDEX.md', '# Registry\n\n## Overview\n\nGlobal registry.\n');
+    put(
+        '.magicspec/ws/specifications/l1-a.md',
+        '# Alpha\n\n**Version:** 1.2.0\n**Status:** Stable\n**Layer:** concept\n\n## Overview\n\nThe overview.\n\n## Retry Rule\n\nA failed call is retried three times with a pause.\n',
+    );
+    put('.magicspec/ws/PLAN.md', '# Plan\n\n## Phase 1\n\nBuild the retry wrapper first.\n');
+    put(
+        '.magicspec/ws/archives/tasks/phase-0.md',
+        '# Old\n\n## Tasks\n\nThe archivedword task retry.\n',
+    );
+    put('.magicspec/ws/CHANGELOG.md', '# Changelog\n\n## 0.1.0\n\nchangeloggedword retry fix.\n');
+    put(
+        '.magicspec/other/specifications/l1-b.md',
+        '# Beta\n\n**Version:** 1.0.0\n**Status:** Draft\n\n## Overview\n\nOther workspace talks about retry too.\n',
+    );
+    return dir;
+};
+
+const memoryQuery = (dir, args, opts) =>
+    simExec(
+        dir,
+        [
+            'memory-query',
+            ...args,
+        ],
+        opts,
+    );
+
 module.exports = {
     sha256Hex,
     listFilesUnder,
@@ -824,4 +1125,10 @@ module.exports = {
     routingEnv,
     executorListing,
     stateFolderOfRepo,
+    memorySectionsPath,
+    memoryFallbackPath,
+    memorySqlitePath,
+    needsSqlite,
+    makeMemoryFixture,
+    memoryQuery,
 };

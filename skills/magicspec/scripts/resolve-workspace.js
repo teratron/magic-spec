@@ -57,13 +57,28 @@ function workspaceFromDesignDir(projectRoot, designAbs) {
  * @returns {{value: string, source: 'argument'|'environment'}|null}
  */
 function explicitChoice(flag, projectRoot, designAbs) {
-    if (flag) return { value: flag, source: 'argument' };
+    if (flag)
+        return {
+            value: flag,
+            source: 'argument',
+        };
     const source = process.env.MAGIC_WORKSPACE_SOURCE;
     const fromDir = workspaceFromDesignDir(projectRoot, designAbs);
-    if (source === 'argument' && fromDir) return { value: fromDir, source: 'argument' };
+    if (source === 'argument' && fromDir)
+        return {
+            value: fromDir,
+            source: 'argument',
+        };
     if (process.env.MAGIC_WORKSPACE)
-        return { value: process.env.MAGIC_WORKSPACE, source: 'environment' };
-    if (!source && fromDir) return { value: fromDir, source: 'environment' };
+        return {
+            value: process.env.MAGIC_WORKSPACE,
+            source: 'environment',
+        };
+    if (!source && fromDir)
+        return {
+            value: fromDir,
+            source: 'environment',
+        };
     return null;
 }
 
@@ -124,8 +139,15 @@ function renderText(result) {
  */
 function main() {
     const { values, flags, errors } = parseFlags(process.argv.slice(2), {
-        valueFlags: ['--workspace', '--command', '--text', '--paths'],
-        boolFlags: ['--json'],
+        valueFlags: [
+            '--workspace',
+            '--command',
+            '--text',
+            '--paths',
+        ],
+        boolFlags: [
+            '--json',
+        ],
     });
     if (errors.length > 0) throw new RoutingError(errors[0]);
 
@@ -156,7 +178,9 @@ function main() {
                 `Workspace '${explicit.value}' provided, but ${STATE_DIR_NAME}/workspace.json does not exist.`,
             );
         }
-        registry = { workspaces: {} };
+        registry = {
+            workspaces: {},
+        };
     }
 
     const listed = (values['--paths'] || '')
@@ -185,4 +209,7 @@ if (require.main === module) {
     }
 }
 
-module.exports = { explicitChoice, renderText };
+module.exports = {
+    explicitChoice,
+    renderText,
+};

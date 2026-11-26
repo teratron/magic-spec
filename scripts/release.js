@@ -66,7 +66,10 @@ const publish = argv.includes('--yes');
  * @throws {Error} When git exits non-zero.
  */
 function git(args) {
-    return execFileSync('git', args, { cwd: ROOT_DIR, encoding: 'utf8' }).trim();
+    return execFileSync('git', args, {
+        cwd: ROOT_DIR,
+        encoding: 'utf8',
+    }).trim();
 }
 
 /**
@@ -93,7 +96,10 @@ const blockers = [];
 
 let branch = '';
 try {
-    branch = git(['branch', '--show-current']);
+    branch = git([
+        'branch',
+        '--show-current',
+    ]);
 } catch {
     /* not a repository: reported below */
 }
@@ -101,7 +107,12 @@ if (!branch) blockers.push('HEAD is not on a branch (detached or not a repositor
 
 const pending = (() => {
     try {
-        return git(['status', '--porcelain']).split('\n').filter(Boolean);
+        return git([
+            'status',
+            '--porcelain',
+        ])
+            .split('\n')
+            .filter(Boolean);
     } catch {
         return [];
     }
@@ -125,7 +136,11 @@ if (fs.existsSync(CHANGELOG_FILE)) {
 try {
     execFileSync(
         process.execPath,
-        [path.join(__dirname, 'check-security-policy.js'), '--version', version],
+        [
+            path.join(__dirname, 'check-security-policy.js'),
+            '--version',
+            version,
+        ],
         {
             cwd: ROOT_DIR,
             encoding: 'utf8',
@@ -141,7 +156,14 @@ try {
     blockers.push(`the security policy does not match this release: ${detail}`);
 }
 
-if (gitOk(['rev-parse', '--verify', '--quiet', `refs/tags/${tagName}`])) {
+if (
+    gitOk([
+        'rev-parse',
+        '--verify',
+        '--quiet',
+        `refs/tags/${tagName}`,
+    ])
+) {
     blockers.push(
         `tag ${tagName} already exists locally; bump the version or delete the tag deliberately`,
     );
@@ -178,7 +200,16 @@ if (blockers.length > 0) error('Refusing to publish: resolve the blockers above.
 
 log('Running engine tests (QA Gate)...');
 try {
-    execFileSync(process.execPath, ['tests/engine.js'], { stdio: 'inherit', cwd: ROOT_DIR });
+    execFileSync(
+        process.execPath,
+        [
+            'tests/engine.js',
+        ],
+        {
+            stdio: 'inherit',
+            cwd: ROOT_DIR,
+        },
+    );
 } catch {
     error('Engine tests failed. Fix issues before releasing.');
 }
@@ -187,11 +218,27 @@ log('Synchronizing metadata and documentation...');
 try {
     // The executor gives the engine its environment and runs C14. `sync` is a maintenance
     // orchestrator (scripts/sync.js) with no engine counterpart, so it is started directly.
-    execFileSync(process.execPath, ['skills/magicspec/scripts/executor.js', 'update-engine-meta'], {
-        stdio: 'inherit',
-        cwd: ROOT_DIR,
-    });
-    execFileSync(process.execPath, ['scripts/sync.js'], { stdio: 'inherit', cwd: ROOT_DIR });
+    execFileSync(
+        process.execPath,
+        [
+            'skills/magicspec/scripts/executor.js',
+            'update-engine-meta',
+        ],
+        {
+            stdio: 'inherit',
+            cwd: ROOT_DIR,
+        },
+    );
+    execFileSync(
+        process.execPath,
+        [
+            'scripts/sync.js',
+        ],
+        {
+            stdio: 'inherit',
+            cwd: ROOT_DIR,
+        },
+    );
 } catch {
     error('Metadata synchronization failed.');
 }
@@ -206,9 +253,21 @@ if (releasedVersion !== version) {
 log('Committing release artifacts...');
 try {
     // The tree was clean at the start, so everything changed now came from the steps above.
-    if (git(['status', '--porcelain'])) {
-        git(['add', '-A']);
-        git(['commit', '-m', `chore: release ${tagName}`]);
+    if (
+        git([
+            'status',
+            '--porcelain',
+        ])
+    ) {
+        git([
+            'add',
+            '-A',
+        ]);
+        git([
+            'commit',
+            '-m',
+            `chore: release ${tagName}`,
+        ]);
     } else {
         log('Working tree clean. No new changes to commit.');
     }
@@ -218,15 +277,29 @@ try {
 
 log(`Creating tag ${tagName}...`);
 try {
-    git(['tag', '-a', tagName, '-m', `${tagName} Release`]);
+    git([
+        'tag',
+        '-a',
+        tagName,
+        '-m',
+        `${tagName} Release`,
+    ]);
 } catch (e) {
     error(`Could not create tag ${tagName}: ${e.message}`);
 }
 
 log(`Pushing ${branch} and ${tagName} to origin...`);
 try {
-    git(['push', 'origin', branch]);
-    git(['push', 'origin', tagName]);
+    git([
+        'push',
+        'origin',
+        branch,
+    ]);
+    git([
+        'push',
+        'origin',
+        tagName,
+    ]);
 } catch {
     error('Failed to push to origin. Verify git configuration and network.');
 }

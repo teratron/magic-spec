@@ -24,7 +24,15 @@ const {
 // second (`applySweep`), and a second run finds nothing left to do.
 
 /** The commands the earlier layout printed as `/magic.<command>`. */
-const OLD_COMMANDS = ['spec', 'task', 'run', 'analyze', 'rule', 'status', 'graph'];
+const OLD_COMMANDS = [
+    'spec',
+    'task',
+    'run',
+    'analyze',
+    'rule',
+    'status',
+    'graph',
+];
 
 /** `/magic.spec`, not `/magic.spec.md` and not `/magic.spec-x`. */
 const COMMAND_RE = new RegExp(`/magic\\.(${OLD_COMMANDS.join('|')})(?![\\w-]|\\.\\w)`, 'g');
@@ -41,11 +49,20 @@ const ENGINE_RE = /(^|[^\w.-])\.magic\//g;
 const HISTORY_SECTION = /^## (Document History|Recent Decisions)\b/;
 
 /** Folders and files of the state folder that are history, generated, or someone else's output. */
-const SKIPPED_DIRS = new Set(['archives', 'graph', 'node_modules']);
-const SKIPPED_FILES = new Set(['RETROSPECTIVE.md', 'CHANGELOG.md']);
+const SKIPPED_DIRS = new Set([
+    'archives',
+    'graph',
+    'node_modules',
+]);
+const SKIPPED_FILES = new Set([
+    'RETROSPECTIVE.md',
+    'CHANGELOG.md',
+]);
 
 /** The constitution changes through its own workflow; the sweep reports what it finds there. */
-const REPORT_ONLY_FILES = new Set(['RULES.md']);
+const REPORT_ONLY_FILES = new Set([
+    'RULES.md',
+]);
 
 /** Text a product scan reads; anything else is not looked into. */
 const PRODUCT_EXTENSIONS = new Set([
@@ -70,7 +87,14 @@ const PRODUCT_MAX_BYTES = 512 * 1024;
 const PRODUCT_REPORT_LIMIT = 10;
 
 /** Folders of a host or of the engine: projections and installed code, not the project's product. */
-const HOST_FOLDERS = ['.claude', '.agents', '.qwen', '.codex', '.gemini', '.cursor'];
+const HOST_FOLDERS = [
+    '.claude',
+    '.agents',
+    '.qwen',
+    '.codex',
+    '.gemini',
+    '.cursor',
+];
 
 // ───────────────────────────────────────────────────────────────────────────
 // Rewriting
@@ -105,7 +129,10 @@ function rewriteVocabulary(text, engineFolder) {
         }
         return next;
     });
-    return { text: out.join('\n'), count };
+    return {
+        text: out.join('\n'),
+        count,
+    };
 }
 
 /**
@@ -115,10 +142,18 @@ function rewriteVocabulary(text, engineFolder) {
 function firstEarlierWord(text) {
     const lines = text.split('\n');
     for (let i = 0; i < lines.length; i++) {
-        for (const re of [COMMAND_RE, STATE_RE, ENGINE_RE]) {
+        for (const re of [
+            COMMAND_RE,
+            STATE_RE,
+            ENGINE_RE,
+        ]) {
             re.lastIndex = 0;
             const hit = re.exec(lines[i]);
-            if (hit) return { token: hit[0].trim(), line: i + 1 };
+            if (hit)
+                return {
+                    token: hit[0].trim(),
+                    line: i + 1,
+                };
         }
     }
     return null;
@@ -150,7 +185,11 @@ function bumpSpecification(text, date) {
         /^(\*\*Version:\*\*\s*)\d+\.\d+\.\d+/m,
         (_, head) => `${head}${to}`,
     );
-    return { text: bumped, from, to };
+    return {
+        text: bumped,
+        from,
+        to,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -183,20 +222,31 @@ function scanProductFiles(root, engineFolder, exclude) {
         // Tracked files and new ones that are not ignored: the project's product as git sees it.
         const listing = execFileSync(
             'git',
-            ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+            [
+                'ls-files',
+                '-z',
+                '--cached',
+                '--others',
+                '--exclude-standard',
+            ],
             {
                 cwd: root,
                 encoding: 'utf8',
-                stdio: ['ignore', 'pipe', 'ignore'],
+                stdio: [
+                    'ignore',
+                    'pipe',
+                    'ignore',
+                ],
                 maxBuffer: 64 * 1024 * 1024,
             },
         );
         rels = listing.split('\0').filter(Boolean);
     } catch {
         const unlisted = (entry) => entry.name === '.git' || entry.name === 'node_modules';
-        rels = walkFiles(root, { skipDir: unlisted, takeFile: (entry) => !unlisted(entry) }).map(
-            (full) => normalizePath(path.relative(root, full)),
-        );
+        rels = walkFiles(root, {
+            skipDir: unlisted,
+            takeFile: (entry) => !unlisted(entry),
+        }).map((full) => normalizePath(path.relative(root, full)));
     }
 
     const skipped = [
@@ -205,7 +255,11 @@ function scanProductFiles(root, engineFolder, exclude) {
         '.magic/',
         'magicspec-migration-backup-',
         ...HOST_FOLDERS.map((f) => `${f}/`),
-        ...(engineFolder ? [`${engineFolder}/`] : []),
+        ...(engineFolder
+            ? [
+                  `${engineFolder}/`,
+              ]
+            : []),
     ];
     const found = [];
     for (const rel of rels) {
@@ -220,9 +274,17 @@ function scanProductFiles(root, engineFolder, exclude) {
             continue;
         }
         const hit = firstEarlierWord(text);
-        if (hit) found.push({ rel, line: hit.line, token: hit.token });
+        if (hit)
+            found.push({
+                rel,
+                line: hit.line,
+                token: hit.token,
+            });
     }
-    return { files: found.slice(0, PRODUCT_REPORT_LIMIT), total: found.length };
+    return {
+        files: found.slice(0, PRODUCT_REPORT_LIMIT),
+        total: found.length,
+    };
 }
 
 /**
@@ -290,7 +352,10 @@ function planSweep(root, stateDir, options = {}) {
         }
         contents.set(abs, bumped.text);
         counts.set(abs, result.count);
-        bumps.set(abs, { from: bumped.from, to: bumped.to });
+        bumps.set(abs, {
+            from: bumped.from,
+            to: bumped.to,
+        });
 
         // The registry row of the specification follows its version.
         const registry = path.join(path.dirname(path.dirname(abs)), 'INDEX.md');
@@ -307,7 +372,9 @@ function planSweep(root, stateDir, options = {}) {
         }
     }
 
-    const edits = [...contents.entries()]
+    const edits = [
+        ...contents.entries(),
+    ]
         .filter(([abs, next]) => next !== originals.get(abs))
         .map(([abs, next]) => ({
             rel: rel(abs),

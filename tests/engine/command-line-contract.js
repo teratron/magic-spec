@@ -21,7 +21,11 @@ const {
 module.exports = () => {
     test('the command table names every runnable script and exactly the options each one reads', () => {
         const { COMMANDS } = require(path.join(SIM_SCRIPTS, 'lib', 'commands.js'));
-        const libraries = new Set(['executor', 'utils', 'graph-cache']);
+        const libraries = new Set([
+            'executor',
+            'utils',
+            'graph-cache',
+        ]);
         const scripts = fs
             .readdirSync(SIM_SCRIPTS)
             .filter((f) => f.endsWith('.js'))
@@ -36,12 +40,26 @@ module.exports = () => {
 
         // Option-shaped literals a script holds for another program, or that the executor consumes for it.
         const allowed = {
-            '*': ['--workspace', '--root', '--help'],
-            migrate: ['--json'],
-            'export-wiki': ['--json'],
-            'serve-spec-graph': ['--json'],
-            'install-hooks': ['--get'],
-            'update-engine-meta': ['--dir'],
+            '*': [
+                '--workspace',
+                '--root',
+                '--help',
+            ],
+            migrate: [
+                '--json',
+            ],
+            'export-wiki': [
+                '--json',
+            ],
+            'serve-spec-graph': [
+                '--json',
+            ],
+            'install-hooks': [
+                '--get',
+            ],
+            'update-engine-meta': [
+                '--dir',
+            ],
         };
         for (const [name, entry] of Object.entries(COMMANDS)) {
             const source = fs.readFileSync(path.join(SIM_SCRIPTS, `${name}.js`), 'utf8');
@@ -63,7 +81,9 @@ module.exports = () => {
                 .replace(/\/\*[\s\S]*?\*\//g, '')
                 .replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
             const literals = new Set(
-                [...code.matchAll(/['"`](--[a-z][a-z0-9-]*)(?=[='"`])/g)].map((m) => m[1]),
+                [
+                    ...code.matchAll(/['"`](--[a-z][a-z0-9-]*)(?=[='"`])/g),
+                ].map((m) => m[1]),
             );
             for (const flag of literals) {
                 assert.ok(
@@ -83,7 +103,10 @@ module.exports = () => {
             const before = treeHashes(dir);
             for (const [name, entry] of Object.entries(COMMANDS)) {
                 if (!entry.ownHelp) {
-                    const help = simExec(dir, [name, '--help']);
+                    const help = simExec(dir, [
+                        name,
+                        '--help',
+                    ]);
                     assert.strictEqual(help.status, 0, `${name} --help: ${help.stderr}`);
                     assert.match(
                         help.stdout,
@@ -92,17 +115,32 @@ module.exports = () => {
                     );
                     assert.match(help.stdout, /Usage: /, `${name}: help shows the usage`);
                 }
-                const bad = simExec(dir, [name, '--no-such-option']);
+                const bad = simExec(dir, [
+                    name,
+                    '--no-such-option',
+                ]);
                 assert.notStrictEqual(bad.status, 0, `${name} --no-such-option must fail`);
                 assert.match(bad.stderr, /Unknown option '--no-such-option'/, name);
             }
-            for (const unknown of ['nosuchcommand', 'utils', 'graph-cache']) {
-                const result = simExec(dir, [unknown]);
+            for (const unknown of [
+                'nosuchcommand',
+                'utils',
+                'graph-cache',
+            ]) {
+                const result = simExec(dir, [
+                    unknown,
+                ]);
                 assert.strictEqual(result.status, 1, unknown);
                 assert.match(result.stderr, new RegExp(`Unknown command '${unknown}'`), unknown);
                 assert.doesNotMatch(result.stdout + result.stderr, /powershell|\.ps1/i, unknown);
             }
-            assert.strictEqual(simExec(dir, ['--help']).status, 0, 'the command list');
+            assert.strictEqual(
+                simExec(dir, [
+                    '--help',
+                ]).status,
+                0,
+                'the command list',
+            );
             assert.ok(sameTree(before, treeHashes(dir)), 'help and refusals wrote nothing');
         } finally {
             cleanup(dir);
@@ -112,10 +150,35 @@ module.exports = () => {
     test('remove deletes only on a clean request: help, a short flag, a malformed dry run and a stray argument leave the project as it was', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init', '--host=claude']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                    '--host=claude',
+                ]).status,
+                0,
+            );
             const before = treeHashes(dir);
-            for (const probe of [['--help'], ['-n'], ['--dry-run=true'], ['--bogus'], ['extra']]) {
-                const result = simExec(dir, ['remove', ...probe]);
+            for (const probe of [
+                [
+                    '--help',
+                ],
+                [
+                    '-n',
+                ],
+                [
+                    '--dry-run=true',
+                ],
+                [
+                    '--bogus',
+                ],
+                [
+                    'extra',
+                ],
+            ]) {
+                const result = simExec(dir, [
+                    'remove',
+                    ...probe,
+                ]);
                 assert.ok(
                     sameTree(before, treeHashes(dir)),
                     `remove ${probe.join(' ')} changed the project`,
@@ -125,8 +188,15 @@ module.exports = () => {
             // started by hand, the script answers the same way
             const direct = spawnSync(
                 process.execPath,
-                [path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts', 'remove.js'), '-n'],
-                { cwd: dir, encoding: 'utf8', env: simEnv() },
+                [
+                    path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts', 'remove.js'),
+                    '-n',
+                ],
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                    env: simEnv(),
+                },
             );
             assert.notStrictEqual(direct.status, 0);
             assert.ok(sameTree(before, treeHashes(dir)), 'a direct run changed the project');
@@ -138,23 +208,43 @@ module.exports = () => {
     test('a registered workspace whose folder is missing: reading commands neither create it nor put a note on stdout; a writing command creates it and says so on stderr', () => {
         const dir = makeSimConsumer();
         try {
-            fs.mkdirSync(path.join(dir, '.magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(dir, '.magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(dir, '.magicspec', 'workspace.json'),
-                JSON.stringify({ default: 'ghost', workspaces: { ghost: { description: 'x' } } }),
+                JSON.stringify({
+                    default: 'ghost',
+                    workspaces: {
+                        ghost: {
+                            description: 'x',
+                        },
+                    },
+                }),
             );
             fs.writeFileSync(path.join(dir, '.magicspec', 'INDEX.md'), '# Index\n');
             const ghost = path.join(dir, '.magicspec', 'ghost');
 
-            const pre = simExec(dir, ['check-prerequisites', '--json']);
+            const pre = simExec(dir, [
+                'check-prerequisites',
+                '--json',
+            ]);
             assert.doesNotThrow(
                 () => JSON.parse(pre.stdout),
                 `stdout is one JSON document: ${pre.stdout.slice(0, 120)}`,
             );
-            assert.strictEqual(simExec(dir, ['resume-state', '--workspace=ghost']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'resume-state',
+                    '--workspace=ghost',
+                ]).status,
+                0,
+            );
             assert.ok(!fs.existsSync(ghost), 'reading commands do not create the workspace folder');
 
-            const ctx = simExec(dir, ['generate-context']);
+            const ctx = simExec(dir, [
+                'generate-context',
+            ]);
             assert.strictEqual(ctx.status, 0, ctx.stderr);
             assert.ok(
                 fs.existsSync(path.join(ghost, 'specifications')),
@@ -177,7 +267,15 @@ module.exports = () => {
         const put = simPutter(dir);
         put(
             '.magicspec/workspace.json',
-            JSON.stringify({ default: 'ws', workspaces: { ws: { description: 'x', scope } } }),
+            JSON.stringify({
+                default: 'ws',
+                workspaces: {
+                    ws: {
+                        description: 'x',
+                        scope,
+                    },
+                },
+            }),
         );
         put('.magicspec/INDEX.md', '# Index\n');
         put('.magicspec/ws/INDEX.md', '# Ws\n');
@@ -190,11 +288,28 @@ module.exports = () => {
         put('other/x.js', 'module.exports = 3;\n');
         return dir;
     };
-    const coverageOf = (dir) => JSON.parse(simExec(dir, ['analyze-coverage', '--json']).stdout);
+    const coverageOf = (dir) =>
+        JSON.parse(
+            simExec(dir, [
+                'analyze-coverage',
+                '--json',
+            ]).stdout,
+        );
 
     test('a scope entry means the same in every spelling: src, src/, ./src, src/* and src/** all select the src files', () => {
-        for (const scope of ['src', 'src/', './src', 'src/*', 'src/**']) {
-            const dir = makeScopeProject([scope], 'src/app.js');
+        for (const scope of [
+            'src',
+            'src/',
+            './src',
+            'src/*',
+            'src/**',
+        ]) {
+            const dir = makeScopeProject(
+                [
+                    scope,
+                ],
+                'src/app.js',
+            );
             try {
                 const report = coverageOf(dir);
                 const scanned = report.coverage
@@ -202,7 +317,10 @@ module.exports = () => {
                     .filter((f) => f.startsWith('src/'));
                 assert.deepStrictEqual(
                     scanned.sort(),
-                    ['src/app.js', 'src/lib/util.js'],
+                    [
+                        'src/app.js',
+                        'src/lib/util.js',
+                    ],
                     `scope '${scope}'`,
                 );
                 assert.ok(
@@ -217,8 +335,19 @@ module.exports = () => {
     });
 
     test('a pattern reference covers what it matches, and a scope entry or pattern that matches nothing is reported, never read as clean', () => {
-        const pattern = makeScopeProject(['src'], 'src/**/*.js');
-        const nothing = makeScopeProject(['src', 'does-not-exist'], 'nothing/here/*.js');
+        const pattern = makeScopeProject(
+            [
+                'src',
+            ],
+            'src/**/*.js',
+        );
+        const nothing = makeScopeProject(
+            [
+                'src',
+                'does-not-exist',
+            ],
+            'nothing/here/*.js',
+        );
         try {
             const covered = coverageOf(pattern);
             const extracted = covered.coverage.filter(
@@ -229,21 +358,39 @@ module.exports = () => {
 
             const empty = coverageOf(nothing);
             const types = empty.warnings.map((w) => w.type).sort();
-            assert.deepStrictEqual(types, ['REF_NO_MATCH', 'SCOPE_NO_MATCH']);
+            assert.deepStrictEqual(types, [
+                'REF_NO_MATCH',
+                'SCOPE_NO_MATCH',
+            ]);
             assert.strictEqual(
                 empty.shadow_specs.length,
                 1,
                 'the pattern that matches nothing is an orphaned reference',
             );
 
-            const rationale = JSON.parse(simExec(nothing, ['extract-rationale', '--json']).stdout);
+            const rationale = JSON.parse(
+                simExec(nothing, [
+                    'extract-rationale',
+                    '--json',
+                ]).stdout,
+            );
             assert.ok(
                 rationale.warnings.some((w) => w.type === 'SCOPE_NO_MATCH'),
                 'extract-rationale reports it too',
             );
-            const globbed = makeScopeProject(['src/**'], 'src/app.js');
+            const globbed = makeScopeProject(
+                [
+                    'src/**',
+                ],
+                'src/app.js',
+            );
             try {
-                const found = JSON.parse(simExec(globbed, ['extract-rationale', '--json']).stdout);
+                const found = JSON.parse(
+                    simExec(globbed, [
+                        'extract-rationale',
+                        '--json',
+                    ]).stdout,
+                );
                 assert.strictEqual(found.rationale.length, 2, 'a glob scope reaches the markers');
             } finally {
                 cleanup(globbed);
@@ -255,9 +402,19 @@ module.exports = () => {
     });
 
     test('generate-context keeps the top-level folders a scope selects, whatever its spelling', () => {
-        const dir = makeScopeProject(['src/**'], 'src/app.js');
+        const dir = makeScopeProject(
+            [
+                'src/**',
+            ],
+            'src/app.js',
+        );
         try {
-            assert.strictEqual(simExec(dir, ['generate-context']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'generate-context',
+                ]).status,
+                0,
+            );
             const context = fs.readFileSync(
                 path.join(dir, '.magicspec', 'ws', 'CONTEXT.md'),
                 'utf8',
@@ -282,7 +439,10 @@ module.exports = () => {
             ])
                 put(rel);
             const files = coverageOf(dir).coverage.map((c) => c.file);
-            for (const kept of ['src/build/real.js', 'src/env/real.js'])
+            for (const kept of [
+                'src/build/real.js',
+                'src/env/real.js',
+            ])
                 assert.ok(files.includes(kept), `${kept} is source`);
             for (const skipped of [
                 'build/output.js',
@@ -299,14 +459,28 @@ module.exports = () => {
     test('a line-endings-only difference from the manifest is not integrity drift; a content change still is, whatever its line endings', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
             const engine = path.join(dir, ...SIM_ENGINE_REL.split('/'));
             // a checkout that converts line endings does this to every text file
-            for (const rel of ['workflows/spec.md', 'workflows/task.md', 'CONSTITUTION.md']) {
+            for (const rel of [
+                'workflows/spec.md',
+                'workflows/task.md',
+                'CONSTITUTION.md',
+            ]) {
                 const file = path.join(engine, rel);
                 fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(/\r?\n/g, '\r\n'));
             }
-            const pre = JSON.parse(simExec(dir, ['check-prerequisites', '--json']).stdout);
+            const pre = JSON.parse(
+                simExec(dir, [
+                    'check-prerequisites',
+                    '--json',
+                ]).stdout,
+            );
             const types = pre.warnings.map((w) => w.type);
             assert.ok(
                 !types.includes('ENGINE_INTEGRITY'),
@@ -314,18 +488,32 @@ module.exports = () => {
             );
             assert.ok(types.includes('ENGINE_LINE_ENDINGS'), 'one advisory finding names it');
             assert.strictEqual(pre.ok, true);
-            const check = simExec(dir, ['update-engine-meta', '--check']);
+            const check = simExec(dir, [
+                'update-engine-meta',
+                '--check',
+            ]);
             assert.strictEqual(check.status, 0, check.stdout + check.stderr);
             assert.match(check.stdout, /only in line endings/);
 
             fs.appendFileSync(path.join(engine, 'workflows', 'spec.md'), '\r\nlocal tweak\r\n');
-            const drift = JSON.parse(simExec(dir, ['check-prerequisites', '--json']).stdout);
+            const drift = JSON.parse(
+                simExec(dir, [
+                    'check-prerequisites',
+                    '--json',
+                ]).stdout,
+            );
             assert.ok(
                 drift.warnings.some(
                     (w) => w.type === 'ENGINE_INTEGRITY' && /workflows\/spec\.md/.test(w.message),
                 ),
             );
-            assert.notStrictEqual(simExec(dir, ['update-engine-meta', '--check']).status, 0);
+            assert.notStrictEqual(
+                simExec(dir, [
+                    'update-engine-meta',
+                    '--check',
+                ]).status,
+                0,
+            );
         } finally {
             cleanup(dir);
         }
@@ -334,8 +522,15 @@ module.exports = () => {
     test('pre-flight in human mode says so when nothing is wrong', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
-            const result = simExec(dir, ['check-prerequisites']);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
+            const result = simExec(dir, [
+                'check-prerequisites',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             assert.match(result.stdout, /^Pre-flight: ok — /);
         } finally {
@@ -346,13 +541,20 @@ module.exports = () => {
     test('init prints the .gitignore lines for the hosts it set up and the .gitattributes line for vendoring, and records why a hook was not installed', () => {
         const dir = makeSimConsumer();
         try {
-            fs.mkdirSync(path.join(dir, '.git', 'hooks'), { recursive: true });
+            fs.mkdirSync(path.join(dir, '.git', 'hooks'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(dir, '.git', 'hooks', 'pre-commit'),
                 '#!/bin/sh\necho mine\n',
-                { mode: 0o755 },
+                {
+                    mode: 0o755,
+                },
             );
-            const result = simExec(dir, ['init', '--host=claude']);
+            const result = simExec(dir, [
+                'init',
+                '--host=claude',
+            ]);
             assert.strictEqual(result.status, 0, result.stderr);
             for (const line of [
                 `/${SIM_ENGINE_REL}/`,
@@ -388,11 +590,22 @@ module.exports = () => {
             const original = '# Changelog\n\n## [Unreleased]\n\n### Added\n\n- Something.\n';
             fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), original);
             for (const args of [
-                ['--version=9.9.9', '--date=not-a-date'],
-                ['--version=9.9.9', '--date=2026-13-45'],
-                ['--version=oops'],
+                [
+                    '--version=9.9.9',
+                    '--date=not-a-date',
+                ],
+                [
+                    '--version=9.9.9',
+                    '--date=2026-13-45',
+                ],
+                [
+                    '--version=oops',
+                ],
             ]) {
-                const result = simExec(dir, ['release-changelog', ...args]);
+                const result = simExec(dir, [
+                    'release-changelog',
+                    ...args,
+                ]);
                 assert.notStrictEqual(result.status, 0, args.join(' '));
                 assert.strictEqual(
                     fs.readFileSync(path.join(dir, 'CHANGELOG.md'), 'utf8'),
@@ -401,7 +614,11 @@ module.exports = () => {
                 );
             }
             assert.strictEqual(
-                simExec(dir, ['release-changelog', '--version=9.9.9', '--date=2026-10-29']).status,
+                simExec(dir, [
+                    'release-changelog',
+                    '--version=9.9.9',
+                    '--date=2026-10-29',
+                ]).status,
                 0,
             );
             assert.match(
@@ -416,7 +633,10 @@ module.exports = () => {
     test('finalize names the accepted workflows as the rule writes them', () => {
         const dir = makeSimConsumer();
         try {
-            const result = simExec(dir, ['finalize', '--workflow=bogus']);
+            const result = simExec(dir, [
+                'finalize',
+                '--workflow=bogus',
+            ]);
             assert.notStrictEqual(result.status, 0);
             assert.match(result.stderr, /Expected one of: spec, plan, task, run, rule/);
         } finally {
@@ -427,7 +647,12 @@ module.exports = () => {
     test('the graph server names a missing tool argument instead of searching for "undefined"', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
             const requests = [
                 {
                     jsonrpc: '2.0',
@@ -436,25 +661,42 @@ module.exports = () => {
                     params: {
                         protocolVersion: '2024-11-05',
                         capabilities: {},
-                        clientInfo: { name: 'test', version: '0' },
+                        clientInfo: {
+                            name: 'test',
+                            version: '0',
+                        },
                     },
                 },
                 {
                     jsonrpc: '2.0',
                     id: 2,
                     method: 'tools/call',
-                    params: { name: 'get_neighbors', arguments: {} },
+                    params: {
+                        name: 'get_neighbors',
+                        arguments: {},
+                    },
                 },
                 {
                     jsonrpc: '2.0',
                     id: 3,
                     method: 'tools/call',
-                    params: { name: 'shortest_path', arguments: { from: 'a' } },
+                    params: {
+                        name: 'shortest_path',
+                        arguments: {
+                            from: 'a',
+                        },
+                    },
                 },
             ].map((r) => JSON.stringify(r));
-            const result = simExec(dir, ['serve-spec-graph'], {
-                input: `${requests.join('\n')}\n`,
-            });
+            const result = simExec(
+                dir,
+                [
+                    'serve-spec-graph',
+                ],
+                {
+                    input: `${requests.join('\n')}\n`,
+                },
+            );
             const replies = result.stdout
                 .split('\n')
                 .filter(Boolean)
@@ -470,16 +712,27 @@ module.exports = () => {
     test('parallel update-state writers each keep their entry: the read-modify-write of STATE.md is serialized', async () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
             const executor = path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts', 'executor.js');
             assert.strictEqual(
-                simExec(dir, ['update-state', '--workspace=main', '--decision=seed']).status,
+                simExec(dir, [
+                    'update-state',
+                    '--workspace=main',
+                    '--decision=seed',
+                ]).status,
                 0,
             );
             const writers = 4;
             const exits = await Promise.all(
                 Array.from(
-                    { length: writers },
+                    {
+                        length: writers,
+                    },
                     (_, i) =>
                         new Promise((resolve) => {
                             const child = require('child_process').spawn(
@@ -490,7 +743,11 @@ module.exports = () => {
                                     '--workspace=main',
                                     `--decision=parallel entry ${i}`,
                                 ],
-                                { cwd: dir, env: simEnv(), stdio: 'ignore' },
+                                {
+                                    cwd: dir,
+                                    env: simEnv(),
+                                    stdio: 'ignore',
+                                },
                             );
                             child.on('exit', resolve);
                         }),
@@ -512,8 +769,19 @@ module.exports = () => {
     test('the graph page draws every node in the palette of its legend, pins its library with an integrity hash, says so when the library is missing and lays out on a narrow screen', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
-            assert.strictEqual(simExec(dir, ['build-spec-graph', '--html']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
+            assert.strictEqual(
+                simExec(dir, [
+                    'build-spec-graph',
+                    '--html',
+                ]).status,
+                0,
+            );
             const html = fs.readFileSync(
                 path.join(dir, '.magicspec', 'graph', 'graph.html'),
                 'utf8',
@@ -569,14 +837,25 @@ module.exports = () => {
             const put = simPutter(dir);
             put(
                 '.design/workspace.json',
-                JSON.stringify({ default: 'main', workspaces: { main: { description: 'x' } } }),
+                JSON.stringify({
+                    default: 'main',
+                    workspaces: {
+                        main: {
+                            description: 'x',
+                        },
+                    },
+                }),
             );
             put('.design/INDEX.md', '# Index\n');
             put('.design/main/INDEX.md', '# Main\n');
             fs.mkdirSync(path.join(dir, '.magicspec'));
 
             const before = treeHashes(dir);
-            const badHost = simExec(dir, ['migrate', '--apply', '--host=bogus']);
+            const badHost = simExec(dir, [
+                'migrate',
+                '--apply',
+                '--host=bogus',
+            ]);
             assert.strictEqual(badHost.status, 1);
             assert.match(badHost.stderr, /Unknown host 'bogus'/);
             assert.ok(
@@ -584,11 +863,19 @@ module.exports = () => {
                 'an unknown host stops the run before anything is written',
             );
 
-            const spaced = simExec(dir, ['migrate', '--host', 'qwen']);
+            const spaced = simExec(dir, [
+                'migrate',
+                '--host',
+                'qwen',
+            ]);
             assert.match(spaced.stdout, /projections for: qwen,/, 'the space spelling is read');
             assert.match(spaced.stdout, /the empty \.magicspec\/ that is there is replaced/);
 
-            const applied = simExec(dir, ['migrate', '--apply', '--host=claude']);
+            const applied = simExec(dir, [
+                'migrate',
+                '--apply',
+                '--host=claude',
+            ]);
             assert.strictEqual(applied.status, 0, applied.stdout + applied.stderr);
             assert.ok(
                 fs.existsSync(path.join(dir, '.magicspec', 'INDEX.md')),
@@ -596,7 +883,10 @@ module.exports = () => {
             );
             assert.ok(!fs.existsSync(path.join(dir, '.design')));
 
-            const again = simExec(dir, ['migrate', '--apply']);
+            const again = simExec(dir, [
+                'migrate',
+                '--apply',
+            ]);
             assert.strictEqual(again.status, 0);
             assert.match(again.stdout, /Nothing to migrate/);
 
@@ -606,11 +896,19 @@ module.exports = () => {
                 const put2 = simPutter(dir2);
                 put2(
                     '.design/workspace.json',
-                    JSON.stringify({ default: 'main', workspaces: { main: {} } }),
+                    JSON.stringify({
+                        default: 'main',
+                        workspaces: {
+                            main: {},
+                        },
+                    }),
                 );
                 put2('.design/INDEX.md', '# Index\n');
                 put2('.magicspec/NOTES.md', "somebody's work\n");
-                const stopped = simExec(dir2, ['migrate', '--apply']);
+                const stopped = simExec(dir2, [
+                    'migrate',
+                    '--apply',
+                ]);
                 assert.strictEqual(stopped.status, 1);
                 assert.match(stopped.stderr, /holds 1 entry \(NOTES\.md\)/);
                 assert.match(stopped.stderr, /rename it to \.magicspec-aside\//);
@@ -621,7 +919,10 @@ module.exports = () => {
                 );
                 fs.renameSync(path.join(dir2, '.magicspec'), path.join(dir2, '.magicspec-aside'));
                 assert.strictEqual(
-                    simExec(dir2, ['migrate', '--apply']).status,
+                    simExec(dir2, [
+                        'migrate',
+                        '--apply',
+                    ]).status,
                     0,
                     'the stated action unblocks the run',
                 );
@@ -637,23 +938,51 @@ module.exports = () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-rel-'));
         const remote = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-rel-remote-'));
         try {
-            const git = (cwd, ...args) => spawnSync('git', args, { cwd, encoding: 'utf8' });
+            const git = (cwd, ...args) =>
+                spawnSync('git', args, {
+                    cwd,
+                    encoding: 'utf8',
+                });
             git(remote, 'init', '-q', '--bare');
             for (const args of [
-                ['init', '-q', '-b', 'master'],
-                ['config', 'user.email', 't@example.com'],
-                ['config', 'user.name', 'T'],
-                ['remote', 'add', 'origin', remote],
+                [
+                    'init',
+                    '-q',
+                    '-b',
+                    'master',
+                ],
+                [
+                    'config',
+                    'user.email',
+                    't@example.com',
+                ],
+                [
+                    'config',
+                    'user.name',
+                    'T',
+                ],
+                [
+                    'remote',
+                    'add',
+                    'origin',
+                    remote,
+                ],
             ])
                 git(dir, ...args);
             fs.mkdirSync(path.join(dir, 'scripts'));
-            fs.mkdirSync(path.join(dir, 'skills', 'magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(dir, 'skills', 'magicspec'), {
+                recursive: true,
+            });
             fs.copyFileSync(
                 path.resolve(TESTS_DIR, '..', 'scripts', 'release.js'),
                 path.join(dir, 'scripts', 'release.js'),
             );
             // The policy check and the two modules its command-line guard loads.
-            for (const file of ['check-security-policy.js', 'cli-guard.js', 'engine-path.js']) {
+            for (const file of [
+                'check-security-policy.js',
+                'cli-guard.js',
+                'engine-path.js',
+            ]) {
                 fs.copyFileSync(
                     path.resolve(TESTS_DIR, '..', 'scripts', file),
                     path.join(dir, 'scripts', file),
@@ -683,15 +1012,30 @@ module.exports = () => {
             git(dir, 'commit', '-q', '-m', 'init');
 
             const run = (...args) =>
-                spawnSync(process.execPath, [path.join(dir, 'scripts', 'release.js'), ...args], {
-                    cwd: dir,
-                    encoding: 'utf8',
-                });
+                spawnSync(
+                    process.execPath,
+                    [
+                        path.join(dir, 'scripts', 'release.js'),
+                        ...args,
+                    ],
+                    {
+                        cwd: dir,
+                        encoding: 'utf8',
+                    },
+                );
             const head = () => git(dir, 'rev-parse', 'HEAD').stdout.trim();
             const pushed = () =>
-                spawnSync('git', ['--git-dir', remote, 'show-ref'], {
-                    encoding: 'utf8',
-                }).stdout.trim();
+                spawnSync(
+                    'git',
+                    [
+                        '--git-dir',
+                        remote,
+                        'show-ref',
+                    ],
+                    {
+                        encoding: 'utf8',
+                    },
+                ).stdout.trim();
             const start = head();
 
             assert.strictEqual(run('--help').status, 0);
@@ -766,8 +1110,14 @@ module.exports = () => {
                 r.supported,
             ]),
             [
-                ['3.0', true],
-                ['1', false],
+                [
+                    '3.0',
+                    true,
+                ],
+                [
+                    '1',
+                    false,
+                ],
             ],
         );
 
@@ -811,23 +1161,47 @@ module.exports = () => {
                 table('| `3.0.x` | Yes |', '| `2.1.x` | Yes |'),
             );
             const script = path.join(dir, 'scripts', 'check-security-policy.js');
-            const stale = spawnSync(process.execPath, [script, '--version', '3.0.1'], {
-                cwd: dir,
-                encoding: 'utf8',
-            });
+            const stale = spawnSync(
+                process.execPath,
+                [
+                    script,
+                    '--version',
+                    '3.0.1',
+                ],
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                },
+            );
             assert.strictEqual(stale.status, 1);
             assert.match(stale.stderr, /\[BLOCKED\] SECURITY\.md: .*2\.1\.x as supported/);
             fs.writeFileSync(path.join(dir, 'SECURITY.md'), table('| `3.0.x` | Yes |'));
-            const fresh = spawnSync(process.execPath, [script, '--version', '3.0.1'], {
-                cwd: dir,
-                encoding: 'utf8',
-            });
+            const fresh = spawnSync(
+                process.execPath,
+                [
+                    script,
+                    '--version',
+                    '3.0.1',
+                ],
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                },
+            );
             assert.strictEqual(fresh.status, 0, fresh.stderr);
             fs.rmSync(path.join(dir, 'SECURITY.md'));
-            const missing = spawnSync(process.execPath, [script, '--version', '3.0.1'], {
-                cwd: dir,
-                encoding: 'utf8',
-            });
+            const missing = spawnSync(
+                process.execPath,
+                [
+                    script,
+                    '--version',
+                    '3.0.1',
+                ],
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                },
+            );
             assert.strictEqual(missing.status, 1);
             assert.match(missing.stderr, /security policy is missing/);
         } finally {
@@ -968,18 +1342,32 @@ module.exports = () => {
             const before = treeHashes(tempDir);
             for (const name of Object.keys(MAINTENANCE_COMMANDS)) {
                 const script = path.join(tempDir, 'scripts', name + '.js');
-                const help = spawnSync(process.execPath, [script, '--help'], {
-                    cwd: tempDir,
-                    encoding: 'utf8',
-                    env: simEnv(),
-                });
+                const help = spawnSync(
+                    process.execPath,
+                    [
+                        script,
+                        '--help',
+                    ],
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                        env: simEnv(),
+                    },
+                );
                 assert.strictEqual(help.status, 0, name + ' --help: ' + help.stderr);
                 assert.match(help.stdout, /Usage: node scripts\//, name);
-                const bad = spawnSync(process.execPath, [script, '--no-such-option'], {
-                    cwd: tempDir,
-                    encoding: 'utf8',
-                    env: simEnv(),
-                });
+                const bad = spawnSync(
+                    process.execPath,
+                    [
+                        script,
+                        '--no-such-option',
+                    ],
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                        env: simEnv(),
+                    },
+                );
                 assert.strictEqual(bad.status, 2, name + ' --no-such-option');
                 assert.match(bad.stderr, /Unknown option '--no-such-option'/, name);
             }
@@ -992,13 +1380,21 @@ module.exports = () => {
     test('a file the engine needs that is missing is reported once, with the remedy, and not as a loader stack trace', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
             const scripts = path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts');
             const helper = path.join(scripts, 'lib', 'scan-hygiene.js');
             const kept = fs.readFileSync(helper);
 
             fs.rmSync(helper);
-            const lib = simExec(dir, ['check-prerequisites', '--json']);
+            const lib = simExec(dir, [
+                'check-prerequisites',
+                '--json',
+            ]);
             assert.strictEqual(lib.status, 1);
             assert.match(
                 lib.stderr,
@@ -1014,7 +1410,10 @@ module.exports = () => {
                 'no loader stack trace',
             );
             assert.strictEqual(
-                simExec(dir, ['remove', '--dry-run']).status,
+                simExec(dir, [
+                    'remove',
+                    '--dry-run',
+                ]).status,
                 0,
                 'a command that does not need the file still runs',
             );
@@ -1023,7 +1422,9 @@ module.exports = () => {
             const utils = path.join(scripts, 'utils.js');
             const keptUtils = fs.readFileSync(utils);
             fs.rmSync(utils);
-            const core = simExec(dir, ['check-prerequisites']);
+            const core = simExec(dir, [
+                'check-prerequisites',
+            ]);
             assert.strictEqual(core.status, 1);
             assert.match(
                 core.stderr,
@@ -1045,10 +1446,16 @@ module.exports = () => {
         try {
             fs.mkdirSync(path.join(dir, '.design'));
             fs.writeFileSync(path.join(dir, '.design', 'INDEX.md'), '# Index\n');
-            const help = simExec(dir, ['check-prerequisites', '--help']);
+            const help = simExec(dir, [
+                'check-prerequisites',
+                '--help',
+            ]);
             assert.strictEqual(help.status, 0, help.stderr);
             assert.match(help.stdout, /^check-prerequisites — /);
-            const bad = simExec(dir, ['check-prerequisites', '--no-such-option']);
+            const bad = simExec(dir, [
+                'check-prerequisites',
+                '--no-such-option',
+            ]);
             assert.strictEqual(bad.status, 1);
             assert.match(bad.stderr, /Unknown option '--no-such-option'/);
             assert.doesNotMatch(
@@ -1056,7 +1463,9 @@ module.exports = () => {
                 /2\.x layout/,
                 'the migration stop comes after the argument check',
             );
-            const plain = simExec(dir, ['check-prerequisites']);
+            const plain = simExec(dir, [
+                'check-prerequisites',
+            ]);
             assert.match(
                 plain.stderr,
                 /2\.x layout/,
@@ -1070,9 +1479,18 @@ module.exports = () => {
     test('update-state waits for a lock another writer holds and takes over one that is stale', async () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
             assert.strictEqual(
-                simExec(dir, ['update-state', '--workspace=main', '--decision=seed']).status,
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
+            assert.strictEqual(
+                simExec(dir, [
+                    'update-state',
+                    '--workspace=main',
+                    '--decision=seed',
+                ]).status,
                 0,
             );
             const state = path.join(dir, '.magicspec', 'main', 'STATE.md');
@@ -1080,12 +1498,23 @@ module.exports = () => {
             const executor = path.join(dir, ...SIM_ENGINE_REL.split('/'), 'scripts', 'executor.js');
 
             // held: nothing is written until the holder lets go
-            fs.mkdirSync(path.dirname(lock), { recursive: true });
+            fs.mkdirSync(path.dirname(lock), {
+                recursive: true,
+            });
             fs.writeFileSync(lock, '99999 held by another writer\n');
             const child = require('child_process').spawn(
                 process.execPath,
-                [executor, 'update-state', '--workspace=main', '--decision=waited for the lock'],
-                { cwd: dir, env: simEnv(), stdio: 'ignore' },
+                [
+                    executor,
+                    'update-state',
+                    '--workspace=main',
+                    '--decision=waited for the lock',
+                ],
+                {
+                    cwd: dir,
+                    env: simEnv(),
+                    stdio: 'ignore',
+                },
             );
             const exited = new Promise((resolve) => child.on('exit', resolve));
             await new Promise((resolve) => setTimeout(resolve, 900));
@@ -1121,13 +1550,22 @@ module.exports = () => {
     test('export-wiki and the graph server read a graph larger than the default child-process buffer (reproduced at about 2000 specifications)', () => {
         const dir = makeSimConsumer();
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
             // One specification that references five thousand files: the graph JSON on stdout passes
             // the old default limit without a thousand fixtures.
             const specs = path.join(dir, '.magicspec', 'main', 'specifications');
-            fs.mkdirSync(specs, { recursive: true });
+            fs.mkdirSync(specs, {
+                recursive: true,
+            });
             const rows = Array.from(
-                { length: 5000 },
+                {
+                    length: 5000,
+                },
                 (_, i) => '| `src/generated/file-number-' + i + '.js` | code |',
             ).join('\n');
             fs.writeFileSync(
@@ -1136,23 +1574,37 @@ module.exports = () => {
                     rows +
                     '\n',
             );
-            const graph = simExec(dir, ['build-spec-graph', '--json']);
+            const graph = simExec(dir, [
+                'build-spec-graph',
+                '--json',
+            ]);
             assert.ok(
                 graph.stdout.length > 1024 * 1024,
                 'precondition: the graph is larger than 1 MiB (' + graph.stdout.length + ')',
             );
-            const wiki = simExec(dir, ['export-wiki']);
+            const wiki = simExec(dir, [
+                'export-wiki',
+            ]);
             assert.strictEqual(wiki.status, 0, wiki.stderr.slice(0, 300));
             assert.match(wiki.stdout, /Wiki exported/);
-            const served = simExec(dir, ['serve-spec-graph'], {
-                input:
-                    JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: 1,
-                        method: 'tools/call',
-                        params: { name: 'get_coverage', arguments: {} },
-                    }) + '\n',
-            });
+            const served = simExec(
+                dir,
+                [
+                    'serve-spec-graph',
+                ],
+                {
+                    input:
+                        JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: 1,
+                            method: 'tools/call',
+                            params: {
+                                name: 'get_coverage',
+                                arguments: {},
+                            },
+                        }) + '\n',
+                },
+            );
             assert.strictEqual(served.status, 0, served.stderr.slice(0, 300));
             assert.strictEqual(
                 JSON.parse(served.stdout.split('\n').filter(Boolean)[0]).id,
@@ -1167,17 +1619,27 @@ module.exports = () => {
     test('the engine prints project-relative paths with forward slashes', () => {
         const dir = makeSimConsumer();
         try {
-            const init = simExec(dir, ['init']);
+            const init = simExec(dir, [
+                'init',
+            ]);
             assert.match(init.stdout, /✅ Created \.magicspec\/workspace\.json\n/);
             assert.match(init.stdout, /✅ Created \.magicspec\/main\/INDEX\.md\n/);
-            const state = simExec(dir, ['update-state', '--workspace=main', '--decision=x']);
+            const state = simExec(dir, [
+                'update-state',
+                '--workspace=main',
+                '--decision=x',
+            ]);
             assert.match(state.stdout, /STATE\.md updated: \.magicspec\/main\/STATE\.md\n/);
-            const context = simExec(dir, ['generate-context']);
+            const context = simExec(dir, [
+                'generate-context',
+            ]);
             assert.match(
                 context.stdout,
                 /Context document updated: \.magicspec\/main\/CONTEXT\.md\n/,
             );
-            const wiki = simExec(dir, ['export-wiki']);
+            const wiki = simExec(dir, [
+                'export-wiki',
+            ]);
             assert.match(wiki.stdout, /Wiki exported → \.magicspec\/graph\/wiki\n/);
         } finally {
             cleanup(dir);
@@ -1188,7 +1650,12 @@ module.exports = () => {
         const dir = makeSimConsumer();
         const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-outside-'));
         try {
-            assert.strictEqual(simExec(dir, ['init']).status, 0);
+            assert.strictEqual(
+                simExec(dir, [
+                    'init',
+                ]).status,
+                0,
+            );
             const registry = path.join(dir, '.magicspec', 'workspace.json');
             const original = JSON.parse(fs.readFileSync(registry, 'utf8'));
             const link = path.join(dir, 'escape');
@@ -1198,29 +1665,46 @@ module.exports = () => {
             fs.symlinkSync(missingTarget, path.join(dir, 'dangling'), 'junction');
             const cases = [
                 [
-                    { changelogPath: 'dangling/CHANGELOG.md' },
+                    {
+                        changelogPath: 'dangling/CHANGELOG.md',
+                    },
                     'changelogPath',
                     path.join(missingTarget, 'CHANGELOG.md'),
                 ],
                 [
-                    { changelogPath: '../outside-changelog.md' },
+                    {
+                        changelogPath: '../outside-changelog.md',
+                    },
                     'changelogPath',
                     path.resolve(dir, '..', 'outside-changelog.md'),
                 ],
                 [
-                    { versionPath: path.join(outside, 'version') },
+                    {
+                        versionPath: path.join(outside, 'version'),
+                    },
                     'versionPath',
                     path.join(outside, 'version'),
                 ],
                 [
-                    { changelogPath: 'escape/CHANGELOG.md' },
+                    {
+                        changelogPath: 'escape/CHANGELOG.md',
+                    },
                     'changelogPath',
                     path.join(outside, 'CHANGELOG.md'),
                 ],
             ];
             for (const [finalization, key, target] of cases) {
-                fs.writeFileSync(registry, JSON.stringify({ ...original, finalization }));
-                const result = simExec(dir, ['finalize', '--workflow=run']);
+                fs.writeFileSync(
+                    registry,
+                    JSON.stringify({
+                        ...original,
+                        finalization,
+                    }),
+                );
+                const result = simExec(dir, [
+                    'finalize',
+                    '--workflow=run',
+                ]);
                 assert.strictEqual(result.status, 1, key + ': ' + result.stdout + result.stderr);
                 assert.match(
                     result.stderr,
@@ -1237,17 +1721,29 @@ module.exports = () => {
                 registry,
                 JSON.stringify({
                     ...original,
-                    finalization: { changelogPath: 'docs/CHANGELOG.md' },
+                    finalization: {
+                        changelogPath: 'docs/CHANGELOG.md',
+                    },
                 }),
             );
             assert.doesNotMatch(
-                simExec(dir, ['finalize', '--workflow=run', '--dry-run']).stderr,
+                simExec(dir, [
+                    'finalize',
+                    '--workflow=run',
+                    '--dry-run',
+                ]).stderr,
                 /must name a file inside the project/,
             );
         } finally {
-            for (const name of ['escape', 'dangling']) {
+            for (const name of [
+                'escape',
+                'dangling',
+            ]) {
                 try {
-                    fs.rmSync(path.join(dir, name), { recursive: false, force: true });
+                    fs.rmSync(path.join(dir, name), {
+                        recursive: false,
+                        force: true,
+                    });
                 } catch {
                     /* the link is removed with the folder */
                 }

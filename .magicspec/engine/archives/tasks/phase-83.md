@@ -1,23 +1,41 @@
 ---
 phase: 83
 name: "4.0.0 (4.0 Step 4, Part 5)"
-status: Todo
+status: Done
 subsystem: "skills/magicspec (scripts: build-spec-graph, export-wiki, the artifact index, lib/migrate-to-4, lib/sync-registry; .version), docs, README.md, SECURITY.md, CHANGELOG.md, tests/engine, .magicspec/engine/simulations, .magicspec/engine/specifications, the release script"
 requires:
   - "Phase 85: migrate --to 4, the stop of a move in flight and the predicate moveInFlight (engine 3.0.229)"
   - "The specifications: l2-sdd-document-set-engine 1.7.2 §5.5, §5.6 step 4, l1-skill-packaging SP-10, l1-sync-command SY-1, l2-spec-graph-memory, l2-artifact-memory-store, l2-release-pipeline, Stable at registry 1.107.2, constitution 2.0.0, plan 1.100.0"
-provides: []
+provides:
+  - "The graph, the wiki and the artifact index leave out a workspace whose move to 4.0 is unfinished"
+  - "The global registry row of a 4.0 workspace links no registry (the move and sync)"
+  - "docs/document-set.md, the 3.x to 4.0 section of the migration page, SECURITY.md on 4.0.x, the version file at 4.0.0 and the [4.0.0] changelog section"
+  - "A release plan with no blocker; nothing published (the owner deferred the release)"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
+  created:
+    - docs/document-set.md
+    - tests/engine/artifact-search.js
+    - tests/engine/finalize-state.js
+  modified:
+    - skills/magicspec/scripts/build-spec-graph.js
+    - skills/magicspec/scripts/lib/memory-sections.js
+    - skills/magicspec/scripts/lib/sync-registry.js
+    - skills/magicspec/scripts/lib/migrate-to-4.js
+    - skills/magicspec/scripts/check-docs.js
+    - skills/magicspec/workflows/migrate.md
+    - skills/magicspec/workflows/sync.md
+    - tests/engine/migrate-to-4.js
+    - docs/migration.md
+patterns_established:
+  - "A registry row that has no registry to link is written by one helper for every writer"
+  - "A harness pin on the shape of a call reads it across lines, an absence pin included"
 duration_minutes: ~
 ---
 
 # Stage 83 Tasks — 4.0.0 (4.0 Step 4, Part 5)
 
 **Phase:** 83
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** 4.0.0 ships with nothing reading a half-moved workspace, a global registry whose rows link only registries that exist, documents that say what a 4.0 workspace is and how to move to one, the version file at 4.0.0 and a release that publishes only on the owner's yes.
 
 **Shared names (fixed here so no two tasks choose different spellings):**
@@ -40,7 +58,7 @@ duration_minutes: ~
 - [x] [T-83S01] The specifications as built
 - [x] [T-83T01] Validation: static checks, full harness, C14
 - [x] [T-83V01] `SECURITY.md`, the version file at 4.0.0 and the `[4.0.0]` section
-- [ ] [T-83R01] The release plan and its one consent question
+- [x] [T-83R01] The release plan and its one consent question
 
 ## Detailed Tracking
 
@@ -142,10 +160,12 @@ duration_minutes: ~
 ### [T-83R01] The release plan and its one consent question
 
 - **Spec:** l2-release-pipeline.md; `skills/magicspec-dev/workflows/release.md`
-- **Status:** Blocked [!]
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `node scripts/release.js` (no option) is run and its plan shown verbatim; while it names a blocker (the working tree not clean, among others) nothing more is run and the blocker is reported with the one action that clears it; with no blocker one question is asked (publish / not now), and `node scripts/release.js --yes` runs only on publish; no commit, merge, branch switch or push is made by the agent outside that command
 - **Handoff:** after publishing, `gh run list --workflow release.yml --limit 1` and `gh release view v4.0.0`; then `/magicspec plan engine` for the Backlog's migrations.
 - **Notes:** E2 — an external release artifact. The release is cut from the branch checked out (premise of the plan); the task does not choose it. Blocked on 2026-11-26: the plan could not be printed, because the host's permission mode refused the run of the release script, and the run did not look for another way to start it. What the script checks was read directly instead and is not its plan: branch `develop`; the working tree is not clean (42 changes), which blocks publishing on its own; no `v3*` or `v4*` tag exists locally; `CHANGELOG.md` holds `[4.0.0]`; the security-policy check passes for 4.0.0. To unblock: the owner commits the changes and then runs `node scripts/release.js`, or allows that command. Known beside it: the `Tests` workflow on `develop` fails at its format step on the committed tree (see the validation task); the release script runs the harness itself and the release workflow runs no Biome step, so this does not stop a release by the script.
 - **Attempts:**
   - `node scripts/release.js` (no option), chained after the state update → refused by the host's permission classifier; nothing of the chain ran.
+  - retry: the script run alone, after the owner asked for it → it ran.
+- **Changes:** On the owner's request, outside the task itself, the tree was committed (`7a2b4a4`) and `develop` pushed. `node scripts/release.js` then printed its plan for v4.0.0 with no blocker (branch `develop`, the changelog entry, the supported-versions table, a clean tree, a free tag); one question was asked (publish / not now), answered *not now*, and `--yes` was not run: nothing is published and no tag exists. The owner then ruled that nothing is released until the branch is brought to quality, so the release leaves this phase for the plan.

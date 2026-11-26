@@ -50,7 +50,10 @@ module.exports = () => {
                 'scripts',
                 'update-engine-meta.js',
             );
-            execSync(`node "${metaScript}"`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${metaScript}"`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
             assert.strictEqual(
                 fs
                     .readFileSync(path.join(tempDir, 'skills', 'magicspec', '.version'), 'utf8')
@@ -89,11 +92,19 @@ module.exports = () => {
         const consumerDir = createTempWorkspace();
         try {
             for (const [tempDir, label] of [
-                [devRepoDir, 'dev-repo'],
-                [consumerDir, 'consumer'],
+                [
+                    devRepoDir,
+                    'dev-repo',
+                ],
+                [
+                    consumerDir,
+                    'consumer',
+                ],
             ]) {
                 generateChecksums(tempDir);
-                fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+                fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                    recursive: true,
+                });
                 fs.writeFileSync(
                     path.join(tempDir, '.magicspec', 'INDEX.md'),
                     [
@@ -126,7 +137,10 @@ module.exports = () => {
             const runWrite = (tempDir) =>
                 execSync(
                     `node "${path.join(tempDir, 'skills', 'magicspec', 'scripts', 'update-engine-meta.js')}" 2>&1`,
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 );
 
             const devOut = runWrite(devRepoDir);
@@ -200,7 +214,10 @@ module.exports = () => {
         fs.writeFileSync(path.join(tempDir, 'skills', 'magicspec', 'task.md'), '# task\n');
         generateChecksums(tempDir);
         if (userInstallation)
-            fs.rmSync(path.join(tempDir, 'scripts'), { recursive: true, force: true });
+            fs.rmSync(path.join(tempDir, 'scripts'), {
+                recursive: true,
+                force: true,
+            });
         fs.appendFileSync(
             path.join(tempDir, 'skills', 'magicspec', 'spec.md'),
             '<!-- local note -->\n',
@@ -216,23 +233,37 @@ module.exports = () => {
     const runMeta = (tempDir, script, ...args) => {
         const res = spawnSync(
             process.execPath,
-            [path.join(tempDir, 'skills', 'magicspec', 'scripts', script), ...args],
-            { cwd: tempDir, encoding: 'utf8' },
+            [
+                path.join(tempDir, 'skills', 'magicspec', 'scripts', script),
+                ...args,
+            ],
+            {
+                cwd: tempDir,
+                encoding: 'utf8',
+            },
         );
-        return { status: res.status, out: `${res.stdout || ''}${res.stderr || ''}` };
+        return {
+            status: res.status,
+            out: `${res.stdout || ''}${res.stderr || ''}`,
+        };
     };
 
     test('update-engine-meta write mode is refused in a user installation: no version bump, no manifest rewrite, non-zero exit', () => {
         const tempDir = createTempWorkspace();
         try {
-            makeDriftedEngine(tempDir, { userInstallation: true });
+            makeDriftedEngine(tempDir, {
+                userInstallation: true,
+            });
             const versionPath = path.join(tempDir, 'skills', 'magicspec', '.version');
             const checksumsPath = path.join(tempDir, 'skills', 'magicspec', '.checksums');
             const manifestBefore = fs.readFileSync(checksumsPath, 'utf8');
 
             // Twice on purpose: the hazard was a ratchet — each retry of the
             // suggested fix moved the version again while the drift stayed.
-            for (const attempt of [1, 2]) {
+            for (const attempt of [
+                1,
+                2,
+            ]) {
                 // Through the executor, as the warning's own hint invokes it.
                 const run = runMeta(tempDir, 'executor.js', 'update-engine-meta');
                 assert.notStrictEqual(
@@ -281,8 +312,12 @@ module.exports = () => {
         const userDir = createTempWorkspace();
         const devDir = createTempWorkspace();
         try {
-            makeDriftedEngine(userDir, { userInstallation: true });
-            makeDriftedEngine(devDir, { userInstallation: false });
+            makeDriftedEngine(userDir, {
+                userInstallation: true,
+            });
+            makeDriftedEngine(devDir, {
+                userInstallation: false,
+            });
 
             const user = runMeta(userDir, 'update-engine-meta.js', '--check');
             assert.strictEqual(
@@ -314,8 +349,12 @@ module.exports = () => {
         const userDir = createTempWorkspace();
         const devDir = createTempWorkspace();
         try {
-            makeDriftedEngine(userDir, { userInstallation: true });
-            makeDriftedEngine(devDir, { userInstallation: false });
+            makeDriftedEngine(userDir, {
+                userInstallation: true,
+            });
+            makeDriftedEngine(devDir, {
+                userInstallation: false,
+            });
             const integrity = (tempDir) =>
                 runCheckPrerequisites(tempDir).warnings.filter(
                     (w) => w.type === 'ENGINE_INTEGRITY',
@@ -324,7 +363,10 @@ module.exports = () => {
             const user = integrity(userDir);
             assert.deepStrictEqual(
                 user.map((w) => w.message.match(/'skills\/magicspec\/([^']+)'/)[1]).sort(),
-                ['spec.md', 'task.md'],
+                [
+                    'spec.md',
+                    'task.md',
+                ],
                 'user installation: exactly the two drifted files are reported',
             );
             for (const w of user) {
@@ -359,7 +401,11 @@ module.exports = () => {
     //     hashed only the files that exist, so a deleted one produced no finding
     //     while `--check` failed on it.
     // ───────────────────────────────────────────────────────────────────────────
-    const INTEGRITY_STATES = ['untouched', 'modified', 'deleted'];
+    const INTEGRITY_STATES = [
+        'untouched',
+        'modified',
+        'deleted',
+    ];
 
     // A layout whose manifest matches the engine, then put in one of three
     // states. `.magicspec/` is present so that `ok` reflects the integrity story
@@ -367,12 +413,17 @@ module.exports = () => {
     const makeIntegrityLayout = (tempDir, { userInstallation, state }) => {
         fs.writeFileSync(path.join(tempDir, 'skills', 'magicspec', 'spec.md'), '# spec\n');
         fs.writeFileSync(path.join(tempDir, 'skills', 'magicspec', 'task.md'), '# task\n');
-        fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+        fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+            recursive: true,
+        });
         fs.writeFileSync(path.join(tempDir, '.magicspec', 'INDEX.md'), '# Index\n');
         fs.writeFileSync(path.join(tempDir, '.magicspec', 'RULES.md'), '# Rules\n');
         generateChecksums(tempDir);
         if (userInstallation)
-            fs.rmSync(path.join(tempDir, 'scripts'), { recursive: true, force: true });
+            fs.rmSync(path.join(tempDir, 'scripts'), {
+                recursive: true,
+                force: true,
+            });
         if (state === 'modified')
             fs.appendFileSync(
                 path.join(tempDir, 'skills', 'magicspec', 'spec.md'),
@@ -391,11 +442,17 @@ module.exports = () => {
     };
 
     test('pre-flight and update-engine-meta --check agree on an untouched, a modified and a deleted layout, in a developer repository and in a user installation', () => {
-        for (const userInstallation of [false, true]) {
+        for (const userInstallation of [
+            false,
+            true,
+        ]) {
             for (const state of INTEGRITY_STATES) {
                 const tempDir = createTempWorkspace();
                 try {
-                    makeIntegrityLayout(tempDir, { userInstallation, state });
+                    makeIntegrityLayout(tempDir, {
+                        userInstallation,
+                        state,
+                    });
                     const verdict = integrityVerdicts(tempDir);
                     const label = `${userInstallation ? 'user installation' : 'developer repository'}, ${state}`;
                     if (state === 'untouched') {
@@ -435,9 +492,18 @@ module.exports = () => {
         const userDir = createTempWorkspace();
         const editedDir = createTempWorkspace();
         try {
-            makeIntegrityLayout(devDir, { userInstallation: false, state: 'deleted' });
-            makeIntegrityLayout(userDir, { userInstallation: true, state: 'deleted' });
-            makeIntegrityLayout(editedDir, { userInstallation: false, state: 'modified' });
+            makeIntegrityLayout(devDir, {
+                userInstallation: false,
+                state: 'deleted',
+            });
+            makeIntegrityLayout(userDir, {
+                userInstallation: true,
+                state: 'deleted',
+            });
+            makeIntegrityLayout(editedDir, {
+                userInstallation: false,
+                state: 'modified',
+            });
 
             const [dev] = integrityVerdicts(devDir).findings;
             assert.match(
@@ -497,30 +563,57 @@ module.exports = () => {
                 [
                     'a\r\nb\r\n',
                     'a\nb\n',
-                    { lineEndingsOnly: true, found: 'CRLF', expectedEol: 'LF' },
+                    {
+                        lineEndingsOnly: true,
+                        found: 'CRLF',
+                        expectedEol: 'LF',
+                    },
                 ],
                 [
                     'a\nb\n',
                     'a\r\nb\r\n',
-                    { lineEndingsOnly: true, found: 'LF', expectedEol: 'CRLF' },
+                    {
+                        lineEndingsOnly: true,
+                        found: 'LF',
+                        expectedEol: 'CRLF',
+                    },
                 ],
                 [
                     'a\r\nb\n',
                     'a\nb\n',
-                    { lineEndingsOnly: true, found: 'mixed', expectedEol: 'LF' },
+                    {
+                        lineEndingsOnly: true,
+                        found: 'mixed',
+                        expectedEol: 'LF',
+                    },
                 ],
-                ['a\nc\n', 'a\nb\n', { lineEndingsOnly: false, found: 'LF', expectedEol: null }],
+                [
+                    'a\nc\n',
+                    'a\nb\n',
+                    {
+                        lineEndingsOnly: false,
+                        found: 'LF',
+                        expectedEol: null,
+                    },
+                ],
                 // Both differ: the content difference is the finding, the endings are incidental.
                 [
                     'a\r\nc\r\n',
                     'a\nb\n',
-                    { lineEndingsOnly: false, found: 'CRLF', expectedEol: null },
+                    {
+                        lineEndingsOnly: false,
+                        found: 'CRLF',
+                        expectedEol: null,
+                    },
                 ],
             ];
             for (const [onDisk, recorded, want] of cases) {
                 fs.writeFileSync(file, onDisk);
                 const got = describeManifestDelta(file, sha256Hex(recorded));
-                const label = JSON.stringify({ onDisk, recorded });
+                const label = JSON.stringify({
+                    onDisk,
+                    recorded,
+                });
                 assert.strictEqual(got.actual, sha256Hex(onDisk), `actual hash for ${label}`);
                 assert.strictEqual(got.expected, sha256Hex(recorded), `expected hash for ${label}`);
                 assert.strictEqual(
@@ -554,13 +647,25 @@ module.exports = () => {
         const devDir = createTempWorkspace();
         const userDir = createTempWorkspace();
         try {
-            makeDriftedEngine(devDir, { userInstallation: false, taskEndingsOnly: true });
-            makeDriftedEngine(userDir, { userInstallation: true, taskEndingsOnly: true });
+            makeDriftedEngine(devDir, {
+                userInstallation: false,
+                taskEndingsOnly: true,
+            });
+            makeDriftedEngine(userDir, {
+                userInstallation: true,
+                taskEndingsOnly: true,
+            });
             const short = (text) => sha256Hex(text).slice(0, 12);
 
             for (const [label, tempDir] of [
-                ['dev repo', devDir],
-                ['user installation', userDir],
+                [
+                    'dev repo',
+                    devDir,
+                ],
+                [
+                    'user installation',
+                    userDir,
+                ],
             ]) {
                 const report = runCheckPrerequisites(tempDir);
                 const byFile = Object.fromEntries(
@@ -575,7 +680,9 @@ module.exports = () => {
                 // task.md: converted to CRLF, otherwise identical to what the manifest recorded.
                 assert.deepStrictEqual(
                     Object.keys(byFile),
-                    ['spec.md'],
+                    [
+                        'spec.md',
+                    ],
                     `${label}: only the content edit is drift`,
                 );
                 const advisory = report.warnings.filter((w) => w.type === 'ENGINE_LINE_ENDINGS');
@@ -608,7 +715,10 @@ module.exports = () => {
     test('update-engine-meta --check reports a content edit as drift and a line-endings-only difference as one information line', () => {
         const tempDir = createTempWorkspace();
         try {
-            makeDriftedEngine(tempDir, { userInstallation: true, taskEndingsOnly: true });
+            makeDriftedEngine(tempDir, {
+                userInstallation: true,
+                taskEndingsOnly: true,
+            });
             const run = runMeta(tempDir, 'update-engine-meta.js', '--check');
             const lineFor = (name) =>
                 run.out.split(/\r?\n/).find((l) => l.includes(`Detected change in: ${name}`));
@@ -642,7 +752,9 @@ module.exports = () => {
             generateChecksums(tempDir);
 
             const workflowsDir = path.join(tempDir, 'workflows');
-            fs.mkdirSync(workflowsDir, { recursive: true });
+            fs.mkdirSync(workflowsDir, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(workflowsDir, 'magic.example.md'),
                 '---\nname: magic.example\ndescription: Does the original thing to the plan. Use when the user asks for the original thing.\n---\n\n# Example\n\nOriginal body.\n',

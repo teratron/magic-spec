@@ -51,19 +51,28 @@ const HOSTS = Object.freeze({
     claude: {
         label: 'Claude Code',
         skills: '.claude/skills',
-        rule: { kind: 'file', path: '.claude/rules/magicspec.md' },
+        rule: {
+            kind: 'file',
+            path: '.claude/rules/magicspec.md',
+        },
         retired: '.claude/commands/magicspec',
     },
     codex: {
         label: 'Codex',
         skills: '.agents/skills',
-        rule: { kind: 'block', path: 'AGENTS.md' },
+        rule: {
+            kind: 'block',
+            path: 'AGENTS.md',
+        },
         retired: null,
     },
     qwen: {
         label: 'Qwen Code',
         skills: '.agents/skills',
-        rule: { kind: 'file', path: '.qwen/rules/magicspec.md' },
+        rule: {
+            kind: 'file',
+            path: '.qwen/rules/magicspec.md',
+        },
         retired: '.qwen/commands/magicspec',
     },
 });
@@ -98,7 +107,12 @@ function parseHosts(list) {
  * needs. `per step` is the demand of a command that runs other commands (`goal`): each of its
  * steps carries the demand of the command it runs.
  */
-const DEMANDS = Object.freeze(['deep', 'standard', 'light', 'per step']);
+const DEMANDS = Object.freeze([
+    'deep',
+    'standard',
+    'light',
+    'per step',
+]);
 
 /**
  * Reads one row of the router's command table: command (with an optional alias), group, what it
@@ -124,7 +138,11 @@ function parseCommandRow(line) {
     if (!command || !body || !DEMANDS.includes(cells[5])) return null;
     return {
         name: command[1],
-        aliases: command[2] ? [...command[2].matchAll(/`([a-z][a-z-]*)`/g)].map((m) => m[1]) : [],
+        aliases: command[2]
+            ? [
+                  ...command[2].matchAll(/`([a-z][a-z-]*)`/g),
+              ].map((m) => m[1])
+            : [],
         group: cells[1],
         summary: cells[2],
         argument: cells[3],
@@ -201,7 +219,9 @@ function pointerBlock() {
  */
 function writeProjection(file, content, isOurs) {
     if (!fs.existsSync(file)) {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.mkdirSync(path.dirname(file), {
+            recursive: true,
+        });
         fs.writeFileSync(file, content);
         return 'written';
     }
@@ -255,15 +275,31 @@ function ensureSkillLink(rootDir, skillsRel) {
     const existing = realOrNull(place);
     if (existing !== null) {
         return existing === here
-            ? { path: shown, action: 'in place' }
-            : { path: shown, action: 'conflict', detail: 'another folder is already there' };
+            ? {
+                  path: shown,
+                  action: 'in place',
+              }
+            : {
+                  path: shown,
+                  action: 'conflict',
+                  detail: 'another folder is already there',
+              };
     }
     try {
-        fs.mkdirSync(path.dirname(place), { recursive: true });
+        fs.mkdirSync(path.dirname(place), {
+            recursive: true,
+        });
         fs.symlinkSync(here, place, 'junction');
-        return { path: shown, action: 'linked' };
+        return {
+            path: shown,
+            action: 'linked',
+        };
     } catch (err) {
-        return { path: shown, action: 'unlinkable', detail: err.message };
+        return {
+            path: shown,
+            action: 'unlinkable',
+            detail: err.message,
+        };
     }
 }
 
@@ -285,10 +321,16 @@ function projectHost(name, rootDir) {
     if (host.rule.kind === 'file') {
         const file = path.join(rootDir, host.rule.path);
         const action = writeProjection(file, readRuleSource(), (t) => t.includes(RULE_MARKER));
-        results.push({ path: rel(file), action });
+        results.push({
+            path: rel(file),
+            action,
+        });
     } else {
         const file = path.join(rootDir, host.rule.path);
-        results.push({ path: rel(file), action: writeBlock(file, pointerBlock()) });
+        results.push({
+            path: rel(file),
+            action: writeBlock(file, pointerBlock()),
+        });
     }
 
     results.push(...retireCommandEntries(name, rootDir));
@@ -343,7 +385,10 @@ function retireCommandEntries(name, rootDir) {
             if (!file.endsWith('.md') || !fs.statSync(full).isFile()) continue;
             if (!COMMAND_MARKER_RE.test(fs.readFileSync(full, 'utf8'))) continue;
             fs.unlinkSync(full);
-            rows.push({ path: normalizePath(path.relative(rootDir, full)), action: 'retired' });
+            rows.push({
+                path: normalizePath(path.relative(rootDir, full)),
+                action: 'retired',
+            });
         } catch {
             /* unreadable or already gone: not ours to report */
         }
@@ -415,13 +460,23 @@ function findProjections(rootDir) {
                 if (seen.has(commandKey)) continue;
                 seen.add(commandKey);
                 // An entry is never current: the engine registers none, so every one is retired.
-                found.push({ path: rel(full), host: name, kind: 'command', stale: true });
+                found.push({
+                    path: rel(full),
+                    host: name,
+                    kind: 'command',
+                    stale: true,
+                });
             }
         }
         const link = path.join(rootDir, host.skills, 'magicspec');
         if (isLink(link) && !seen.has(link)) {
             seen.add(link);
-            found.push({ path: rel(link), host: name, kind: 'link', stale: false });
+            found.push({
+                path: rel(link),
+                host: name,
+                kind: 'link',
+                stale: false,
+            });
         }
     }
     return found;
@@ -447,7 +502,11 @@ function refreshProjections(rootDir) {
         } else {
             fs.unlinkSync(full);
         }
-        refreshed.push({ path: item.path, host: item.host, kind: item.kind });
+        refreshed.push({
+            path: item.path,
+            host: item.host,
+            kind: item.kind,
+        });
     }
     removeEmptyCommandFolders(rootDir);
     return refreshed;
@@ -516,7 +575,10 @@ function versionControlLines(hostNames, rootDir) {
     }
     add(`/${STATE_DIR_NAME}/${GRAPH_DIR_NAME}/`);
     add(`/${STATE_DIR_NAME}/*cache*/`);
-    return { ignore, engineInProject };
+    return {
+        ignore,
+        engineInProject,
+    };
 }
 
 module.exports = {

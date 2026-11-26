@@ -27,8 +27,12 @@ module.exports = () => {
     const makeBloatProject = (config, files) => {
         const tempDir = createTempWorkspace();
         const wsDir = path.join(tempDir, '.magicspec', 'ws');
-        fs.mkdirSync(path.join(wsDir, 'specifications', 'sub'), { recursive: true });
-        fs.mkdirSync(path.join(wsDir, 'tasks'), { recursive: true });
+        fs.mkdirSync(path.join(wsDir, 'specifications', 'sub'), {
+            recursive: true,
+        });
+        fs.mkdirSync(path.join(wsDir, 'tasks'), {
+            recursive: true,
+        });
         if (config !== null) {
             fs.writeFileSync(
                 path.join(tempDir, '.magicspec', 'workspace.json'),
@@ -44,11 +48,17 @@ module.exports = () => {
     const bloatSignals = (tempDir) => {
         const result = spawnSync(
             'node',
-            [path.join(tempDir, 'skills', 'magicspec', 'scripts', 'check-bloat.js'), '--json'],
+            [
+                path.join(tempDir, 'skills', 'magicspec', 'scripts', 'check-bloat.js'),
+                '--json',
+            ],
             {
                 cwd: tempDir,
                 encoding: 'utf8',
-                env: { ...process.env, MAGIC_DESIGN_DIR: '.magicspec/ws' },
+                env: {
+                    ...process.env,
+                    MAGIC_DESIGN_DIR: '.magicspec/ws',
+                },
             },
         );
         assert.strictEqual(result.status, 0, result.stdout + result.stderr);
@@ -73,7 +83,14 @@ module.exports = () => {
         };
         try {
             assert.deepStrictEqual(
-                signalsFor({ bloat: { spec: { soft: 20, hard: 40 } } }),
+                signalsFor({
+                    bloat: {
+                        spec: {
+                            soft: 20,
+                            hard: 40,
+                        },
+                    },
+                }),
                 [
                     'SPEC_BLOAT specifications/a.md 25/20',
                     'SPEC_DECOMPOSE specifications/b.md 45/40',
@@ -82,7 +99,14 @@ module.exports = () => {
                 'the spec override applies; the task thresholds keep 250/400 because their keys are omitted',
             );
             assert.deepStrictEqual(
-                signalsFor({ bloat: { task: { soft: 50, hard: 100 } } }),
+                signalsFor({
+                    bloat: {
+                        task: {
+                            soft: 50,
+                            hard: 100,
+                        },
+                    },
+                }),
                 [
                     'TASK_DECOMPOSE tasks/phase-1.md 260/100',
                     'TASK_BLOAT tasks/phase-2.md 60/50',
@@ -91,12 +115,29 @@ module.exports = () => {
                 'the task override applies to task files',
             );
             assert.deepStrictEqual(
-                signalsFor({ bloat: { spec: { soft: 0, hard: 40 } } }),
-                ['SPEC_DECOMPOSE specifications/b.md 45/40', 'TASK_BLOAT tasks/phase-1.md 260/250'],
+                signalsFor({
+                    bloat: {
+                        spec: {
+                            soft: 0,
+                            hard: 40,
+                        },
+                    },
+                }),
+                [
+                    'SPEC_DECOMPOSE specifications/b.md 45/40',
+                    'TASK_BLOAT tasks/phase-1.md 260/250',
+                ],
                 'a soft threshold of 0 turns off the soft signal and leaves the hard one',
             );
             assert.deepStrictEqual(
-                signalsFor({ bloat: { spec: { soft: 20, hard: 0 } } }),
+                signalsFor({
+                    bloat: {
+                        spec: {
+                            soft: 20,
+                            hard: 0,
+                        },
+                    },
+                }),
                 [
                     'SPEC_BLOAT specifications/a.md 25/20',
                     'SPEC_BLOAT specifications/b.md 45/20',
@@ -107,8 +148,14 @@ module.exports = () => {
 
             // Control: with no override the defaults decide, so the override is read and not merely tolerated.
             assert.deepStrictEqual(
-                signalsFor({ finalization: { enabled: true } }),
-                ['TASK_BLOAT tasks/phase-1.md 260/250'],
+                signalsFor({
+                    finalization: {
+                        enabled: true,
+                    },
+                }),
+                [
+                    'TASK_BLOAT tasks/phase-1.md 260/250',
+                ],
                 'no bloat section: the defaults 300/500 and 250/400 apply',
             );
         } finally {
@@ -134,7 +181,15 @@ module.exports = () => {
             for (const config of [
                 null,
                 '{ not json',
-                { bloat: { spec: { soft: 'ten', hard: -5 }, task: null } },
+                {
+                    bloat: {
+                        spec: {
+                            soft: 'ten',
+                            hard: -5,
+                        },
+                        task: null,
+                    },
+                },
             ]) {
                 const dir = makeBloatProject(config, files);
                 dirs.push(dir);
@@ -161,11 +216,17 @@ module.exports = () => {
                 fs.writeFileSync(path.join(dir, '.magicspec', 'INDEX.md'), 'line\n'.repeat(7000));
                 const result = spawnSync(
                     'node',
-                    [path.join(dir, 'skills', 'magicspec', 'scripts', 'check-bloat.js'), '--json'],
+                    [
+                        path.join(dir, 'skills', 'magicspec', 'scripts', 'check-bloat.js'),
+                        '--json',
+                    ],
                     {
                         cwd: dir,
                         encoding: 'utf8',
-                        env: { ...process.env, MAGIC_DESIGN_DIR: '.magicspec/ws' },
+                        env: {
+                            ...process.env,
+                            MAGIC_DESIGN_DIR: '.magicspec/ws',
+                        },
                     },
                 );
                 assert.strictEqual(result.status, 0, result.stdout + result.stderr);
@@ -187,7 +248,14 @@ module.exports = () => {
             'defaults 30/60 KB: the workspace registry is over the hard tier, the plan and the global registry over the soft one, the small constitution is not flagged',
         );
         assert.deepStrictEqual(
-            docSignals({ bloat: { doc: { soft: 20, hard: 0 } } }),
+            docSignals({
+                bloat: {
+                    doc: {
+                        soft: 20,
+                        hard: 0,
+                    },
+                },
+            }),
             [
                 'DOC_BLOAT .magicspec/ws/INDEX.md 20',
                 'DOC_BLOAT .magicspec/ws/PLAN.md 20',
@@ -196,7 +264,14 @@ module.exports = () => {
             'an override replaces the soft tier and a hard threshold of 0 turns only the hard tier off',
         );
         assert.deepStrictEqual(
-            docSignals({ bloat: { doc: { soft: 0, hard: 0 } } }),
+            docSignals({
+                bloat: {
+                    doc: {
+                        soft: 0,
+                        hard: 0,
+                    },
+                },
+            }),
             [],
             'both thresholds at 0 turn the document signal off',
         );
@@ -232,7 +307,10 @@ module.exports = () => {
             // 3. Drift Case
             fs.writeFileSync(path.join(tempDir, '.magicspec', 'INDEX.md'), '# Index Restored');
             fs.writeFileSync(path.join(tempDir, '.magicspec', 'RULES.md'), '# Modified Rules');
-            execSync('git add . && git commit -m "Fixed"', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git add . && git commit -m "Fixed"', {
+                cwd: tempDir,
+                stdio: 'ignore',
+            });
 
             // Manual edit outside workflow
             fs.writeFileSync(path.join(tempDir, '.magicspec', 'RULES.md'), '# Drifted Rules');
@@ -356,7 +434,10 @@ module.exports = () => {
             const mismatches = result.warnings.filter((w) => w.type === 'REGISTRY_MISMATCH');
             assert.deepStrictEqual(
                 mismatches.map((w) => w.message.match(/^'([^']+)'/)[1]).sort(),
-                ['a.md', 'b.md'],
+                [
+                    'a.md',
+                    'b.md',
+                ],
                 `must report exactly the two unquoted, unregistered files — bounded individually, nothing merged or quoted → ${JSON.stringify(mismatches)}`,
             );
             assert.ok(
@@ -467,9 +548,17 @@ module.exports = () => {
 
             // A second workspace directory holding the same registry.
             const wsDir = path.join(designDir, 'docs');
-            fs.mkdirSync(wsDir, { recursive: true });
-            fs.cpSync(specsDir, path.join(wsDir, 'specifications'), { recursive: true });
-            for (const f of ['INDEX.md', 'RULES.md', 'PLAN.md']) {
+            fs.mkdirSync(wsDir, {
+                recursive: true,
+            });
+            fs.cpSync(specsDir, path.join(wsDir, 'specifications'), {
+                recursive: true,
+            });
+            for (const f of [
+                'INDEX.md',
+                'RULES.md',
+                'PLAN.md',
+            ]) {
                 fs.copyFileSync(path.join(designDir, f), path.join(wsDir, f));
             }
             generateChecksums(tempDir);
@@ -481,12 +570,16 @@ module.exports = () => {
             const flat = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 remedies(flat, 'ORPHANED_SPEC'),
-                ['/magicspec plan'],
+                [
+                    '/magicspec plan',
+                ],
                 'the flat layout invents no workspace',
             );
             assert.deepStrictEqual(
                 remedies(flat, 'REGISTRY_MISMATCH'),
-                ['/magicspec spec audit'],
+                [
+                    '/magicspec spec audit',
+                ],
                 'the audit command is spelled the way the workflows spell it',
             );
 
@@ -502,12 +595,17 @@ module.exports = () => {
                 execSync(`node "${scriptPath}" --json --require-specs`, {
                     cwd: tempDir,
                     encoding: 'utf8',
-                    env: { ...process.env, MAGIC_DESIGN_DIR: '.magicspec/docs' },
+                    env: {
+                        ...process.env,
+                        MAGIC_DESIGN_DIR: '.magicspec/docs',
+                    },
                 }),
             );
             assert.deepStrictEqual(
                 remedies(scoped, 'ORPHANED_SPEC'),
-                ['/magicspec plan docs'],
+                [
+                    '/magicspec plan docs',
+                ],
                 'a remedy without the workspace would re-plan the default workspace instead',
             );
         } finally {
@@ -560,7 +658,9 @@ module.exports = () => {
                         '',
                     ].join('\n'),
                 );
-            writePlan(['**Based on RULES:** .magicspec/RULES.md v1.0.0']);
+            writePlan([
+                '**Based on RULES:** .magicspec/RULES.md v1.0.0',
+            ]);
             generateChecksums(tempDir);
 
             const result = runCheckPrerequisites(tempDir, '--require-specs', '--verify-headers');
@@ -569,8 +669,13 @@ module.exports = () => {
 
             // The registry is ahead of the plan, the constitution is ahead of the plan, a spec is not in the plan:
             // each is the plan's to repair, in one spelling, with no "update" word.
-            assert.deepStrictEqual(fixes('SYNC_GAP'), ['/magicspec plan', '/magicspec plan']);
-            assert.deepStrictEqual(fixes('ORPHANED_SPEC'), ['/magicspec plan']);
+            assert.deepStrictEqual(fixes('SYNC_GAP'), [
+                '/magicspec plan',
+                '/magicspec plan',
+            ]);
+            assert.deepStrictEqual(fixes('ORPHANED_SPEC'), [
+                '/magicspec plan',
+            ]);
             const gaps = result.warnings.filter((w) => w.type === 'SYNC_GAP').map((w) => w.message);
             assert.ok(
                 gaps.some((m) =>
@@ -589,7 +694,10 @@ module.exports = () => {
 
             // A header that disagrees with the registry is reconciled by the specification workflow and then
             // by the plan, which owns the Pre-flight that reports it.
-            const parity = [...fixes('VERSION_DRIFT'), ...fixes('STATUS_DRIFT')];
+            const parity = [
+                ...fixes('VERSION_DRIFT'),
+                ...fixes('STATUS_DRIFT'),
+            ];
             assert.ok(parity.length >= 2, 'both the version and the status drift are reported');
             for (const fix of parity) {
                 assert.match(
@@ -613,7 +721,9 @@ module.exports = () => {
             );
 
             // A plan that records the current constitution is clean of that finding.
-            writePlan(['**Based on RULES:** .magicspec/RULES.md v2.0.0']);
+            writePlan([
+                '**Based on RULES:** .magicspec/RULES.md v2.0.0',
+            ]);
             const current = runCheckPrerequisites(tempDir, '--require-specs');
             assert.strictEqual(
                 current.warnings.filter((w) => /RULES\.md/.test(w.message)).length,
@@ -656,12 +766,17 @@ module.exports = () => {
             const noPlan = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 named(noPlan, 'GHOST_REGISTRY'),
-                ['l1-missing.md', 'legacy.md'],
+                [
+                    'l1-missing.md',
+                    'legacy.md',
+                ],
                 'a registered spec that is missing from disk must be reported with no plan present',
             );
             assert.deepStrictEqual(
                 named(noPlan, 'NAMING_VIOLATION'),
-                ['legacy.md'],
+                [
+                    'legacy.md',
+                ],
                 'the Layer Prefix rule needs no plan either',
             );
             assert.strictEqual(noPlan.ok, false, 'GHOST_REGISTRY is an integrity failure');
@@ -722,13 +837,18 @@ module.exports = () => {
         try {
             const designDir = path.join(tempDir, '.magicspec');
             const wsDir = path.join(designDir, 'docs');
-            fs.mkdirSync(wsDir, { recursive: true });
+            fs.mkdirSync(wsDir, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index');
             fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
             fs.writeFileSync(path.join(wsDir, 'INDEX.md'), '# Index');
             fs.writeFileSync(path.join(wsDir, 'RULES.md'), '# Workspace Rules');
             generateChecksums(tempDir);
-            execSync('git add -A && git commit -m "baseline"', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git add -A && git commit -m "baseline"', {
+                cwd: tempDir,
+                stdio: 'ignore',
+            });
 
             const scriptPath = path.join(
                 tempDir,
@@ -742,7 +862,10 @@ module.exports = () => {
                     execSync(`node "${scriptPath}" --json`, {
                         cwd: tempDir,
                         encoding: 'utf8',
-                        env: { ...process.env, MAGIC_DESIGN_DIR: '.magicspec/docs' },
+                        env: {
+                            ...process.env,
+                            MAGIC_DESIGN_DIR: '.magicspec/docs',
+                        },
                     }),
                 )
                     .warnings.filter((w) => w.type === 'CONFIG_DRIFT')
@@ -754,17 +877,27 @@ module.exports = () => {
             fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules (edited by hand)');
             assert.deepStrictEqual(
                 drifted(),
-                ['.magicspec/RULES.md'],
+                [
+                    '.magicspec/RULES.md',
+                ],
                 'the global constitution is monitored even when a workspace RULES.md exists',
             );
 
             fs.writeFileSync(path.join(wsDir, 'RULES.md'), '# Workspace Rules (edited by hand)');
-            assert.deepStrictEqual(drifted(), ['.magicspec/RULES.md', '.magicspec/docs/RULES.md']);
+            assert.deepStrictEqual(drifted(), [
+                '.magicspec/RULES.md',
+                '.magicspec/docs/RULES.md',
+            ]);
 
-            execSync('git checkout -- .magicspec/RULES.md', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git checkout -- .magicspec/RULES.md', {
+                cwd: tempDir,
+                stdio: 'ignore',
+            });
             assert.deepStrictEqual(
                 drifted(),
-                ['.magicspec/docs/RULES.md'],
+                [
+                    '.magicspec/docs/RULES.md',
+                ],
                 'the workspace RULES.md stays monitored on its own',
             );
         } finally {

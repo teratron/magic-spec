@@ -67,11 +67,16 @@ function minorLineOf(version) {
  */
 function checkPolicy(policyText, version) {
     const releaseLine = minorLineOf(version);
-    if (!releaseLine) return [`'${version}' is not a version (expected major.minor.patch)`];
+    if (!releaseLine)
+        return [
+            `'${version}' is not a version (expected major.minor.patch)`,
+        ];
 
     const rows = parseSupportedVersions(policyText);
     if (rows.length === 0)
-        return ['the policy has no supported-versions table (rows like | `3.0.x` | Yes |)'];
+        return [
+            'the policy has no supported-versions table (rows like | `3.0.x` | Yes |)',
+        ];
 
     const problems = [];
     const releaseRows = rows.filter((row) => row.line === releaseLine);
@@ -137,4 +142,8 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { parseSupportedVersions, minorLineOf, checkPolicy };
+module.exports = {
+    parseSupportedVersions,
+    minorLineOf,
+    checkPolicy,
+};

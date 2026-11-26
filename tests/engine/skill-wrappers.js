@@ -22,8 +22,14 @@ module.exports = () => {
         const syncSkills = require(path.join(devScriptsDir, 'skill-frontmatter.js'));
         const repoRoot = path.resolve(TESTS_DIR, '..');
         // Both routers are authored; the contract is the same for the engine skill and the maintenance skill.
-        const sourceNames = new Set(['magicspec', 'magicspec-dev']);
-        const dirs = ['magicspec', 'magicspec-dev'].map((name) => ({
+        const sourceNames = new Set([
+            'magicspec',
+            'magicspec-dev',
+        ]);
+        const dirs = [
+            'magicspec',
+            'magicspec-dev',
+        ].map((name) => ({
             name,
             file: path.join(repoRoot, 'skills', name, 'SKILL.md'),
         }));
@@ -38,7 +44,9 @@ module.exports = () => {
                 const lines = block[1].split(/\r?\n/);
                 const at = lines.findIndex((l) => l.startsWith(`${key}:`));
                 if (at === -1) return '';
-                const parts = [lines[at].slice(key.length + 1).trim()];
+                const parts = [
+                    lines[at].slice(key.length + 1).trim(),
+                ];
                 for (let i = at + 1; i < lines.length && /^\s/.test(lines[i]); i++) {
                     parts.push(lines[i].trim());
                 }
@@ -192,7 +200,10 @@ module.exports = () => {
 
     // The engine bodies and shared modules of the skill folder, as repository-relative paths.
     const engineBodyPaths = (repoRoot) =>
-        ['workflows', 'references'].flatMap((dir) =>
+        [
+            'workflows',
+            'references',
+        ].flatMap((dir) =>
             fs
                 .readdirSync(path.join(repoRoot, 'skills', 'magicspec', dir))
                 .filter((f) => f.endsWith('.md'))
@@ -221,17 +232,32 @@ module.exports = () => {
         // marked as another workflow's alone, and a fenced block holding a `##` line
         // that is not a section.
         const make = (contents, before = 0) => {
-            const lines = ['# Title', '', 'Intro.', ''];
+            const lines = [
+                '# Title',
+                '',
+                'Intro.',
+                '',
+            ];
             for (let i = 0; i < before; i++) lines.push(`filler ${i}`);
             lines.push(...contents, '');
-            for (const name of ['Alpha', 'Beta', 'Gamma']) {
+            for (const name of [
+                'Alpha',
+                'Beta',
+                'Gamma',
+            ]) {
                 lines.push(`## ${name}`, '');
                 for (let i = 0; i < 30; i++) lines.push(`${name} line ${i}`);
                 if (name === 'Beta') lines.push('```', '## Not a section', '```');
             }
             return lines.join('\n') + '\n';
         };
-        const full = ['**Contents:**', '', '- Alpha', '- Beta — `magic.spec` only', '- Gamma'];
+        const full = [
+            '**Contents:**',
+            '',
+            '- Alpha',
+            '- Beta — `magic.spec` only',
+            '- Gamma',
+        ];
 
         assert.ok(countLines(make(full)) > 100, 'the fixture must be over 100 lines');
         assert.deepStrictEqual(
@@ -245,12 +271,23 @@ module.exports = () => {
             'a body with no contents list is flagged for every heading',
         );
         assert.strictEqual(
-            contentsProblems(make(['- Alpha', '- Gamma'])).length,
+            contentsProblems(
+                make([
+                    '- Alpha',
+                    '- Gamma',
+                ]),
+            ).length,
             1,
             'a list that omits one heading is flagged for exactly that heading',
         );
         assert.ok(
-            contentsProblems(make(['- Beta', '- Alpha', '- Gamma'])).length >= 1,
+            contentsProblems(
+                make([
+                    '- Beta',
+                    '- Alpha',
+                    '- Gamma',
+                ]),
+            ).length >= 1,
             'a list out of file order is flagged',
         );
         assert.strictEqual(

@@ -381,6 +381,28 @@ module.exports = () => {
         );
     };
 
+    test('document set: an address of a component that ends a sentence is a reference, a version or a file name beside it is none', () => {
+        const dir = makeSetProject('good');
+        try {
+            rewriteSet(
+                dir,
+                'spec/hello.md',
+                '- Accept: the output is "hello"',
+                '- Accept: the output is "hello"\n\nAs hello.8 says, and see hello.9.\nNeither hello.7.1 nor hello.6.js is a reference.',
+            );
+            const r = simExec(dir, [
+                'check-docs',
+            ]);
+            assert.strictEqual(r.status, 1, r.stdout + r.stderr);
+            assert.deepStrictEqual(linesOf(r.stdout), [
+                'spec/hello.md: hello.1 mentions hello.8, which is not defined',
+                'spec/hello.md: hello.1 mentions hello.9, which is not defined',
+            ]);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
     test('document set: a rule without From is no finding while the plan defines no milestone', () => {
         const dir = makeSetProject('good');
         try {

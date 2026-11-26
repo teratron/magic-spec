@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "minimumVersion": "3.34.0",
   "entry": [
     "skills/magicspec/scripts/*.js",
     "scripts/*.js",

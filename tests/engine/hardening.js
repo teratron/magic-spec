@@ -47,13 +47,19 @@ module.exports = () => {
                     source: 'fixture',
                     code: 'KEPT',
                     message: 'recorded with a hostile environment',
-                    recheck: { script: 'revalidate-fixture', args: [], env: hostile },
+                    recheck: {
+                        script: 'revalidate-fixture',
+                        args: [],
+                        env: hostile,
+                    },
                 }),
             );
             const stored = diagnostics.read();
             assert.deepStrictEqual(
                 stored[0].recheck.env,
-                { MAGIC_FIXTURE_WARNINGS: '[]' },
+                {
+                    MAGIC_FIXTURE_WARNINGS: '[]',
+                },
                 'only MAGIC_ keys are stored',
             );
 
@@ -64,7 +70,11 @@ module.exports = () => {
                     source: 'fixture',
                     code: 'KEPT',
                     message: 'read back',
-                    recheck: { script: 'revalidate-fixture', args: [], env: hostile },
+                    recheck: {
+                        script: 'revalidate-fixture',
+                        args: [],
+                        env: hostile,
+                    },
                 },
             ]);
             assert.ok(Array.isArray(survivors));
@@ -90,11 +100,18 @@ module.exports = () => {
                 source: 'fixture',
                 code: 'PLANTED',
                 message: 'planted',
-                recheck: { script, args: [], env },
+                recheck: {
+                    script,
+                    args: [],
+                    env,
+                },
             });
 
             // `remove` would delete the engine folder if it were spawned; the fixture would count a run
-            diagnostics.revalidate([planted('remove'), planted('revalidate-fixture')]);
+            diagnostics.revalidate([
+                planted('remove'),
+                planted('revalidate-fixture'),
+            ]);
             assert.ok(
                 fs.existsSync(path.join(engine, '.version')),
                 'the engine folder is still there',
@@ -156,7 +173,10 @@ module.exports = () => {
                 added: 1,
                 deleted: 0,
             });
-            assert.deepStrictEqual(gitUtils.fileNumstat(tempDir, name), { added: 1, deleted: 0 });
+            assert.deepStrictEqual(gitUtils.fileNumstat(tempDir, name), {
+                added: 1,
+                deleted: 0,
+            });
             assert.ok(
                 significance.gitFileDiff(tempDir, name).includes('+two'),
                 'the diff of the odd name is read',
@@ -181,7 +201,9 @@ module.exports = () => {
                 path.join(tempDir, '.magicspec', 'RULES.md'),
                 '## 7. Project Conventions\n\n### C9 — ' + payload + '\n\nA probe.\n',
             );
-            const run = runScript('executor', tempDir, tempDir, 'build-spec-graph', ['--html']);
+            const run = runScript('executor', tempDir, tempDir, 'build-spec-graph', [
+                '--html',
+            ]);
             assert.strictEqual(run.status, 0, run.stdout + run.stderr);
             const html = fs.readFileSync(
                 path.join(tempDir, '.magicspec', 'graph', 'graph.html'),

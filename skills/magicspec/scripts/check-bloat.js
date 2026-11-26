@@ -40,9 +40,18 @@ const { PHASE_FILE_RE } = require('./lib/phase-files');
  */
 
 const DEFAULT_THRESHOLDS = {
-    spec: { soft: 300, hard: 500 },
-    task: { soft: 250, hard: 400 },
-    doc: { soft: 30, hard: 60 },
+    spec: {
+        soft: 300,
+        hard: 500,
+    },
+    task: {
+        soft: 250,
+        hard: 400,
+    },
+    doc: {
+        soft: 30,
+        hard: 60,
+    },
 };
 
 /**
@@ -98,7 +107,9 @@ function countLines(filePath) {
  * @returns {{ json: boolean }}
  */
 function parseArgs() {
-    return { json: process.argv.includes('--json') };
+    return {
+        json: process.argv.includes('--json'),
+    };
 }
 
 /**
@@ -112,15 +123,28 @@ function parseArgs() {
  */
 function loadThresholds(projectRoot) {
     const limits = {
-        spec: { ...DEFAULT_THRESHOLDS.spec },
-        task: { ...DEFAULT_THRESHOLDS.task },
-        doc: { ...DEFAULT_THRESHOLDS.doc },
+        spec: {
+            ...DEFAULT_THRESHOLDS.spec,
+        },
+        task: {
+            ...DEFAULT_THRESHOLDS.task,
+        },
+        doc: {
+            ...DEFAULT_THRESHOLDS.doc,
+        },
     };
     try {
         const data = JSON.parse(fs.readFileSync(statePath(projectRoot, 'workspace.json'), 'utf8'));
         const section = data.bloat;
-        for (const kind of ['spec', 'task', 'doc']) {
-            for (const tier of ['soft', 'hard']) {
+        for (const kind of [
+            'spec',
+            'task',
+            'doc',
+        ]) {
+            for (const tier of [
+                'soft',
+                'hard',
+            ]) {
                 const value = section?.[kind]?.[tier];
                 if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
                     limits[kind][tier] = value;
@@ -148,7 +172,9 @@ function loadThresholds(projectRoot) {
  */
 function listFiles(dir, pattern, recursive) {
     const found = [];
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(dir, {
+        withFileTypes: true,
+    })) {
         if (entry.isDirectory()) {
             if (!recursive) continue;
             for (const nested of listFiles(path.join(dir, entry.name), pattern, true)) {
@@ -223,9 +249,15 @@ function scanDocuments(wsDir, globalDir, designDir, issues, limits) {
             doc.scope === 'global' ? `${STATE_DIR_NAME}/${doc.name}` : `${designDir}/${doc.name}`;
         const tier =
             limits.hard > 0 && kb > limits.hard
-                ? { type: 'DOC_DECOMPOSE', limit: limits.hard }
+                ? {
+                      type: 'DOC_DECOMPOSE',
+                      limit: limits.hard,
+                  }
                 : limits.soft > 0 && kb > limits.soft
-                  ? { type: 'DOC_BLOAT', limit: limits.soft }
+                  ? {
+                        type: 'DOC_BLOAT',
+                        limit: limits.soft,
+                    }
                   : null;
         if (!tier) continue;
         issues.push({
@@ -264,7 +296,16 @@ function main() {
     scanDocuments(wsDir, path.resolve(projectRoot, STATE_DIR_NAME), designDir, issues, limits.doc);
 
     if (opts.json) {
-        process.stdout.write(JSON.stringify({ workspace: designDir, issues }, null, 2) + '\n');
+        process.stdout.write(
+            JSON.stringify(
+                {
+                    workspace: designDir,
+                    issues,
+                },
+                null,
+                2,
+            ) + '\n',
+        );
         return 0;
     }
 

@@ -23,7 +23,10 @@ const { ENGINE_DIR, repoRoot } = require('./engine-path');
 const ENGINE_POSIX = ENGINE_DIR.split(path.sep).join('/');
 
 /** Root files that ship beside the skill folder, when present. */
-const ROOT_FILES = ['README.md', 'LICENSE'];
+const ROOT_FILES = [
+    'README.md',
+    'LICENSE',
+];
 
 /** Files without which the archive is not an installable skill. */
 const REQUIRED = [
@@ -49,11 +52,19 @@ function isAllowed(rel) {
  * @returns {string[]} Absolute file paths.
  */
 function walk(dir) {
-    return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-        if (e.isSymbolicLink()) return [];
-        const full = path.join(dir, e.name);
-        return e.isDirectory() ? walk(full) : [full];
-    });
+    return fs
+        .readdirSync(dir, {
+            withFileTypes: true,
+        })
+        .flatMap((e) => {
+            if (e.isSymbolicLink()) return [];
+            const full = path.join(dir, e.name);
+            return e.isDirectory()
+                ? walk(full)
+                : [
+                      full,
+                  ];
+        });
 }
 
 /**
@@ -89,7 +100,10 @@ function check(names, prefix) {
         present.add(rel);
         if (!isAllowed(rel)) outside.push(name);
     }
-    return { outside, missing: REQUIRED.filter((r) => !present.has(r)) };
+    return {
+        outside,
+        missing: REQUIRED.filter((r) => !present.has(r)),
+    };
 }
 
 if (require.main === module) {
@@ -113,4 +127,10 @@ if (require.main === module) {
     }
 }
 
-module.exports = { isAllowed, listRelease, check, ROOT_FILES, REQUIRED };
+module.exports = {
+    isAllowed,
+    listRelease,
+    check,
+    ROOT_FILES,
+    REQUIRED,
+};

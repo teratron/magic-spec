@@ -24,7 +24,11 @@ module.exports = () => {
         const items = section.split('\n').filter((l) => /^[1-7]\. /.test(l));
         assert.strictEqual(items.length, 7, 'seven items');
         const expected = [
-            ['1. **Coverage:**', 'names, flags or paths', 'runs no pass'],
+            [
+                '1. **Coverage:**',
+                'names, flags or paths',
+                'runs no pass',
+            ],
             [
                 '2. **Nothing lost:**',
                 'listed as set aside, with the reason',
@@ -45,8 +49,16 @@ module.exports = () => {
                 'F1 incoherence, F2 essence ambiguity',
                 'it never becomes a question',
             ],
-            ['6. **Silent by default:**', 'print nothing', '`[Intake] Understood as: {statement}`'],
-            ['7. **Bar:**', 'PQ-4 precision bar', 'never a verdict'],
+            [
+                '6. **Silent by default:**',
+                'print nothing',
+                '`[Intake] Understood as: {statement}`',
+            ],
+            [
+                '7. **Bar:**',
+                'PQ-4 precision bar',
+                'never a verdict',
+            ],
         ];
         expected.forEach((needles, i) => {
             for (const needle of needles)
@@ -65,7 +77,9 @@ module.exports = () => {
             .map((f) => f.slice(0, -3))
             .sort();
         assert.strictEqual(bodies.length, 14, 'fourteen shipped bodies');
-        const triggered = [...card.matchAll(/- workflow: (\S+)\.md\n {4}gate: "Input Pass"/g)]
+        const triggered = [
+            ...card.matchAll(/- workflow: (\S+)\.md\n {4}gate: "Input Pass"/g),
+        ]
             .map((m) => m[1])
             .sort();
         assert.deepStrictEqual(
@@ -97,10 +111,22 @@ module.exports = () => {
                 '## Argument Routing',
                 '## Workspace Resolution',
             ],
-            'skills/magicspec/workflows/rule.md': ['## Entry', '## Core Invariants (Mandatory)'],
-            'skills/magicspec/workflows/status.md': ['## Entry', '## Core Invariants (Mandatory)'],
-            'skills/magicspec/workflows/migrate.md': ['## Entry', '## Core Invariants (Mandatory)'],
-            'skills/magicspec/workflows/help.md': ['## Entry', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/rule.md': [
+                '## Entry',
+                '## Core Invariants (Mandatory)',
+            ],
+            'skills/magicspec/workflows/status.md': [
+                '## Entry',
+                '## Core Invariants (Mandatory)',
+            ],
+            'skills/magicspec/workflows/migrate.md': [
+                '## Entry',
+                '## Core Invariants (Mandatory)',
+            ],
+            'skills/magicspec/workflows/help.md': [
+                '## Entry',
+                '## Core Invariants (Mandatory)',
+            ],
             'skills/magicspec/workflows/graph.md': [
                 '## Steps',
                 '### 1. Build the Specification Knowledge Graph',
@@ -117,13 +143,22 @@ module.exports = () => {
                 '## Argument Routing',
                 '## Core Invariants (Mandatory)',
             ],
-            'skills/magicspec-dev/workflows/init.md': ['## Arguments', '## Agent Map'],
-            'skills/magicspec-dev/workflows/fix.md': ['**Command:**', '## Inputs'],
+            'skills/magicspec-dev/workflows/init.md': [
+                '## Arguments',
+                '## Agent Map',
+            ],
+            'skills/magicspec-dev/workflows/fix.md': [
+                '**Command:**',
+                '## Inputs',
+            ],
             'skills/magicspec-dev/workflows/test.md': [
                 '**Scope:**',
                 '## Core Invariants (Mandatory)',
             ],
-            'skills/magicspec-dev/workflows/reverse.md': ['**Command:**', '## Arguments'],
+            'skills/magicspec-dev/workflows/reverse.md': [
+                '**Command:**',
+                '## Arguments',
+            ],
             'skills/magicspec-dev/workflows/release.md': [
                 '# Release Workflow',
                 '## Agent Guidelines',
@@ -232,7 +267,10 @@ module.exports = () => {
             '| every workflow body | Input Pass (before the workflow acts on prose) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |';
         const constitution = readShipped('.magicspec/RULES.md');
         const template = readShipped('skills/magicspec/templates/rules.md');
-        for (const text of [constitution, template]) {
+        for (const text of [
+            constitution,
+            template,
+        ]) {
             assert.strictEqual(text.split(row).length - 1, 1, 'the row is in the table once');
             assert.ok(
                 text.indexOf(row) >
@@ -426,7 +464,10 @@ module.exports = () => {
                     '--code=CLI_PROBE',
                     '--message=probe',
                 ],
-                { cwd: tempDir, encoding: 'utf8' },
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
             );
             assert.strictEqual(recorded.status, 0);
             const first = feedback(
@@ -453,7 +494,9 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 note.evidence.findingCodes,
-                ['CLI_PROBE'],
+                [
+                    'CLI_PROBE',
+                ],
                 'the finding recorded in the same workflow is evidence',
             );
             assert.strictEqual(note.evidence.failingScript, 'finalize');
@@ -475,7 +518,9 @@ module.exports = () => {
             const diagnostics = requireFromFixture(tempDir, 'lib', 'diagnostics.js');
             assert.deepStrictEqual(
                 diagnostics.drain().map((f) => f.code),
-                ['CLI_PROBE'],
+                [
+                    'CLI_PROBE',
+                ],
             );
             assert.match(
                 feedback('list').stdout,
@@ -486,10 +531,24 @@ module.exports = () => {
             // The closed kinds, the required text and the limits: rejected with the reason, exit status 0.
             const rejections = [
                 [
-                    ['note', '--kind=wish', '--summary=x', '--tried=x', '--happened=x'],
+                    [
+                        'note',
+                        '--kind=wish',
+                        '--summary=x',
+                        '--tried=x',
+                        '--happened=x',
+                    ],
                     /kind must be one of bug, missing-capability, improvement, docs/,
                 ],
-                [['note', '--kind=bug', '--summary=x', '--happened=x'], /tried is required/],
+                [
+                    [
+                        'note',
+                        '--kind=bug',
+                        '--summary=x',
+                        '--happened=x',
+                    ],
+                    /tried is required/,
+                ],
                 [
                     [
                         'note',
@@ -572,13 +631,23 @@ module.exports = () => {
             for (let i = 2; i < library.LIMITS.notes; i++)
                 assert.ok(
                     library.addNote(
-                        { kind: 'docs', summary: `n${i}`, tried: 't', happened: 'h' },
+                        {
+                            kind: 'docs',
+                            summary: `n${i}`,
+                            tried: 't',
+                            happened: 'h',
+                        },
                         {},
                         tempDir,
                     ).recorded,
                 );
             const full = library.addNote(
-                { kind: 'docs', summary: 'one too many', tried: 't', happened: 'h' },
+                {
+                    kind: 'docs',
+                    summary: 'one too many',
+                    tried: 't',
+                    happened: 'h',
+                },
                 {},
                 tempDir,
             );
@@ -587,14 +656,21 @@ module.exports = () => {
 
             // The store's byte bound gives way oldest evidence first (EF-5): the oldest notes lose theirs, the newest keep it.
             const store = library.loadStore(tempDir);
-            store.notes = Array.from({ length: 30 }, (_, i) => ({
-                id: `n${i + 1}`,
-                kind: 'docs',
-                summary: 's',
-                tried: 't',
-                happened: 'h',
-                evidence: { os: 'x'.repeat(3000) },
-            }));
+            store.notes = Array.from(
+                {
+                    length: 30,
+                },
+                (_, i) => ({
+                    id: `n${i + 1}`,
+                    kind: 'docs',
+                    summary: 's',
+                    tried: 't',
+                    happened: 'h',
+                    evidence: {
+                        os: 'x'.repeat(3000),
+                    },
+                }),
+            );
             const saved = library.saveStore(store, tempDir);
             assert.ok(saved.trimmed > 0, 'evidence was dropped');
             const after = readStore().notes;
@@ -615,18 +691,33 @@ module.exports = () => {
             assert.match(feedback('discard', 'n999').stdout, /No note n999 is pending/);
 
             // clean-cache removes what can be rebuilt and never the notes.
-            const dry = spawnSync(process.execPath, [executor, 'clean-cache', '--dry-run'], {
-                cwd: tempDir,
-                encoding: 'utf8',
-            });
+            const dry = spawnSync(
+                process.execPath,
+                [
+                    executor,
+                    'clean-cache',
+                    '--dry-run',
+                ],
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
+            );
             assert.ok(
                 !dry.stdout.includes('feedback.json'),
                 'the notes are not listed for removal',
             );
-            spawnSync(process.execPath, [executor, 'clean-cache'], {
-                cwd: tempDir,
-                encoding: 'utf8',
-            });
+            spawnSync(
+                process.execPath,
+                [
+                    executor,
+                    'clean-cache',
+                ],
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
+            );
             assert.ok(fs.existsSync(storeFile), 'clean-cache keeps the notes');
         } finally {
             cleanup(tempDir);

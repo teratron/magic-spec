@@ -61,7 +61,9 @@ const MIN_IDF = 1e-6;
  * @returns {void}
  */
 function writeAtomic(target, content) {
-    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.mkdirSync(path.dirname(target), {
+        recursive: true,
+    });
     const tmp = `${target}.tmp`;
     fs.writeFileSync(tmp, content, 'utf8');
     try {
@@ -69,7 +71,9 @@ function writeAtomic(target, content) {
     } catch (err) {
         if (err.code !== 'EPERM' && err.code !== 'EBUSY') throw err;
         fs.copyFileSync(tmp, target);
-        fs.rmSync(tmp, { force: true });
+        fs.rmSync(tmp, {
+            force: true,
+        });
     }
 }
 
@@ -83,7 +87,13 @@ function writeAtomic(target, content) {
  * @returns {{meta: Object<string, string>, files: Object<string, {sha256: string, indexed_at: string}>, sections: object[], nextId: number, vectors: Object<string, {model: string, dim: number, data: string}>}}
  */
 function load(cachePath) {
-    const empty = () => ({ meta: {}, files: {}, sections: [], nextId: 1, vectors: {} });
+    const empty = () => ({
+        meta: {},
+        files: {},
+        sections: [],
+        nextId: 1,
+        vectors: {},
+    });
     if (!fs.existsSync(cachePath)) return empty();
     let parsed;
     try {
@@ -127,7 +137,10 @@ function analyze(sections) {
     sections.forEach((section, index) => {
         const h = tokenize(section.heading);
         const b = tokenize(section.body);
-        tokens.push({ h, b });
+        tokens.push({
+            h,
+            b,
+        });
         lengths.push(h.length + b.length);
         total += h.length + b.length;
         for (const token of h.concat(b)) {
@@ -136,7 +149,12 @@ function analyze(sections) {
             inverted.set(token, rows);
         }
     });
-    return { tokens, lengths, inverted, total };
+    return {
+        tokens,
+        lengths,
+        inverted,
+        total,
+    };
 }
 
 /**
@@ -233,23 +251,48 @@ function open(cachePath) {
             changed = true;
         },
 
-        fileHashes: () => new Map(Object.entries(state.files).map(([rel, v]) => [rel, v.sha256])),
+        fileHashes: () =>
+            new Map(
+                Object.entries(state.files).map(([rel, v]) => [
+                    rel,
+                    v.sha256,
+                ]),
+            ),
 
         replaceFile(rel, sha256, units) {
             const kept = new Map();
             for (const section of state.sections) {
                 if (section.path !== rel) continue;
-                const key = JSON.stringify([section.heading, section.body]);
-                kept.set(key, [...(kept.get(key) ?? []), section]);
+                const key = JSON.stringify([
+                    section.heading,
+                    section.body,
+                ]);
+                kept.set(key, [
+                    ...(kept.get(key) ?? []),
+                    section,
+                ]);
             }
             state.sections = state.sections.filter((s) => s.path !== rel);
             for (const unit of units) {
-                const same = kept.get(JSON.stringify([unit.heading, unit.body]))?.shift();
-                state.sections.push({ ...unit, id: same ? same.id : state.nextId++ });
+                const same = kept
+                    .get(
+                        JSON.stringify([
+                            unit.heading,
+                            unit.body,
+                        ]),
+                    )
+                    ?.shift();
+                state.sections.push({
+                    ...unit,
+                    id: same ? same.id : state.nextId++,
+                });
             }
             for (const left of kept.values())
                 for (const gone of left) delete state.vectors[gone.id];
-            state.files[rel] = { sha256, indexed_at: new Date().toISOString() };
+            state.files[rel] = {
+                sha256,
+                indexed_at: new Date().toISOString(),
+            };
             touch();
         },
 
@@ -265,12 +308,27 @@ function open(cachePath) {
         sectionCount: () => state.sections.length,
 
         sectionMeta: () =>
-            new Map(state.sections.map((s) => [s.id, { kind: s.kind, workspace: s.workspace }])),
+            new Map(
+                state.sections.map((s) => [
+                    s.id,
+                    {
+                        kind: s.kind,
+                        workspace: s.workspace,
+                    },
+                ]),
+            ),
 
         sectionsByIds(ids) {
             const wanted = new Set(ids);
             return new Map(
-                state.sections.filter((s) => wanted.has(s.id)).map((s) => [s.id, { ...s }]),
+                state.sections
+                    .filter((s) => wanted.has(s.id))
+                    .map((s) => [
+                        s.id,
+                        {
+                            ...s,
+                        },
+                    ]),
             );
         },
 
@@ -281,12 +339,20 @@ function open(cachePath) {
                     return !(v && v.model === model && v.dim === dim);
                 })
                 .slice(0, limit)
-                .map((s) => ({ id: s.id, heading: s.heading, body: s.body })),
+                .map((s) => ({
+                    id: s.id,
+                    heading: s.heading,
+                    body: s.body,
+                })),
 
         putVectors(model, dim, entries) {
             for (const { id, vector } of entries) {
                 const bytes = Buffer.from(vector.buffer, vector.byteOffset, vector.byteLength);
-                state.vectors[id] = { model, dim, data: bytes.toString('base64') };
+                state.vectors[id] = {
+                    model,
+                    dim,
+                    data: bytes.toString('base64'),
+                };
             }
             changed = true;
         },
@@ -324,7 +390,12 @@ function open(cachePath) {
             const ranked = [];
             for (const [index, score] of scoresOf(stats, state.sections.length, phrases)) {
                 const section = state.sections[index];
-                if (matchesFilters(section, options)) ranked.push({ ...section, score, index });
+                if (matchesFilters(section, options))
+                    ranked.push({
+                        ...section,
+                        score,
+                        index,
+                    });
             }
             ranked.sort((a, b) => b.score - a.score || a.index - b.index);
             return ranked;
@@ -379,4 +450,7 @@ function open(cachePath) {
     return backend;
 }
 
-module.exports = { open, SCHEMA_VERSION };
+module.exports = {
+    open,
+    SCHEMA_VERSION,
+};

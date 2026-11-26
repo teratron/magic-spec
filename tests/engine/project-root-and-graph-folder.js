@@ -19,7 +19,10 @@ module.exports = () => {
     // root and hands it on, and directly, where the script resolves it itself.
     // Each case runs both, so a script that falls back to its working directory
     // is caught even though the executor would have covered for it.
-    const ROOT_MODES = ['executor', 'direct'];
+    const ROOT_MODES = [
+        'executor',
+        'direct',
+    ];
 
     // Runs `body` once per root mode on a fresh fixture, removed afterwards.
     const forEachRootFixture = (body) => {
@@ -40,7 +43,12 @@ module.exports = () => {
 
     // A command run from `a/b` must leave nothing of the project there.
     const assertNoStrayProject = (nested, what) => {
-        for (const name of ['.magicspec', '.git', 'skills', 'CHANGELOG.md']) {
+        for (const name of [
+            '.magicspec',
+            '.git',
+            'skills',
+            'CHANGELOG.md',
+        ]) {
             assert.ok(
                 !fs.existsSync(path.join(nested, name)),
                 `${what} must not create ${name} in the directory it was run from`,
@@ -54,7 +62,9 @@ module.exports = () => {
         try {
             const dir = (...parts) => {
                 const full = path.join(base, ...parts);
-                fs.mkdirSync(full, { recursive: true });
+                fs.mkdirSync(full, {
+                    recursive: true,
+                });
                 return full;
             };
             dir('proj', '.magicspec');
@@ -64,11 +74,18 @@ module.exports = () => {
             const bare = dir('bare', 'y');
             const other = dir('other');
             // A nearer state folder wins over a farther .git.
-            fs.mkdirSync(path.join(base, 'mix', '.git'), { recursive: true });
+            fs.mkdirSync(path.join(base, 'mix', '.git'), {
+                recursive: true,
+            });
             const mixInner = dir('mix', 'inner', 'z');
             fs.mkdirSync(path.join(base, 'mix', 'inner', '.magicspec'));
 
-            const at = (cwd, extra = {}) => resolveProjectRoot({ cwd, env: {}, ...extra });
+            const at = (cwd, extra = {}) =>
+                resolveProjectRoot({
+                    cwd,
+                    env: {},
+                    ...extra,
+                });
             assert.strictEqual(at(deep), path.join(base, 'proj'), 'nearest state folder');
             assert.strictEqual(at(gitOnly), path.join(base, 'gitonly'), 'nearest .git');
             assert.strictEqual(
@@ -82,22 +99,36 @@ module.exports = () => {
                 'state folder beats a farther .git',
             );
             assert.strictEqual(
-                at(deep, { env: { MAGIC_ROOT: other } }),
+                at(deep, {
+                    env: {
+                        MAGIC_ROOT: other,
+                    },
+                }),
                 other,
                 'MAGIC_ROOT beats the walk',
             );
             assert.strictEqual(
-                at(deep, { root: gitOnly, env: { MAGIC_ROOT: other } }),
+                at(deep, {
+                    root: gitOnly,
+                    env: {
+                        MAGIC_ROOT: other,
+                    },
+                }),
                 gitOnly,
                 '--root beats MAGIC_ROOT',
             );
             assert.strictEqual(
-                at(path.join(base, 'proj'), { root: '../other' }),
+                at(path.join(base, 'proj'), {
+                    root: '../other',
+                }),
                 other,
                 'a relative --root is read from the working directory',
             );
             assert.throws(
-                () => at(deep, { root: path.join(base, 'missing') }),
+                () =>
+                    at(deep, {
+                        root: path.join(base, 'missing'),
+                    }),
                 /\(from --root\) is not a directory/,
                 'an explicit root that is not a directory stops with one message naming its source',
             );
@@ -110,8 +141,12 @@ module.exports = () => {
         forEachRootFixture(({ mode, tempDir, nested, run }) => {
             const where = (what) => `${mode}: ${what}`;
 
-            const fromRoot = run(tempDir, 'resume-state', ['--workspace=engine']);
-            const fromNested = run(nested, 'resume-state', ['--workspace=engine']);
+            const fromRoot = run(tempDir, 'resume-state', [
+                '--workspace=engine',
+            ]);
+            const fromNested = run(nested, 'resume-state', [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(fromRoot.status, 0);
             assert.ok(fromRoot.stdout.includes('T-1A01'), where('the task in flight is named'));
             assert.strictEqual(
@@ -134,8 +169,16 @@ module.exports = () => {
             );
 
             for (const [script, args] of [
-                ['check-bloat', []],
-                ['archive-phases', ['--dry-run']],
+                [
+                    'check-bloat',
+                    [],
+                ],
+                [
+                    'archive-phases',
+                    [
+                        '--dry-run',
+                    ],
+                ],
             ]) {
                 const a = run(tempDir, script, args);
                 const b = run(nested, script, args);
@@ -159,7 +202,12 @@ module.exports = () => {
 
     test('the graph scripts read and write the project from a subdirectory: graph, wiki, coverage, communities and rationale (SP-2)', () => {
         forEachRootFixture(({ mode, tempDir, nested, run }) => {
-            const graphOf = (cwd) => JSON.parse(run(cwd, 'build-spec-graph', ['--json']).stdout);
+            const graphOf = (cwd) =>
+                JSON.parse(
+                    run(cwd, 'build-spec-graph', [
+                        '--json',
+                    ]).stdout,
+                );
             assert.deepStrictEqual(
                 graphOf(nested).nodes.map((n) => n.id),
                 graphOf(tempDir).nodes.map((n) => n.id),
@@ -167,9 +215,21 @@ module.exports = () => {
             );
             assert.ok(graphOf(nested).nodes.some((n) => n.id === 'ws:engine'));
 
-            for (const script of ['analyze-coverage', 'detect-communities', 'extract-rationale']) {
+            for (const script of [
+                'analyze-coverage',
+                'detect-communities',
+                'extract-rationale',
+            ]) {
                 const args =
-                    script === 'extract-rationale' ? ['--json', '--scope', 'src'] : ['--json'];
+                    script === 'extract-rationale'
+                        ? [
+                              '--json',
+                              '--scope',
+                              'src',
+                          ]
+                        : [
+                              '--json',
+                          ];
                 const a = run(tempDir, script, args);
                 const b = run(nested, script, args);
                 assert.strictEqual(a.status, 0, `${mode}: ${script} from the root: ${a.stderr}`);
@@ -208,7 +268,9 @@ module.exports = () => {
                 `${mode}: the hook is installed in the repository root`,
             );
 
-            const ws = run('create-workspace', ['--name=ws2']);
+            const ws = run('create-workspace', [
+                '--name=ws2',
+            ]);
             assert.strictEqual(ws.status, 0, ws.stdout + ws.stderr);
             assert.ok(
                 fs.existsSync(path.join(tempDir, '.magicspec', 'ws2', 'specifications')),
@@ -227,7 +289,9 @@ module.exports = () => {
                 `${mode}: STATE.md of the project is updated`,
             );
 
-            const ctx = run('generate-context', ['--workspace=engine']);
+            const ctx = run('generate-context', [
+                '--workspace=engine',
+            ]);
             assert.strictEqual(ctx.status, 0, ctx.stdout + ctx.stderr);
             assert.ok(
                 fs.existsSync(path.join(tempDir, '.magicspec', 'engine', 'CONTEXT.md')),
@@ -239,7 +303,9 @@ module.exports = () => {
                 '# Changelog\n\n## [Unreleased]\n\n### Changed\n\n- a change\n',
             );
             fs.writeFileSync(path.join(tempDir, '.magicspec', '.version'), '0.1.0\n');
-            const rel = run('release-changelog', ['--date=2026-01-02']);
+            const rel = run('release-changelog', [
+                '--date=2026-01-02',
+            ]);
             assert.strictEqual(rel.status, 0, rel.stdout + rel.stderr);
             assert.ok(
                 /## \[0\.1\.0\]/.test(fs.readFileSync(path.join(tempDir, 'CHANGELOG.md'), 'utf8')),
@@ -254,8 +320,12 @@ module.exports = () => {
             const fresh = createTempWorkspace(true);
             try {
                 const nested = path.join(fresh, 'src', 'deep');
-                fs.mkdirSync(nested, { recursive: true });
-                const init = runScript(mode, fresh, nested, 'init', [], { designDir: null });
+                fs.mkdirSync(nested, {
+                    recursive: true,
+                });
+                const init = runScript(mode, fresh, nested, 'init', [], {
+                    designDir: null,
+                });
                 assert.strictEqual(init.status, 0, init.stdout + init.stderr);
                 assert.ok(
                     fs.existsSync(path.join(fresh, '.magicspec', 'main', 'specifications')),
@@ -299,16 +369,24 @@ module.exports = () => {
         try {
             // The project holds a link where the engine folder would be; Node resolves
             // the link, so a script's own directory lies in the other tree.
-            fs.mkdirSync(path.join(project, 'skills'), { recursive: true });
+            fs.mkdirSync(path.join(project, 'skills'), {
+                recursive: true,
+            });
             fs.symlinkSync(
                 path.join(engineHost, 'skills', 'magicspec'),
                 path.join(project, 'skills', 'magicspec'),
                 'junction',
             );
             const wsDir = writeResumeFixture(project, {
-                engine: { entries: [trackingEntry('T-1A01', 'Linked probe', 'In Progress')] },
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Linked probe', 'In Progress'),
+                    ],
+                },
             });
-            fs.mkdirSync(path.join(wsDir, 'engine', 'specifications'), { recursive: true });
+            fs.mkdirSync(path.join(wsDir, 'engine', 'specifications'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(wsDir, 'engine', 'specifications', 'big.md'),
                 `# Big\n${'line\n'.repeat(600)}`,
@@ -320,17 +398,26 @@ module.exports = () => {
             const nested = path.join(project, 'a');
             fs.mkdirSync(nested);
 
-            for (const cwd of [project, nested]) {
+            for (const cwd of [
+                project,
+                nested,
+            ]) {
                 const at = path.relative(project, cwd) || 'the root';
                 const run = (script, args) => runScript('executor', project, cwd, script, args);
 
-                const resume = run('resume-state', ['--workspace=engine']);
+                const resume = run('resume-state', [
+                    '--workspace=engine',
+                ]);
                 assert.ok(
                     resume.stdout.includes('T-1A01'),
                     `through a link, from ${at}: resume-state names the task`,
                 );
 
-                const fin = run('finalize', ['--workflow=spec', '--workspace=engine', '--dry-run']);
+                const fin = run('finalize', [
+                    '--workflow=spec',
+                    '--workspace=engine',
+                    '--dry-run',
+                ]);
                 assert.strictEqual(
                     fin.status,
                     0,
@@ -341,7 +428,9 @@ module.exports = () => {
                     `finalize from ${at} finds the project`,
                 );
 
-                const archive = run('archive-phases', ['--dry-run']);
+                const archive = run('archive-phases', [
+                    '--dry-run',
+                ]);
                 assert.ok(
                     archive.stdout.includes('phase-2.md'),
                     `archive-phases from ${at} sees the project's workbook`,
@@ -461,11 +550,19 @@ module.exports = () => {
 
     test('no engine script spells the state folder: every path to it is built from the one definition (SP-8)', () => {
         const walk = (dir) =>
-            fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-                const full = path.join(dir, entry.name);
-                if (entry.isDirectory()) return walk(full);
-                return entry.name.endsWith('.js') ? [full] : [];
-            });
+            fs
+                .readdirSync(dir, {
+                    withFileTypes: true,
+                })
+                .flatMap((entry) => {
+                    const full = path.join(dir, entry.name);
+                    if (entry.isDirectory()) return walk(full);
+                    return entry.name.endsWith('.js')
+                        ? [
+                              full,
+                          ]
+                        : [];
+                });
 
         const offenders = [];
         for (const file of walk(scriptsDir)) {
@@ -493,7 +590,10 @@ module.exports = () => {
             withoutComments(probe)
                 .split('\n')
                 .map((l) => /\.magicspec(?![A-Za-z-])/.test(l)),
-            [true, true],
+            [
+                true,
+                true,
+            ],
             'strings are kept, comments are blanked',
         );
         assert.ok(!/\.magicspec/.test(withoutComments('// .magicspec\n/* .magicspec */')));
@@ -515,9 +615,13 @@ module.exports = () => {
     // Lays down the five artifacts as an installation before the graph folder left them.
     const writeLegacyGraph = (tempDir) => {
         const design = path.join(tempDir, '.magicspec');
-        fs.mkdirSync(path.join(design, 'wiki'), { recursive: true });
+        fs.mkdirSync(path.join(design, 'wiki'), {
+            recursive: true,
+        });
         fs.writeFileSync(path.join(design, 'wiki', 'old.md'), 'stale\n');
-        fs.mkdirSync(path.join(design, '.graph-cache'), { recursive: true });
+        fs.mkdirSync(path.join(design, '.graph-cache'), {
+            recursive: true,
+        });
         fs.writeFileSync(path.join(design, '.graph-cache', 'x.json'), '{}');
         fs.writeFileSync(path.join(design, 'spec-graph.html'), '<html>old</html>');
         fs.writeFileSync(path.join(design, 'graph-snapshot.json'), '{"which":"legacy-snapshot"}');
@@ -537,21 +641,27 @@ module.exports = () => {
         assert.strictEqual(p.before, path.join(design, 'graph', 'before.json'));
         assert.deepStrictEqual(
             p.legacy.map((x) => path.basename(x)).sort(),
-            [...LEGACY_GRAPH_NAMES].sort(),
+            [
+                ...LEGACY_GRAPH_NAMES,
+            ].sort(),
             'the earlier locations are exactly the five names',
         );
 
         const { tempDir } = makeRootFixture();
         try {
             const specs = path.join(tempDir, '.magicspec', 'engine', 'specifications');
-            fs.mkdirSync(specs, { recursive: true });
+            fs.mkdirSync(specs, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(specs, 'l1-probe.md'),
                 '# Probe\n\n**Version:** 1.0.0\n**Status:** Stable\n**Layer:** concept\n\n## Overview\n\nA probe.\n',
             );
             const wiki = runScript('executor', tempDir, tempDir, 'export-wiki', []);
             assert.strictEqual(wiki.status, 0, wiki.stdout + wiki.stderr);
-            const page = runScript('executor', tempDir, tempDir, 'build-spec-graph', ['--html']);
+            const page = runScript('executor', tempDir, tempDir, 'build-spec-graph', [
+                '--html',
+            ]);
             assert.strictEqual(page.status, 0, page.stdout + page.stderr);
 
             const design2 = path.join(tempDir, '.magicspec');
@@ -617,7 +727,9 @@ module.exports = () => {
                 'the page waits for its own writer',
             );
 
-            const page = runScript('executor', tempDir, tempDir, 'build-spec-graph', ['--html']);
+            const page = runScript('executor', tempDir, tempDir, 'build-spec-graph', [
+                '--html',
+            ]);
             assert.strictEqual(page.status, 0, page.stdout + page.stderr);
             assert.ok(
                 !fs.existsSync(path.join(design, 'spec-graph.html')),
@@ -632,7 +744,9 @@ module.exports = () => {
     test('build-spec-graph --json --out writes the graph to a file and prints one line, while plain --json still prints the whole graph (graph output)', () => {
         const { tempDir } = makeRootFixture();
         try {
-            const whole = runScript('executor', tempDir, tempDir, 'build-spec-graph', ['--json']);
+            const whole = runScript('executor', tempDir, tempDir, 'build-spec-graph', [
+                '--json',
+            ]);
             assert.strictEqual(whole.status, 0, whole.stdout + whole.stderr);
             const graph = JSON.parse(whole.stdout);
 
@@ -670,7 +784,9 @@ module.exports = () => {
         const { tempDir } = makeRootFixture();
         try {
             const design = writeLegacyGraph(tempDir);
-            fs.mkdirSync(path.join(design, 'graph'), { recursive: true });
+            fs.mkdirSync(path.join(design, 'graph'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(design, 'graph', 'before.json'), '{"which":"current"}');
             const wiki = runScript('executor', tempDir, tempDir, 'export-wiki', []);
             assert.strictEqual(wiki.status, 0, wiki.stdout + wiki.stderr);
@@ -721,11 +837,19 @@ module.exports = () => {
 
     test('no engine script defines a graph path outside utils.js, and no shipped text names the earlier ones (graph folder)', () => {
         const walk = (dir, ext) =>
-            fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-                const full = path.join(dir, entry.name);
-                if (entry.isDirectory()) return walk(full, ext);
-                return entry.name.endsWith(ext) ? [full] : [];
-            });
+            fs
+                .readdirSync(dir, {
+                    withFileTypes: true,
+                })
+                .flatMap((entry) => {
+                    const full = path.join(dir, entry.name);
+                    if (entry.isDirectory()) return walk(full, ext);
+                    return entry.name.endsWith(ext)
+                        ? [
+                              full,
+                          ]
+                        : [];
+                });
 
         const codeOffenders = [];
         for (const file of walk(scriptsDir, '.js')) {

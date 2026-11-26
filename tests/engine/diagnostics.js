@@ -59,9 +59,24 @@ module.exports = () => {
             );
 
             const findings = [
-                { severity: 'error', source: 'a', code: 'A1', message: 'first' },
-                { severity: 'warning', source: 'b', code: 'B1', message: 'second' },
-                { severity: 'fix', source: 'c', code: 'C1', message: 'third' },
+                {
+                    severity: 'error',
+                    source: 'a',
+                    code: 'A1',
+                    message: 'first',
+                },
+                {
+                    severity: 'warning',
+                    source: 'b',
+                    code: 'B1',
+                    message: 'second',
+                },
+                {
+                    severity: 'fix',
+                    source: 'c',
+                    code: 'C1',
+                    message: 'third',
+                },
             ];
             for (const f of findings) {
                 assert.strictEqual(
@@ -75,7 +90,11 @@ module.exports = () => {
             assert.strictEqual(drained.length, 3, 'all three findings should drain');
             assert.deepStrictEqual(
                 drained.map((f) => f.code),
-                ['A1', 'B1', 'C1'],
+                [
+                    'A1',
+                    'B1',
+                    'C1',
+                ],
                 'findings must drain in append order',
             );
 
@@ -96,7 +115,9 @@ module.exports = () => {
 
             // Occupy .magicspec/.cache with a file so the sink's parent path
             // cannot resolve to a directory — the write itself must fail.
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, '.magicspec', '.cache'), 'not a directory');
 
             let result;
@@ -132,7 +153,12 @@ module.exports = () => {
             const sinkPath = path.join(tempDir, '.magicspec', '.cache', 'diagnostics.jsonl');
             fs.appendFileSync(sinkPath, '{"severity":"error","source":"b","code":"TRUNC","mess\n');
 
-            diagnostics.record({ severity: 'fix', source: 'c', code: 'AFTER', message: 'third' });
+            diagnostics.record({
+                severity: 'fix',
+                source: 'c',
+                code: 'AFTER',
+                message: 'third',
+            });
 
             const findings = diagnostics.drain();
             const codes = findings.map((f) => f.code);
@@ -170,12 +196,17 @@ module.exports = () => {
             );
 
             // 12 identical (severity, source, code) findings collapse to one entry.
-            const repeated = Array.from({ length: 12 }, () => ({
-                severity: 'warning',
-                source: 'update-state',
-                code: 'STATE_CAP_EXHAUSTED',
-                message: 'cap exhausted',
-            }));
+            const repeated = Array.from(
+                {
+                    length: 12,
+                },
+                () => ({
+                    severity: 'warning',
+                    source: 'update-state',
+                    code: 'STATE_CAP_EXHAUSTED',
+                    message: 'cap exhausted',
+                }),
+            );
             const repeatedDigest = diagnostics.formatDigest(repeated).join('\n');
             assert.match(
                 repeatedDigest,
@@ -189,12 +220,17 @@ module.exports = () => {
             );
 
             // 20 distinct findings: 15 rendered, 5 reported as omitted.
-            const distinct = Array.from({ length: 20 }, (_, i) => ({
-                severity: 'warning',
-                source: 'test',
-                code: `CODE_${i}`,
-                message: `finding ${i}`,
-            }));
+            const distinct = Array.from(
+                {
+                    length: 20,
+                },
+                (_, i) => ({
+                    severity: 'warning',
+                    source: 'test',
+                    code: `CODE_${i}`,
+                    message: `finding ${i}`,
+                }),
+            );
             const distinctLines = diagnostics.formatDigest(distinct);
             const bulletCount = distinctLines.filter(
                 (l) => l.startsWith('- ') && !l.includes('more finding'),
@@ -220,8 +256,18 @@ module.exports = () => {
             // separator is U+0000 and has to survive being written as the `\0`
             // escape rather than as a raw byte — dropping it would merge these.
             const findings = [
-                { severity: 'warning', source: 'a', code: 'BC', message: 'first finding' },
-                { severity: 'warning', source: 'aB', code: 'C', message: 'second finding' },
+                {
+                    severity: 'warning',
+                    source: 'a',
+                    code: 'BC',
+                    message: 'first finding',
+                },
+                {
+                    severity: 'warning',
+                    source: 'aB',
+                    code: 'C',
+                    message: 'second finding',
+                },
             ];
 
             assert.strictEqual(
@@ -262,7 +308,9 @@ module.exports = () => {
                     recheck: {
                         script: 'revalidate-fixture',
                         args: [],
-                        env: { MAGIC_FIXTURE_WARNINGS: '[]' },
+                        env: {
+                            MAGIC_FIXTURE_WARNINGS: '[]',
+                        },
                     },
                 },
             ],
@@ -287,7 +335,13 @@ module.exports = () => {
                     recheck: {
                         script: 'revalidate-fixture',
                         args: [],
-                        env: { MAGIC_FIXTURE_WARNINGS: JSON.stringify([{ type: 'STILL_OPEN' }]) },
+                        env: {
+                            MAGIC_FIXTURE_WARNINGS: JSON.stringify([
+                                {
+                                    type: 'STILL_OPEN',
+                                },
+                            ]),
+                        },
                     },
                 },
             ],
@@ -305,8 +359,19 @@ module.exports = () => {
     test('revalidate() spawns one recheck process per distinct signature, not one per finding (DG-10)', () => {
         const sharedRecheck = {
             script: 'revalidate-fixture',
-            args: ['shared'],
-            env: { MAGIC_FIXTURE_WARNINGS: JSON.stringify([{ type: 'A' }, { type: 'B' }]) },
+            args: [
+                'shared',
+            ],
+            env: {
+                MAGIC_FIXTURE_WARNINGS: JSON.stringify([
+                    {
+                        type: 'A',
+                    },
+                    {
+                        type: 'B',
+                    },
+                ]),
+            },
         };
         testRevalidate(
             [
@@ -333,7 +398,10 @@ module.exports = () => {
                 );
                 assert.deepStrictEqual(
                     survivors.map((f) => f.code).sort(),
-                    ['A', 'B'],
+                    [
+                        'A',
+                        'B',
+                    ],
                     'both findings survive — the shared recheck reproduced both codes',
                 );
             },
@@ -351,7 +419,11 @@ module.exports = () => {
                     source: 'test',
                     code: 'UNCHECKABLE',
                     message: 'recheck target does not exist',
-                    recheck: { script: 'does-not-exist-xyz', args: [], env: {} },
+                    recheck: {
+                        script: 'does-not-exist-xyz',
+                        args: [],
+                        env: {},
+                    },
                 },
             ]);
 
@@ -383,7 +455,9 @@ module.exports = () => {
                     recheck: {
                         script: 'revalidate-fixture',
                         args: [],
-                        env: { MAGIC_FIXTURE_WARNINGS: '[]' },
+                        env: {
+                            MAGIC_FIXTURE_WARNINGS: '[]',
+                        },
                     },
                 },
             ],
@@ -419,7 +493,9 @@ module.exports = () => {
             // createTempWorkspace, including this session's own
             // recheck-attachment change) — a missing skills/magicspec/.checksums
             // reliably yields one ENGINE_INTEGRITY finding with a recheck.
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(tempDir, '.magicspec', 'INDEX.md'), '# Registry\n');
             fs.writeFileSync(path.join(tempDir, '.magicspec', 'RULES.md'), '# Rules\n');
             const cpPath = path.join(
@@ -429,7 +505,10 @@ module.exports = () => {
                 'scripts',
                 'check-prerequisites.js',
             );
-            execSync(`node "${cpPath}" --json`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${cpPath}" --json`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
 
             const recorded = diagnostics.read();
             assert.ok(
@@ -468,7 +547,10 @@ module.exports = () => {
 
             const dryOut = execSync(
                 `node "${finalizePath}" --workflow=task --workspace=main --dry-run`,
-                { cwd: tempDir, encoding: 'utf8' },
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
             );
             assert.match(
                 dryOut,
@@ -477,7 +559,9 @@ module.exports = () => {
             );
             assert.deepStrictEqual(
                 diagnostics.read().map((f) => f.code),
-                ['DRY_RUN_PROBE'],
+                [
+                    'DRY_RUN_PROBE',
+                ],
                 'the finding must still be sitting in the sink after a preview — the preview must not have drained it',
             );
 
@@ -558,7 +642,9 @@ module.exports = () => {
         try {
             const { wsDir, finalizePath } = createFinalizeFixture(tempDir);
             const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
+            fs.mkdirSync(tasksDir, {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(wsDir, 'TASKS.md'),
                 [
@@ -691,7 +777,10 @@ module.exports = () => {
             // Valid finding.
             const validOut = execSync(
                 `node "${scriptPath}" --severity=warning --code=CLI_PROBE --message="from the agent channel"`,
-                { cwd: tempDir, encoding: 'utf8' },
+                {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                },
             );
             assert.match(
                 validOut,
@@ -703,14 +792,19 @@ module.exports = () => {
             assert.doesNotThrow(() => {
                 execSync(
                     `node "${scriptPath}" --severity=bogus --code=BAD --message="should be dropped"`,
-                    { cwd: tempDir, encoding: 'utf8' },
+                    {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    },
                 );
             }, 'an invalid severity must not produce a non-zero exit');
 
             const drained = diagnostics.drain();
             assert.deepStrictEqual(
                 drained.map((f) => f.code),
-                ['CLI_PROBE'],
+                [
+                    'CLI_PROBE',
+                ],
                 'only the valid finding should have reached the sink',
             );
             assert.strictEqual(

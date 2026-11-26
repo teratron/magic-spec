@@ -37,10 +37,17 @@ module.exports = () => {
             );
 
             // Path traversal in workspace name
-            fs.mkdirSync(path.join(tempDir, '.magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, '.magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(tempDir, '.magicspec', 'workspace.json'),
-                JSON.stringify({ default: 'main', workspaces: { main: {} } }),
+                JSON.stringify({
+                    default: 'main',
+                    workspaces: {
+                        main: {},
+                    },
+                }),
             );
             assert.throws(
                 () =>
@@ -55,7 +62,12 @@ module.exports = () => {
             // The same guard holds for a default that arrives from the registry file
             fs.writeFileSync(
                 path.join(tempDir, '.magicspec', 'workspace.json'),
-                JSON.stringify({ default: '../../outside', workspaces: { '../../outside': {} } }),
+                JSON.stringify({
+                    default: '../../outside',
+                    workspaces: {
+                        '../../outside': {},
+                    },
+                }),
             );
             assert.throws(
                 () =>
@@ -78,7 +90,9 @@ module.exports = () => {
         const tempDir = createTempWorkspace();
         try {
             const gitHooksDir = path.join(tempDir, '.git', 'hooks');
-            fs.mkdirSync(gitHooksDir, { recursive: true });
+            fs.mkdirSync(gitHooksDir, {
+                recursive: true,
+            });
 
             const scriptPath = path.join(
                 tempDir,
@@ -87,7 +101,9 @@ module.exports = () => {
                 'scripts',
                 'install-hooks.js',
             );
-            execSync(`node "${scriptPath}"`, { cwd: tempDir });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+            });
 
             const hookPath = path.join(gitHooksDir, 'pre-commit');
             assert.ok(fs.existsSync(hookPath), 'pre-commit hook should be created');
@@ -112,11 +128,20 @@ module.exports = () => {
     const outputOf = (result) => result.stdout + result.stderr;
     const hookFileOf = (dir) => path.join(dir, '.git', 'hooks', 'pre-commit');
     const installHookIn = (dir) =>
-        spawnSync('node', [path.join(scriptsDir, 'install-hooks.js')], {
-            cwd: dir,
-            encoding: 'utf8',
-            env: { ...process.env, MAGIC_ENGINE_DIR: path.join(dir, 'skills', 'magicspec') },
-        });
+        spawnSync(
+            'node',
+            [
+                path.join(scriptsDir, 'install-hooks.js'),
+            ],
+            {
+                cwd: dir,
+                encoding: 'utf8',
+                env: {
+                    ...process.env,
+                    MAGIC_ENGINE_DIR: path.join(dir, 'skills', 'magicspec'),
+                },
+            },
+        );
 
     const makeHookRepo = () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-hook-'));
@@ -295,7 +320,10 @@ module.exports = () => {
             const shared = path.join(linkedDir, 'shared-hooks');
             fs.mkdirSync(shared);
             const hooksDir = path.join(linkedDir, '.git', 'hooks');
-            fs.rmSync(hooksDir, { recursive: true, force: true });
+            fs.rmSync(hooksDir, {
+                recursive: true,
+                force: true,
+            });
             try {
                 fs.symlinkSync(target, hookFileOf(linkedHook));
                 fs.symlinkSync(shared, hooksDir, 'dir');
@@ -349,7 +377,12 @@ module.exports = () => {
         const drifted = makeEngineHookRepo();
         const partial = makeEngineHookRepo();
         try {
-            for (const dir of [bare, synced, drifted, partial]) {
+            for (const dir of [
+                bare,
+                synced,
+                drifted,
+                partial,
+            ]) {
                 const installed = installHookIn(dir);
                 assert.strictEqual(installed.status, 0, outputOf(installed));
             }
@@ -423,7 +456,13 @@ module.exports = () => {
                 'a partly deleted engine is not an absent one',
             );
         } finally {
-            for (const dir of [bare, synced, drifted, partial]) cleanup(dir);
+            for (const dir of [
+                bare,
+                synced,
+                drifted,
+                partial,
+            ])
+                cleanup(dir);
         }
     });
 };

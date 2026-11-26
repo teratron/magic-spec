@@ -15,12 +15,14 @@ const AREA_BYTE_BOUND = 60 * 1024;
 module.exports = () => {
     test('harness layout: the entry registers every domain module exactly once, holds no case itself, no module is missing or left out, and none passes the line bound (HL-1, HL-2, HL-7)', () => {
         const entry = fs.readFileSync(path.join(TESTS_DIR, 'engine.js'), 'utf8');
-        const registered = [...entry.matchAll(/require\('\.\/engine\/([\w-]+)'\)\(\)/g)].map(
-            (m) => m[1],
-        );
+        const registered = [
+            ...entry.matchAll(/require\('\.\/engine\/([\w-]+)'\)\(\)/g),
+        ].map((m) => m[1]);
         const dir = path.join(TESTS_DIR, 'engine');
         const onDisk = fs
-            .readdirSync(dir, { withFileTypes: true })
+            .readdirSync(dir, {
+                withFileTypes: true,
+            })
             .filter((e) => e.isFile() && e.name.endsWith('.js'))
             .map((e) => e.name.slice(0, -3))
             .sort();
@@ -28,7 +30,9 @@ module.exports = () => {
         assert.ok(registered.length > 0, 'the entry registers modules');
         assert.strictEqual(new Set(registered).size, registered.length, 'no module twice');
         assert.deepStrictEqual(
-            [...registered].sort(),
+            [
+                ...registered,
+            ].sort(),
             onDisk,
             'the registered modules are exactly the modules on disk',
         );
@@ -88,7 +92,12 @@ module.exports = () => {
                 assert.ok(m, `an identifier range: ${part}`);
                 const from = Number(m[1]);
                 const to = m[2] ? Number(m[2]) : from;
-                return Array.from({ length: to - from + 1 }, (_, i) => from + i);
+                return Array.from(
+                    {
+                        length: to - from + 1,
+                    },
+                    (_, i) => from + i,
+                );
             });
         const rows = [
             ...index.matchAll(
@@ -101,7 +110,9 @@ module.exports = () => {
             'the index lists every area file, once',
         );
         for (const [, file, count, ranges] of rows) {
-            const ids = [...idsOf.get(file)].sort((a, b) => a - b);
+            const ids = [
+                ...idsOf.get(file),
+            ].sort((a, b) => a - b);
             assert.deepStrictEqual(expand(ranges), ids, `${file}: the listed identifiers`);
             assert.strictEqual(Number(count), ids.length, `${file}: the listed count`);
         }

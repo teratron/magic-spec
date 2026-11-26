@@ -64,7 +64,11 @@ function loadGraph() {
     try {
         const stdout = execFileSync(
             process.execPath,
-            [executorPath, 'build-spec-graph', '--json'],
+            [
+                executorPath,
+                'build-spec-graph',
+                '--json',
+            ],
             {
                 cwd: resolveProjectRoot(),
                 env: process.env,
@@ -79,7 +83,12 @@ function loadGraph() {
         process.exit(1);
     }
 
-    const nodes = new Map(raw.nodes.map((n) => [n.id, n]));
+    const nodes = new Map(
+        raw.nodes.map((n) => [
+            n.id,
+            n,
+        ]),
+    );
     const edges = raw.edges;
 
     // Build adjacency list: id → [{id, relation}]
@@ -88,12 +97,23 @@ function loadGraph() {
 
     for (const edge of edges) {
         if (adjacency.has(edge.from))
-            adjacency.get(edge.from).push({ id: edge.to, relation: edge.relation });
+            adjacency.get(edge.from).push({
+                id: edge.to,
+                relation: edge.relation,
+            });
         if (adjacency.has(edge.to))
-            adjacency.get(edge.to).push({ id: edge.from, relation: edge.relation });
+            adjacency.get(edge.to).push({
+                id: edge.from,
+                relation: edge.relation,
+            });
     }
 
-    return { nodes, edges, analysis: raw.analysis || {}, adjacency };
+    return {
+        nodes,
+        edges,
+        analysis: raw.analysis || {},
+        adjacency,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -134,9 +154,17 @@ function getNeighbors(nodes, adjacency, nodeId) {
     if (!nodes.has(nodeId)) return null;
     const neighbors = (adjacency.get(nodeId) || []).map(({ id, relation }) => {
         const n = nodes.get(id);
-        return { id, label: n ? n.label : id, type: n ? n.type : 'unknown', relation };
+        return {
+            id,
+            label: n ? n.label : id,
+            type: n ? n.type : 'unknown',
+            relation,
+        };
     });
-    return { node: nodes.get(nodeId), neighbors };
+    return {
+        node: nodes.get(nodeId),
+        neighbors,
+    };
 }
 
 /**
@@ -148,11 +176,20 @@ function getNeighbors(nodes, adjacency, nodeId) {
  * @returns {string[]|null} Array of node ids from source to target, or null if unreachable.
  */
 function shortestPath(adjacency, fromId, toId) {
-    if (fromId === toId) return [fromId];
+    if (fromId === toId)
+        return [
+            fromId,
+        ];
     if (!adjacency.has(fromId) || !adjacency.has(toId)) return null;
 
-    const visited = new Set([fromId]);
-    const queue = [[fromId]];
+    const visited = new Set([
+        fromId,
+    ]);
+    const queue = [
+        [
+            fromId,
+        ],
+    ];
 
     while (queue.length) {
         const path = queue.shift();
@@ -160,7 +197,10 @@ function shortestPath(adjacency, fromId, toId) {
 
         for (const { id: nb } of adjacency.get(current) || []) {
             if (visited.has(nb)) continue;
-            const newPath = [...path, nb];
+            const newPath = [
+                ...path,
+                nb,
+            ];
             if (nb === toId) return newPath;
             visited.add(nb);
             queue.push(newPath);
@@ -177,7 +217,9 @@ function shortestPath(adjacency, fromId, toId) {
  * @returns {object[]}
  */
 function godNodes(nodes, topN) {
-    return [...nodes.values()]
+    return [
+        ...nodes.values(),
+    ]
         .filter((n) => typeof n.degree === 'number')
         .sort((a, b) => b.degree - a.degree)
         .slice(0, topN);
@@ -202,7 +244,13 @@ const TOOLS = [
                 },
                 type: {
                     type: 'string',
-                    enum: ['workspace', 'spec', 'file', 'convention', 'phase'],
+                    enum: [
+                        'workspace',
+                        'spec',
+                        'file',
+                        'convention',
+                        'phase',
+                    ],
                     description: 'Filter by node type (optional).',
                 },
                 limit: {
@@ -225,9 +273,14 @@ const TOOLS = [
             'Returns full details for a specific node by its id (e.g. "spec:{workspace}/l1-core", "ws:{workspace}", "conv:C1").',
         inputSchema: {
             type: 'object',
-            required: ['id'],
+            required: [
+                'id',
+            ],
             properties: {
-                id: { type: 'string', description: 'Exact node id.' },
+                id: {
+                    type: 'string',
+                    description: 'Exact node id.',
+                },
             },
         },
     },
@@ -237,9 +290,14 @@ const TOOLS = [
             'Returns all nodes adjacent to a given node, with their edge relation types (contains, covers, implements, enforces, scopes, plans).',
         inputSchema: {
             type: 'object',
-            required: ['id'],
+            required: [
+                'id',
+            ],
             properties: {
-                id: { type: 'string', description: 'Exact node id.' },
+                id: {
+                    type: 'string',
+                    description: 'Exact node id.',
+                },
             },
         },
     },
@@ -258,10 +316,19 @@ const TOOLS = [
             'Finds the shortest path between two nodes in the SDD graph (BFS). Useful for tracing spec-to-code or task-to-spec relationships.',
         inputSchema: {
             type: 'object',
-            required: ['from', 'to'],
+            required: [
+                'from',
+                'to',
+            ],
             properties: {
-                from: { type: 'string', description: 'Source node id.' },
-                to: { type: 'string', description: 'Target node id.' },
+                from: {
+                    type: 'string',
+                    description: 'Source node id.',
+                },
+                to: {
+                    type: 'string',
+                    description: 'Target node id.',
+                },
             },
         },
     },
@@ -344,7 +411,14 @@ function dispatchTool(name, args, graph) {
                         text.slice(0, charBudget) +
                         `\n... (truncated to ~${budget} tokens; tighten \`query\`, lower \`limit\`, or raise \`token_budget\`)`;
                 }
-                return { content: [{ type: 'text', text }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text,
+                        },
+                    ],
+                };
             }
 
             case 'get_node': {
@@ -352,10 +426,22 @@ function dispatchTool(name, args, graph) {
                 const node = nodes.get(args.id);
                 if (!node)
                     return {
-                        content: [{ type: 'text', text: `Node not found: ${args.id}` }],
+                        content: [
+                            {
+                                type: 'text',
+                                text: `Node not found: ${args.id}`,
+                            },
+                        ],
                         isError: true,
                     };
-                return { content: [{ type: 'text', text: JSON.stringify(node, null, 2) }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(node, null, 2),
+                        },
+                    ],
+                };
             }
 
             case 'get_neighbors': {
@@ -363,10 +449,22 @@ function dispatchTool(name, args, graph) {
                 const result = getNeighbors(nodes, adjacency, args.id);
                 if (!result)
                     return {
-                        content: [{ type: 'text', text: `Node not found: ${args.id}` }],
+                        content: [
+                            {
+                                type: 'text',
+                                text: `Node not found: ${args.id}`,
+                            },
+                        ],
                         isError: true,
                     };
-                return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(result, null, 2),
+                        },
+                    ],
+                };
             }
 
             case 'find_gaps': {
@@ -376,7 +474,14 @@ function dispatchTool(name, args, graph) {
                     orphaned_conventions: analysis.convention_coverage?.orphaned || [],
                     bridge_specs: analysis.bridge_specs || [],
                 };
-                return { content: [{ type: 'text', text: JSON.stringify(gaps, null, 2) }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(gaps, null, 2),
+                        },
+                    ],
+                };
             }
 
             case 'shortest_path': {
@@ -394,14 +499,21 @@ function dispatchTool(name, args, graph) {
                 }
                 const steps = pathResult.map((id) => {
                     const n = nodes.get(id);
-                    return { id, label: n ? n.label : id, type: n ? n.type : 'unknown' };
+                    return {
+                        id,
+                        label: n ? n.label : id,
+                        type: n ? n.type : 'unknown',
+                    };
                 });
                 return {
                     content: [
                         {
                             type: 'text',
                             text: JSON.stringify(
-                                { length: pathResult.length - 1, path: steps },
+                                {
+                                    length: pathResult.length - 1,
+                                    path: steps,
+                                },
                                 null,
                                 2,
                             ),
@@ -423,17 +535,37 @@ function dispatchTool(name, args, graph) {
 
             case 'god_nodes': {
                 const top = godNodes(nodes, args.top_n || 10);
-                return { content: [{ type: 'text', text: JSON.stringify(top, null, 2) }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(top, null, 2),
+                        },
+                    ],
+                };
             }
 
             default:
                 return {
-                    content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+                    content: [
+                        {
+                            type: 'text',
+                            text: `Unknown tool: ${name}`,
+                        },
+                    ],
                     isError: true,
                 };
         }
     } catch (err) {
-        return { content: [{ type: 'text', text: `Tool error: ${err.message}` }], isError: true };
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Tool error: ${err.message}`,
+                },
+            ],
+            isError: true,
+        };
     }
 }
 
@@ -448,7 +580,12 @@ function dispatchTool(name, args, graph) {
  * @param {unknown} result - Result payload.
  */
 function respond(id, result) {
-    const msg = JSON.stringify({ jsonrpc: '2.0', id, result }) + '\n';
+    const msg =
+        JSON.stringify({
+            jsonrpc: '2.0',
+            id,
+            result,
+        }) + '\n';
     process.stdout.write(msg);
 }
 
@@ -460,7 +597,15 @@ function respond(id, result) {
  * @param {string} message - Error message.
  */
 function respondError(id, code, message) {
-    const msg = JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } }) + '\n';
+    const msg =
+        JSON.stringify({
+            jsonrpc: '2.0',
+            id,
+            error: {
+                code,
+                message,
+            },
+        }) + '\n';
     process.stdout.write(msg);
 }
 
@@ -475,7 +620,10 @@ function main() {
         `[sdd-graph] Ready — ${graph.nodes.size} nodes, ${graph.edges.length} edges\n`,
     );
 
-    const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
+    const rl = readline.createInterface({
+        input: process.stdin,
+        crlfDelay: Infinity,
+    });
 
     rl.on('line', (line) => {
         line = line.trim();
@@ -494,7 +642,9 @@ function main() {
         if (method === 'initialize') {
             respond(id, {
                 protocolVersion: PROTOCOL_VERSION,
-                capabilities: { tools: {} },
+                capabilities: {
+                    tools: {},
+                },
                 serverInfo: SERVER_INFO,
             });
             return;
@@ -503,7 +653,9 @@ function main() {
         if (method === 'notifications/initialized') return;
 
         if (method === 'tools/list') {
-            respond(id, { tools: TOOLS });
+            respond(id, {
+                tools: TOOLS,
+            });
             return;
         }
 

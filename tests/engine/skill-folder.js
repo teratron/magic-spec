@@ -96,7 +96,12 @@ module.exports = () => {
             help: 'light',
         };
         assert.deepStrictEqual(
-            Object.fromEntries(rows.map((r) => [r.name, r.demand])),
+            Object.fromEntries(
+                rows.map((r) => [
+                    r.name,
+                    r.demand,
+                ]),
+            ),
             demands,
             'every command declares the demand of the specification',
         );
@@ -109,14 +114,38 @@ module.exports = () => {
 
         // An alias is read as its command and is never the name of another one.
         const names = new Set(rows.map((r) => r.name));
-        const aliases = rows.filter((r) => r.alias).map((r) => [r.alias, r.name]);
-        assert.deepStrictEqual(aliases, [['audit', 'analyze']]);
+        const aliases = rows
+            .filter((r) => r.alias)
+            .map((r) => [
+                r.alias,
+                r.name,
+            ]);
+        assert.deepStrictEqual(aliases, [
+            [
+                'audit',
+                'analyze',
+            ],
+        ]);
         for (const [alias] of aliases) assert.ok(!names.has(alias), `${alias} is not a command`);
 
         // The engine's parser and the harness's own pattern read the same table.
         assert.deepStrictEqual(
-            parsed.map((r) => [r.name, r.demand, r.aliases, r.body]),
-            rows.map((r) => [r.name, r.demand, r.alias ? [r.alias] : [], `${r.file}.md`]),
+            parsed.map((r) => [
+                r.name,
+                r.demand,
+                r.aliases,
+                r.body,
+            ]),
+            rows.map((r) => [
+                r.name,
+                r.demand,
+                r.alias
+                    ? [
+                          r.alias,
+                      ]
+                    : [],
+                `${r.file}.md`,
+            ]),
             'the one parser and the harness agree on every row',
         );
         assert.deepStrictEqual(
@@ -151,7 +180,10 @@ module.exports = () => {
             hosts.parseCommandRow(
                 '| `x` (aliases `y`, `z`) | pipeline | s | a | m | light | `workflows/x.md` |',
             ).aliases,
-            ['y', 'z'],
+            [
+                'y',
+                'z',
+            ],
         );
 
         // The dispatch reads an alias as its command, with no narration, and the pipeline reads plan between spec and task.
@@ -168,8 +200,16 @@ module.exports = () => {
         const row = rows.find((r) => r.name === 'goal');
         assert.ok(row, 'the router lists goal');
         assert.deepStrictEqual(
-            { group: row.group, demand: row.demand, file: row.file },
-            { group: 'quality & automation', demand: 'per step', file: 'goal' },
+            {
+                group: row.group,
+                demand: row.demand,
+                file: row.file,
+            },
+            {
+                group: 'quality & automation',
+                demand: 'per step',
+                file: 'goal',
+            },
         );
         for (const form of [
             'a goal statement',
@@ -254,7 +294,10 @@ module.exports = () => {
         );
         assert.ok(!/\/magicspec:[a-z]/.test(help), 'it prints no colon form');
         for (const [needle, what] of [
-            [/\*\*Read-Only\*\*/, 'read-only'],
+            [
+                /\*\*Read-Only\*\*/,
+                'read-only',
+            ],
             [
                 /ignoring letter case, is the command — only the first such token[\s\S]*[Aa]ny other token is read as a language/,
                 'command versus language',
@@ -263,15 +306,42 @@ module.exports = () => {
                 /in `<…>` when the \*When it is missing\* cell says \*\*required\*\*/,
                 'argument brackets',
             ],
-            [/two steps: the group, then the command/, 'the two-step picker'],
-            [/a group with one command skips its second step/, 'a one-command group skips a step'],
-            [/numbered list in the chat/, 'the chat fallback'],
-            [/free-text choice/, 'free text is always accepted'],
-            [/Nothing runs before the user has chosen/, 'nothing runs unasked'],
-            [/runs nothing; say so in one line/, 'cancel'],
-            [/Asking is bounded \(E7\)/, 'E7'],
-            [/never translated, in any language/, 'verbatim names'],
-            [/one line saying which value was not recognized/, 'an unrecognized language'],
+            [
+                /two steps: the group, then the command/,
+                'the two-step picker',
+            ],
+            [
+                /a group with one command skips its second step/,
+                'a one-command group skips a step',
+            ],
+            [
+                /numbered list in the chat/,
+                'the chat fallback',
+            ],
+            [
+                /free-text choice/,
+                'free text is always accepted',
+            ],
+            [
+                /Nothing runs before the user has chosen/,
+                'nothing runs unasked',
+            ],
+            [
+                /runs nothing; say so in one line/,
+                'cancel',
+            ],
+            [
+                /Asking is bounded \(E7\)/,
+                'E7',
+            ],
+            [
+                /never translated, in any language/,
+                'verbatim names',
+            ],
+            [
+                /one line saying which value was not recognized/,
+                'an unrecognized language',
+            ],
         ]) {
             assert.match(help, needle, `help.md: ${what}`);
         }
@@ -370,12 +440,18 @@ module.exports = () => {
                 'an alias names its command, `help help` explains this command like any other and offers no picker',
                 'help help and the alias are explained',
             ],
-            ['`/magicspec help help`, `/magicspec help audit`', 'the examples carry both'],
+            [
+                '`/magicspec help help`, `/magicspec help audit`',
+                'the examples carry both',
+            ],
             [
                 'only the first such token: a further one is ignored with one line saying so',
                 'the recursion is bounded',
             ],
-            ['so `help help help` renders what `help help` renders', 'at one level'],
+            [
+                'so `help help help` renders what `help help` renders',
+                'at one level',
+            ],
             [
                 'a token that is neither a command, an alias nor a recognized language is answered with one line naming it, the command one edit away when there is one, and then the whole list',
                 'an unknown token is answered',
@@ -384,8 +460,14 @@ module.exports = () => {
                 "An alias follows its command's name in parentheses (`analyze (audit)`)",
                 'the list shows the alias',
             ],
-            ['(`audit is analyze`)', 'the detail view says an alias is its command'],
-            ['the offer is dropped: the list is one `help` away', 'help help offers no picker'],
+            [
+                '(`audit is analyze`)',
+                'the detail view says an alias is its command',
+            ],
+            [
+                'the offer is dropped: the list is one `help` away',
+                'help help offers no picker',
+            ],
             [
                 '/magicspec {command} {argument}      ({demand} reasoning)',
                 'the detail layout carries the demand',
@@ -420,7 +502,13 @@ module.exports = () => {
         );
 
         // The table: every row carries a group, an argument and a when-missing value.
-        const groups = new Set(['pipeline', 'quality & automation', 'health', 'maintenance', '—']);
+        const groups = new Set([
+            'pipeline',
+            'quality & automation',
+            'health',
+            'maintenance',
+            '—',
+        ]);
         const rows = routerRows();
         assert.ok(rows.length > 0, 'the table has rows');
         for (const row of rows) {
@@ -446,7 +534,12 @@ module.exports = () => {
             'the commands that cannot act without input are the ones that ask for it (goal does not: its argument is optional and its default runs)',
         );
 
-        const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
+        const byName = Object.fromEntries(
+            rows.map((r) => [
+                r.name,
+                r,
+            ]),
+        );
         assert.strictEqual(byName.help.group, '—', 'help belongs to no group');
         assert.strictEqual(byName.migrate.group, 'maintenance', 'migrate is maintenance');
         assert.match(byName.spec.missing, /^\*\*required\*\* — up to three suggested topics/);
@@ -542,10 +635,14 @@ module.exports = () => {
         try {
             const real = installSkill(dir);
             const link = path.join(dir, '.claude', 'skills', 'magicspec');
-            fs.mkdirSync(path.dirname(link), { recursive: true });
+            fs.mkdirSync(path.dirname(link), {
+                recursive: true,
+            });
             fs.symlinkSync(real, link, 'junction');
             const nested = path.join(dir, 'src', 'deep');
-            fs.mkdirSync(nested, { recursive: true });
+            fs.mkdirSync(nested, {
+                recursive: true,
+            });
 
             // init through the link, from a nested directory: the state goes to the repository root
             // and the hook names the link, which is the path this project can run.
@@ -563,7 +660,9 @@ module.exports = () => {
             );
 
             // a hint printed through the real path names the real path
-            const viaReal = skillExec(real, nested, 'check-prerequisites', ['--json']);
+            const viaReal = skillExec(real, nested, 'check-prerequisites', [
+                '--json',
+            ]);
             const report = JSON.parse(viaReal.stdout);
             const fix = JSON.stringify(report.warnings);
             assert.ok(!fix.includes('.magic/'), 'no hint names the earlier folder');
@@ -573,7 +672,9 @@ module.exports = () => {
             const shared = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-shared-'));
             const other = makeConsumer();
             try {
-                fs.cpSync(skillSrc, path.join(shared, 'magicspec'), { recursive: true });
+                fs.cpSync(skillSrc, path.join(shared, 'magicspec'), {
+                    recursive: true,
+                });
                 const run = skillExec(path.join(shared, 'magicspec'), other, 'init');
                 assert.strictEqual(run.status, 0, run.stdout + run.stderr);
                 const outside = fs.readFileSync(
@@ -608,7 +709,9 @@ module.exports = () => {
             const skill = installSkill(dir);
             fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# Mine\n\nKeep this.\n');
 
-            const bad = skillExec(skill, dir, 'init', ['--host=claude,zed']);
+            const bad = skillExec(skill, dir, 'init', [
+                '--host=claude,zed',
+            ]);
             assert.strictEqual(bad.status, 1);
             assert.match(bad.stderr, /Unknown host 'zed'\. Known hosts: claude, codex, qwen\./);
             assert.ok(
@@ -629,7 +732,11 @@ module.exports = () => {
 
             // The router is the only command surface: no host receives an entry, and the printed
             // ignore lines name no command folder.
-            for (const host of ['.claude', '.qwen', '.codex']) {
+            for (const host of [
+                '.claude',
+                '.qwen',
+                '.codex',
+            ]) {
                 assert.ok(
                     !fs.existsSync(path.join(dir, host, 'commands')),
                     `${host}: no command folder is created`,
@@ -651,8 +758,13 @@ module.exports = () => {
             // idempotent
             const before = walkFiles(dir)
                 .filter((f) => !f.includes(`${path.sep}.git${path.sep}`))
-                .map((f) => [f, fs.readFileSync(f, 'utf8')]);
-            const again = skillExec(skill, dir, 'init', ['--host=claude,codex,qwen']);
+                .map((f) => [
+                    f,
+                    fs.readFileSync(f, 'utf8'),
+                ]);
+            const again = skillExec(skill, dir, 'init', [
+                '--host=claude,codex,qwen',
+            ]);
             assert.strictEqual(again.status, 0);
             for (const [f, content] of before)
                 assert.strictEqual(
@@ -674,8 +786,12 @@ module.exports = () => {
         const dir = makeConsumer();
         try {
             const skill = installSkill(dir);
-            fs.mkdirSync(path.join(dir, '.claude', 'rules'), { recursive: true });
-            fs.mkdirSync(path.join(dir, '.claude', 'commands', 'magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(dir, '.claude', 'rules'), {
+                recursive: true,
+            });
+            fs.mkdirSync(path.join(dir, '.claude', 'commands', 'magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(dir, '.claude', 'rules', 'magicspec.md'),
                 "the project's own rule\n",
@@ -692,14 +808,18 @@ module.exports = () => {
             );
             const retiredOf = () =>
                 JSON.parse(
-                    skillExec(skill, dir, 'check-prerequisites', ['--json']).stdout,
+                    skillExec(skill, dir, 'check-prerequisites', [
+                        '--json',
+                    ]).stdout,
                 ).warnings.filter((w) => w.type === 'PROJECTION_RETIRED');
             const retired = retiredOf();
             assert.strictEqual(retired.length, 1, 'the leftover entry is reported');
             assert.match(retired[0].message, /'\.claude\/commands\/magicspec\/task\.md'/);
             assert.match(retired[0].fix, /init --host=claude/);
 
-            const run = skillExec(skill, dir, 'init', ['--host=claude']);
+            const run = skillExec(skill, dir, 'init', [
+                '--host=claude',
+            ]);
             assert.strictEqual(run.status, 0, run.stdout + run.stderr);
             assert.match(
                 run.stdout,
@@ -729,10 +849,14 @@ module.exports = () => {
 
             // stale: a marked copy edited, and a marked copy whose source changed
             fs.rmSync(path.join(dir, '.claude', 'rules', 'magicspec.md'));
-            skillExec(skill, dir, 'init', ['--host=claude']);
+            skillExec(skill, dir, 'init', [
+                '--host=claude',
+            ]);
             const staleOf = () =>
                 JSON.parse(
-                    skillExec(skill, dir, 'check-prerequisites', ['--json']).stdout,
+                    skillExec(skill, dir, 'check-prerequisites', [
+                        '--json',
+                    ]).stdout,
                 ).warnings.filter((w) => w.type === 'PROJECTION_STALE');
             assert.deepStrictEqual(staleOf(), [], 'a fresh projection is not stale');
 
@@ -745,7 +869,9 @@ module.exports = () => {
             );
             assert.match(stale[0].fix, /init --host=claude/);
 
-            skillExec(skill, dir, 'init', ['--host=claude']);
+            skillExec(skill, dir, 'init', [
+                '--host=claude',
+            ]);
             assert.deepStrictEqual(staleOf(), [], 'init writes the copy again');
 
             fs.appendFileSync(path.join(skill, 'CONSTITUTION.md'), '\nA new sentence.\n');
@@ -783,7 +909,12 @@ module.exports = () => {
                 'refreshing creates no projection',
             );
 
-            assert.strictEqual(skillExec(skill, dir, 'init', ['--host=claude,codex']).status, 0);
+            assert.strictEqual(
+                skillExec(skill, dir, 'init', [
+                    '--host=claude,codex',
+                ]).status,
+                0,
+            );
             assert.deepStrictEqual(refresh(), [], 'a current projection is not rewritten');
 
             // Entries as 3.0.x installations wrote them, reached through two hosts whose command
@@ -791,11 +922,15 @@ module.exports = () => {
             const entry = (name) =>
                 `---\ndescription: x\n---\n<!-- magicspec-command ${name} -->\nRun the command.\n`;
             const folder = path.join(dir, '.claude', 'commands', 'magicspec');
-            fs.mkdirSync(folder, { recursive: true });
+            fs.mkdirSync(folder, {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(folder, 'task.md'), entry('task'));
             fs.writeFileSync(path.join(folder, 'graph.md'), entry('graph'));
             fs.writeFileSync(path.join(folder, 'run.md'), "the project's own command\n");
-            fs.mkdirSync(path.join(dir, '.qwen'), { recursive: true });
+            fs.mkdirSync(path.join(dir, '.qwen'), {
+                recursive: true,
+            });
             fs.symlinkSync(
                 path.join(dir, '.claude', 'commands'),
                 path.join(dir, '.qwen', 'commands'),
@@ -859,10 +994,16 @@ module.exports = () => {
         try {
             const skill = installSkill(dir);
             fs.writeFileSync(path.join(dir, 'AGENTS.md'), '# Mine\n');
-            skillExec(skill, dir, 'init', ['--host=claude,codex,qwen']);
-            fs.mkdirSync(path.join(dir, '.claude', 'rules'), { recursive: true });
+            skillExec(skill, dir, 'init', [
+                '--host=claude,codex,qwen',
+            ]);
+            fs.mkdirSync(path.join(dir, '.claude', 'rules'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(dir, '.claude', 'rules', 'other.md'), 'mine\n');
-            fs.mkdirSync(path.join(dir, '.claude', 'commands', 'magicspec'), { recursive: true });
+            fs.mkdirSync(path.join(dir, '.claude', 'commands', 'magicspec'), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 path.join(dir, '.claude', 'commands', 'magicspec', 'extra.md'),
                 'mine\n',
@@ -878,7 +1019,9 @@ module.exports = () => {
                     .map((f) => path.relative(dir, f))
                     .sort();
             const before = snapshot();
-            const dry = skillExec(skill, dir, 'remove', ['--dry-run']);
+            const dry = skillExec(skill, dir, 'remove', [
+                '--dry-run',
+            ]);
             assert.strictEqual(dry.status, 0, dry.stdout + dry.stderr);
             assert.deepStrictEqual(snapshot(), before, 'a dry run changes nothing');
             assert.match(dry.stdout, /Would remove: the managed block in AGENTS\.md/);
@@ -933,12 +1076,17 @@ module.exports = () => {
                     '-e',
                     `process.stdout.write(String(require(${JSON.stringify(path.join(skill, 'scripts', 'utils.js'))}).hasEngineWriteTooling()))`,
                 ],
-                { cwd: dir, encoding: 'utf8' },
+                {
+                    cwd: dir,
+                    encoding: 'utf8',
+                },
             );
             return out.stdout;
         };
         const withBuilder = (dir) => {
-            fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
+            fs.mkdirSync(path.join(dir, 'scripts'), {
+                recursive: true,
+            });
             fs.writeFileSync(path.join(dir, 'scripts', 'generate-checksums.js'), '// builder\n');
         };
 
@@ -978,11 +1126,19 @@ module.exports = () => {
         const dir = makeConsumer();
         try {
             const skill = installSkill(dir);
-            fs.rmSync(path.join(skill, '.checksums'), { force: true });
+            fs.rmSync(path.join(skill, '.checksums'), {
+                force: true,
+            });
             const build = spawnSync(
                 process.execPath,
-                [path.join(devScriptsDir, 'generate-checksums.js'), '--dir', skill],
-                { encoding: 'utf8' },
+                [
+                    path.join(devScriptsDir, 'generate-checksums.js'),
+                    '--dir',
+                    skill,
+                ],
+                {
+                    encoding: 'utf8',
+                },
             );
             assert.strictEqual(build.status, 0, build.stdout + build.stderr);
 
@@ -1003,7 +1159,10 @@ module.exports = () => {
                 'the manifest and the version are outside it',
             );
 
-            const check = () => skillExec(skill, dir, 'update-engine-meta', ['--check']);
+            const check = () =>
+                skillExec(skill, dir, 'update-engine-meta', [
+                    '--check',
+                ]);
             assert.strictEqual(check().status, 0, 'an untouched folder passes');
 
             for (const rel of [
@@ -1038,8 +1197,14 @@ module.exports = () => {
             const skill = installSkill(dir);
             const manifest = spawnSync(
                 process.execPath,
-                [path.join(devScriptsDir, 'generate-checksums.js'), '--dir', skill],
-                { encoding: 'utf8' },
+                [
+                    path.join(devScriptsDir, 'generate-checksums.js'),
+                    '--dir',
+                    skill,
+                ],
+                {
+                    encoding: 'utf8',
+                },
             );
             assert.strictEqual(manifest.status, 0, manifest.stdout + manifest.stderr);
             const init = skillExec(skill, dir, 'init');
@@ -1058,8 +1223,28 @@ module.exports = () => {
 
             const commit = () => {
                 fs.writeFileSync(path.join(dir, 'file.txt'), `${Math.random()}\n`);
-                spawnSync('git', ['add', 'file.txt'], { cwd: dir });
-                return spawnSync('git', ['commit', '-m', 'x'], { cwd: dir, encoding: 'utf8' });
+                spawnSync(
+                    'git',
+                    [
+                        'add',
+                        'file.txt',
+                    ],
+                    {
+                        cwd: dir,
+                    },
+                );
+                return spawnSync(
+                    'git',
+                    [
+                        'commit',
+                        '-m',
+                        'x',
+                    ],
+                    {
+                        cwd: dir,
+                        encoding: 'utf8',
+                    },
+                );
             };
             const ok = commit();
             assert.strictEqual(ok.status, 0, ok.stdout + ok.stderr);
@@ -1077,7 +1262,10 @@ module.exports = () => {
                 /Engine drift detected in \.agents\/skills\/magicspec\//,
             );
 
-            fs.rmSync(skill, { recursive: true, force: true });
+            fs.rmSync(skill, {
+                recursive: true,
+                force: true,
+            });
             const gone = commit();
             assert.strictEqual(gone.status, 0, 'a removed engine lets the commit through');
             const lines = (gone.stdout + gone.stderr)
@@ -1095,15 +1283,23 @@ module.exports = () => {
 
     test('the plugin channel is gone: no builder script, no executor command, no shipped text that offers one (skill folder)', () => {
         // The name is assembled so that a search for the removed command finds only history.
-        const removed = ['build', 'plugin'].join('-');
+        const removed = [
+            'build',
+            'plugin',
+        ].join('-');
         assert.ok(
             !fs.existsSync(path.join(skillSrc, 'scripts', `${removed}.js`)),
             'the builder script is removed',
         );
         const run = spawnSync(
             process.execPath,
-            [path.join(skillSrc, 'scripts', 'executor.js'), removed],
-            { encoding: 'utf8' },
+            [
+                path.join(skillSrc, 'scripts', 'executor.js'),
+                removed,
+            ],
+            {
+                encoding: 'utf8',
+            },
         );
         assert.strictEqual(run.status, 1, 'the executor no longer knows the command');
         assert.match(run.stderr, /Unknown command/);

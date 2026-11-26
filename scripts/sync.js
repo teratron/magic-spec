@@ -61,7 +61,11 @@ const KNOWN_FLAGS = new Set([
 const unknown = rawArgs.filter((a) => a.startsWith('-') && !KNOWN_FLAGS.has(a));
 if (unknown.length > 0) {
     console.error(`❌ sync.js: unknown flag(s): ${unknown.join(', ')}`);
-    console.error(`   Accepted: ${[...KNOWN_FLAGS].join(', ')}`);
+    console.error(
+        `   Accepted: ${[
+            ...KNOWN_FLAGS,
+        ].join(', ')}`,
+    );
     process.exit(2);
 }
 
@@ -93,7 +97,16 @@ function runScript(scriptPath, extraArgs = [], opts = {}) {
     }
 
     try {
-        execFileSync(process.execPath, [scriptPath, ...extraArgs], { stdio: 'inherit' });
+        execFileSync(
+            process.execPath,
+            [
+                scriptPath,
+                ...extraArgs,
+            ],
+            {
+                stdio: 'inherit',
+            },
+        );
     } catch {
         if (opts.tolerant) {
             console.warn(`⚠️  ${path.basename(scriptPath)} exited non-zero (tolerant).`);
@@ -119,13 +132,26 @@ function main() {
     if (!rawArgs.includes('--skip-links')) {
         runScript(
             path.join(devScriptsDir, 'validate-hardlinks.js'),
-            strictLinks ? ['--strict'] : [],
-            { tolerant: !strictLinks },
+            strictLinks
+                ? [
+                      '--strict',
+                  ]
+                : [],
+            {
+                tolerant: !strictLinks,
+            },
         );
     }
 
     // 4. Derived project state: the shipped pass (L2 calling L1, the sanctioned direction), previewed with the pipeline
-    runScript(path.join(magicScriptsDir, 'sync.js'), dryRun ? ['--dry-run'] : []);
+    runScript(
+        path.join(magicScriptsDir, 'sync.js'),
+        dryRun
+            ? [
+                  '--dry-run',
+              ]
+            : [],
+    );
 
     // 5. Docs (CONTRIBUTING + docs/*.md content sync)
     if (!rawArgs.includes('--skip-docs')) {
