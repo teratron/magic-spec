@@ -217,6 +217,8 @@ class DocSet {
         this.scopeItems = [];
         /** @type {Map<string, number>} unit address → revision the map records as built */
         this.mapRevs = new Map();
+        /** @type {{ address: string, where: string }[]} the map's rows, with the path of each */
+        this.mapRows = [];
         /** @type {{ address: string, kind: string | null, status: string | null, affects: string[], assets: string[], builtBy: string[] }[]} */
         this.changes = [];
         /** @type {string[]} */
@@ -835,6 +837,43 @@ function parseTasks(set) {
     }
 }
 
+/**
+ * The rows of `memory/map.md`: each component's address and path, and the revision each unit it
+ * provides was built at.
+ *
+ * @param {DocSet} set
+ */
+function parseMap(set) {
+    const map = set.read('memory/map.md');
+    let provides = 3;
+    let where = 1;
+    for (const line of (map ?? '').split(/\r?\n/)) {
+        const cells = tableCells(line);
+        if (!cells) continue;
+        const at = cells.findIndex((c) => /^Provides/.test(c));
+        if (at !== -1) {
+            provides = at;
+            const found = cells.findIndex((c) => /^Where/.test(c));
+            if (found !== -1) where = found;
+            continue;
+        }
+        if (!/^`?map:[\w-]+`?$/.test(cells[0])) continue;
+        const address = cells[0].replace(/`/g, '');
+        set.define(address, 'memory/map.md', line, 'memory');
+        set.mapRows.push({
+            address,
+            where: cells[where] ?? '',
+        });
+        // `addr@n` records the revision built; a bare address was built at revision 1.
+        const provided = addressList(cells[provides]).map((p) => {
+            const [a, rev] = p.split('@');
+            set.mapRevs.set(a, Number(rev ?? 1));
+            return a;
+        });
+        set.refer('memory/map.md', address, 'Provides', provided);
+    }
+}
+
 /** @param {DocSet} set */
 function parseRulesAndMemory(set) {
     for (const { address, text } of headedUnits(set, 'rules.md', /^R\d+$/, 'neutral')) {
@@ -858,27 +897,7 @@ function parseRulesAndMemory(set) {
         set.refer('memory/decisions.md', address, 'Affects', addressList(field(text, 'Affects')));
         set.refer('memory/decisions.md', address, 'Moves to', addressList(field(text, 'Moves to')));
     }
-    const map = set.read('memory/map.md');
-    let provides = 3;
-    for (const line of (map ?? '').split(/\r?\n/)) {
-        const cells = tableCells(line);
-        if (!cells) continue;
-        const at = cells.findIndex((c) => /^Provides/.test(c));
-        if (at !== -1) {
-            provides = at;
-            continue;
-        }
-        if (!/^`?map:[\w-]+`?$/.test(cells[0])) continue;
-        const address = cells[0].replace(/`/g, '');
-        set.define(address, 'memory/map.md', line, 'memory');
-        // `addr@n` records the revision built; a bare address was built at revision 1.
-        const provided = addressList(cells[provides]).map((p) => {
-            const [a, rev] = p.split('@');
-            set.mapRevs.set(a, Number(rev ?? 1));
-            return a;
-        });
-        set.refer('memory/map.md', address, 'Provides', provided);
-    }
+    parseMap(set);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

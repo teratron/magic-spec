@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.4.11
+**Version:** 1.4.12
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -101,6 +101,8 @@ related_rules: [C24]
 4. Cross-check findings against `RULES.md` — is any finding actually a rule violation that should cite a specific `C{N}`?
 5. Verify anti-fabrication (`.magicspec/RULES.md` C13 §5, Anti-Hallucination Audit): is each finding grounded in a concrete file/reference, not inferred?
 6. Emit refined findings set for the Advisory Report.
+
+On a 4.0 workspace the audit reads units, the map and the code: the check-docs report, the map compared with the code by analyze-coverage, and the product scanned for the addresses and paths of the set.
 
 **Anti-patterns:**
 
@@ -307,6 +309,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.12 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: the `project-auditor` card and its mirror end the operating protocol with the line for a 4.0 workspace. |
 | 1.4.11 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `spec-critic` card and its mirror end the operating protocol with the line for a 4.0 workspace. |
 | 1.4.10 | 2026-11-19 | Clarification patch, Stable retained (as built in Phase 65; the mirror follows the deployed card word for word): item 3 of the `prompt-engineer` card's *Input Pass* states the host's marking, its limit and the boundary of the person's own words, and its anti-pattern line names the instruction the person's words do not ask for. |
 | 1.4.9 | 2026-11-13 | Clarification patch, Stable retained (the mirror follows the deployed card word for word). Spec-critic: the Comparison set bullet of step 1 reads the cited lines, not the file, and, when the first line of the query counts more matches than it showed, takes the next page it names or narrows the query before treating the set as complete; the fallback to a direct text search is unchanged. |

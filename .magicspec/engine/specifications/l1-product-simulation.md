@@ -1,6 +1,6 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
-**Version:** 1.1.5
+**Version:** 1.1.6
 **Status:** Stable
 **Layer:** concept
 
@@ -118,7 +118,7 @@ In the engine's repository the product is the engine, and its user is a develope
 
    **Finding resolved (1.1.2).** SM-7 ends a failed `simulate` run with `/magicspec fix` as its one next step, and the finalization prints it; `l1-fix-command.md` FX-10 made `/magicspec-dev fix` the entry for error feedback about the engine in this repository without naming a scenario finding. `l1-fix-command.md` 1.2.0 settles it: in this repository a failed or inconclusive step of the engine's own scenarios enters through the maintenance `fix` (FX-10, its scenario-finding item), carried by the repository's own text; SM-7 and the printed step are unchanged, as no shipped text names the maintenance command.
 
-   **As built (Phase 81), the 4.0 branch, no requirement changed for 3.x.** On a workspace in the 4.0 document-set format the scenarios stay in `simulations/` of the workspace, are written from the scope items and the `Accept` lines of the units, cite them by address and name their milestone on a `**Milestone:**` line, so SM-3's listing is per milestone ([l1-sdd-document-set.md](l1-sdd-document-set.md) §6); a failed step goes to `fix`, which records a change. The engine's own files now hold seventeen scenarios and sixty-one steps, numbered across the files: S-15 is the pipeline of a 4.0 workspace (until now it repeated the identifier S-4 of `intake`), S-16 (`routing`) a goal of milestones, S-17 (`quality`) a defect becoming a change.
+   **As built (Phase 81), the 4.0 branch, no requirement changed for 3.x.** On a workspace in the 4.0 document-set format the scenarios stay in `simulations/` of the workspace, are written from the scope items and the `Accept` lines of the units, cite them by address and name their milestone on a `**Milestone:**` line, so SM-3's listing is per milestone ([l1-sdd-document-set.md](l1-sdd-document-set.md) §6); a failed step goes to `fix`, which records a change. The engine's own files then held seventeen scenarios and sixty-one steps, numbered across the files: S-15 is the pipeline of a 4.0 workspace (until now it repeated the identifier S-4 of `intake`), S-16 (`routing`) a goal of milestones, S-17 (`quality`) a defect becoming a change. Phase 82 added S-18 (`pipeline`, a set written from existing code) and S-19 (`quality`, an audit of a 4.0 workspace): nineteen scenarios and seventy steps.
 
 ## 7. Drawbacks & Alternatives
 
@@ -138,6 +138,7 @@ In the engine's repository the product is the engine, and its user is a develope
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.6 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: §6 records S-18 and S-19, nineteen scenarios and seventy steps. |
 | 1.1.5 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: §6 states the 4.0 branch and the engine's scenarios as they stand — S-16 and S-17 added, the repeated identifier of the 4.0 pipeline scenario now S-15. |
 | 1.1.4 | 2026-11-19 | Agent | As built in Phase 67, Stable retained, no requirement changed. The set of the engine's own scenarios grew by S-14 (`quality`, a bare `goal` runs the active phase and does not read a finished goal back) and one step of S-12 (a premise the forecast accepted appears under `Assumptions` in the one report): fourteen scenarios and forty-seven steps; `Last run` stays `never` in both. |
 | 1.1.3 | 2026-11-19 | Agent | As built in Phase 65, Stable retained, no requirement changed. The set of the engine's own scenarios grew by S-13 (`intake`, an instruction inside a pasted report) and one step of S-12 (`quality`, a finalization that ends on its handoff line): thirteen scenarios and forty-three steps; `Last run` stays `never` in both. |

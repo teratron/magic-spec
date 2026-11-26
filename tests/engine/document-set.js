@@ -213,6 +213,25 @@ const BODY_SECTIONS = [
         ],
         place: checklist('Help'),
     },
+    {
+        body: 'analyze',
+        calls: [
+            `check-docs ${HERE}`,
+            `analyze-coverage ${HERE}`,
+            `pack {task} ${HERE}`,
+            `mark-built M{n} ${HERE}`,
+        ],
+        names: [
+            'The audit writes no document of the set',
+            '`map:{key}: {path} is missing`',
+            '`references/rules/containment.md` §On a 4.0 Workspace',
+            '`/magicspec analyze first-time` on a workspace with code and no `product.md`',
+            'run every `Observe` of its `Done when` against the existing code',
+            'never a change of the code',
+        ],
+        role: 'project-auditor',
+        place: checklist('Task'),
+    },
 ];
 
 /** A file of this repository as text. */
@@ -244,7 +263,7 @@ module.exports = () => {
         });
     }
 
-    test('document set: the three role cards that read a 4.0 workspace end their protocol with the line their specifications hold', () => {
+    test('document set: the role cards that read a 4.0 workspace end their protocol with the line their specifications hold', () => {
         const cards = {
             'spec-critic': [
                 'l2-role-cards-governance.md',
@@ -257,6 +276,10 @@ module.exports = () => {
             coder: [
                 'l2-role-cards-execution.md',
                 "On a 4.0 workspace the builder reads its task's pack and the files of the workspace, and nothing of the documents beyond the pack.",
+            ],
+            'project-auditor': [
+                'l2-role-cards-governance.md',
+                'On a 4.0 workspace the audit reads units, the map and the code: the check-docs report, the map compared with the code by analyze-coverage, and the product scanned for the addresses and paths of the set.',
             ],
         };
         for (const [id, [spec, line]] of Object.entries(cards)) {
@@ -272,6 +295,25 @@ module.exports = () => {
                 `the ${id} mirror holds it`,
             );
         }
+    });
+
+    test('document set: the containment rule names the classes of a set, the unconditional and the ones judged by self-containment', () => {
+        const rule = repoText('skills', 'magicspec', 'references', 'rules', 'containment.md');
+        const section = rule
+            .split('\n### On a 4.0 Workspace\n')[1]
+            ?.split('\nIf design rationale')[0];
+        assert.ok(section, 'the section stands in the reference rule');
+        const flat = section.replace(/\s+/g, ' ');
+        for (const name of [
+            'beside every `.magicspec/` path',
+            '**Always**: a task `M{n}.T{k}`; a binding unit `{key}.b{n}`',
+            '`map:{key}`, `term:{word}` and `asset:{path}`',
+            '**After the self-containment test**',
+            '`R{n}`, `S{n}`, `P{n}`, `X{n}`, `D{n}`, `C{n}` and `M{n}`, a requirement `{key}.{n}`',
+            '(`product.md`, `plan.md`, `changes.md`, `spec/`, `stack/`, `memory/`)',
+            '**Never a finding**: a component key written where the bindings use it as a name',
+        ])
+            assert.ok(flat.includes(name), `names ${name}`);
     });
 
     test('document set: the builder of the run body is given the pack file and the workspace, nothing else of the documents', () => {
@@ -1387,9 +1429,12 @@ module.exports = () => {
     test('document set: analyze-coverage counts the requirements a task observes', () => {
         const dir = makeSetProject('good');
         try {
+            // The map of the fixture names one file; with it present the map holds the scope.
+            writeIn(dir, 'src/core.rs', '// core\n');
+            const held = ', 0 map path(s) missing, 0 file(s) with no map row';
             assert.strictEqual(
                 runGood(dir, 'analyze-coverage').trim(),
-                '1 of 1 requirements covered',
+                `1 of 1 requirements covered${held}`,
             );
             writeIn(
                 dir,
@@ -1399,7 +1444,7 @@ module.exports = () => {
             );
             assert.strictEqual(
                 runGood(dir, 'analyze-coverage').trim(),
-                'hello.2: unobserved\nhello.3: unchecked\n1 of 3 requirements covered',
+                `hello.2: unobserved\nhello.3: unchecked\n1 of 3 requirements covered${held}`,
             );
             const { summary } = JSON.parse(runGood(dir, 'analyze-coverage', '--json'));
             assert.deepStrictEqual(summary, {
@@ -1408,6 +1453,80 @@ module.exports = () => {
                 unobserved: 1,
                 unchecked: 1,
             });
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: analyze-coverage compares the map with the files of the scope', () => {
+        const dir = makeSetProject('good');
+        try {
+            const report = () => runGood(dir, 'analyze-coverage').trim();
+            const summary = (/** @type {number} */ missing, /** @type {number} */ unmapped) =>
+                `1 of 1 requirements covered, ${missing} map path(s) missing, ${unmapped} file(s) with no map row`;
+            const drop = (/** @type {string} */ rel) => fs.rmSync(path.join(dir, rel));
+            assert.strictEqual(report(), `map:core: src/core.rs is missing\n${summary(1, 0)}`);
+            writeIn(dir, 'src/core.rs', '// core\n');
+            assert.strictEqual(report(), summary(0, 0));
+            drop('src/core.rs');
+            writeIn(dir, 'src/extra.rs', '// extra\n');
+            assert.strictEqual(
+                report(),
+                `map:core: src/core.rs is missing\nsrc/extra.rs: no map row\n${summary(1, 1)}`,
+            );
+            const json = JSON.parse(runGood(dir, 'analyze-coverage', '--json'));
+            assert.deepStrictEqual(json.map, {
+                missing: [
+                    {
+                        address: 'map:core',
+                        path: 'src/core.rs',
+                    },
+                ],
+                unmapped: [
+                    'src/extra.rs',
+                ],
+            });
+            drop('src/extra.rs');
+            writeIn(dir, 'src/core.rs', '// core\n');
+
+            // What the engine, a host or .gitignore holds is no file of the product.
+            writeIn(dir, '.gitignore', 'ignored/\n');
+            writeIn(dir, 'ignored/a.rs', '\n');
+            writeIn(dir, '.claude/settings.json', '{}\n');
+            writeIn(dir, '.qwen/x.md', '\n');
+            assert.strictEqual(report(), `.gitignore: no map row\n${summary(0, 1)}`);
+            drop('.gitignore');
+            drop('ignored/a.rs');
+
+            // A row's folder holds every file under it; a row with no path names none.
+            writeIn(
+                dir,
+                '.magicspec/docs/memory/map.md',
+                '# Map\n\n| Address | Where (path) | API | Provides |\n| --- | --- | --- | --- |\n| map:core | `src/` | core.rs | — |\n| map:hello | — | — | — |\n',
+            );
+            writeIn(dir, 'src/deep/more.rs', '\n');
+            writeIn(dir, 'other/y.rs', '\n');
+            assert.strictEqual(report(), `other/y.rs: no map row\n${summary(0, 1)}`);
+
+            // A scope narrows the files, and a set with no map is not compared.
+            const registry = path.join(dir, '.magicspec', 'workspace.json');
+            fs.writeFileSync(
+                registry,
+                JSON.stringify({
+                    default: 'docs',
+                    workspaces: {
+                        docs: {
+                            format: '4',
+                            scope: [
+                                'src',
+                            ],
+                        },
+                    },
+                }),
+            );
+            assert.strictEqual(report(), summary(0, 0));
+            fs.rmSync(docsFile(dir, 'memory/map.md'));
+            assert.strictEqual(report(), '1 of 1 requirements covered');
         } finally {
             cleanup(dir);
         }

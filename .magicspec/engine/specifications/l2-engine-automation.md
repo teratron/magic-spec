@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.33.4
+**Version:** 1.33.5
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -27,7 +27,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **feedback.js** with **lib/feedback.js**, **lib/feedback-draft.js** and **lib/feedback-submit.js**: The engine feedback channel — `note`, `list`, `draft`, `submit`, `keep` and `discard` (the record and its limits are in [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11). Always exits 0; submission goes through the person's own `gh` client only.
 - **clean-cache.js**: Removes the rebuildable caches of the project; `--dry-run` lists them (§Cache Retention).
 - **check-docs.js** and **pack.js** with **lib/count-tokens.js**: the checker and the pack builder of the 4.0 document set ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.2). Both read the workspace the executor resolved and act only when its entry in `workspace.json` carries `"format": "4"`; on any other workspace they print one line and exit 0. `check-docs` reads and reports only; `pack` writes the cache of the task packs (§Cache Retention). Neither requires anything outside the skill folder, and the token measure (characters divided by four, rounded up) lives once, in `lib/count-tokens.js`.
-- **mark-built.js** and **check-log.js**: the milestone record and the change-history check of a 4.0 workspace ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.2), acting only on a workspace in the 4.0 format; `check-log` reads git by argument list and writes nothing. **lib/doc-set-state.js** holds the 4.0 test and the next ready task that `finalize` and `resume-state` share, and the next step `finalize` names; **lib/created-files.js** the reader of the file names in a task's Creates (a task address is none) that `pack` and `mark-built` share. **lib/doc-set-graph.js**, **lib/doc-set-wiki.js** (with **lib/wiki-text.js**, the text helpers the wiki shares), **lib/doc-set-coverage.js** and **lib/doc-set-sync.js** give `build-spec-graph`, `export-wiki`, `analyze-coverage` and `sync` their answers for a 4.0 workspace, each reading the set through the checker's loader.
+- **mark-built.js** and **check-log.js**: the milestone record and the change-history check of a 4.0 workspace ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.2), acting only on a workspace in the 4.0 format; `check-log` reads git by argument list and writes nothing. **lib/doc-set-state.js** holds the 4.0 test and the next ready task that `finalize` and `resume-state` share, and the next step `finalize` names; **lib/created-files.js** the reader of the file names in a task's Creates (a task address is none) that `pack` and `mark-built` share. **lib/doc-set-graph.js**, **lib/doc-set-wiki.js** (with **lib/wiki-text.js**, the text helpers the wiki shares), **lib/doc-set-coverage.js** (which also compares the set's map with the code, the rows read by the checker's loader) and **lib/doc-set-sync.js** give `build-spec-graph`, `export-wiki`, `analyze-coverage` and `sync` their answers for a 4.0 workspace, each reading the set through the checker's loader.
 - **check-prerequisites.js**: Validates engine integrity and project state.
 - **generate-checksums.js**: Maintains `skills/magicspec/.checksums`. Honors `.gitignore` during the file walk (Invariant 7 parity).
 - **generate-context.js**: Regenerates `CONTEXT.md` from current project state.
@@ -398,6 +398,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.33.5 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: on a 4.0 workspace `lib/doc-set-coverage.js` compares the map with the files `analyze-coverage` walks, reading the map rows through the checker's loader. |
 | 1.33.4 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: the Components list gains `lib/goal-block.js`, and the table of writers states that on a 4.0 workspace `update-state` writes the goal file alone. |
 | 1.33.3 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: the Components list gains the readers of a 4.0 set the remaining subcommands use. |
 | 1.33.2 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: `lib/doc-set-state.js` also holds the next step of a 4.0 workspace; `lib/created-files.js` leaves task addresses out. |

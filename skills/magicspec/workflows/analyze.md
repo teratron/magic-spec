@@ -23,6 +23,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.magic
 - Engine Snapshot Update (Mandatory, All Modes)
 - Advisory Report — Recommendations Format
 - Reporting & Dispatch
+- On a 4.0 Workspace
 - Task Completion Checklist
 - Handoffs
 
@@ -401,6 +402,34 @@ This is a `.magicspec/` write — it does NOT trigger C14 (engine meta bump).
    - Context Regeneration: `node scripts/executor.js generate-context`.
    - **Graph Refresh**: `node scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
    - **Handoff (C9 / DA-6 / DA-9)**: after dispatch, compute the next step and narrate it as a Decision Record, then end the invocation — the next stage is named, never started: `[DR] Specs Stable — /magicspec plan is next. (Override: any /magicspec <command>)`. When the request's own words asked for the following stage too, run it and say in one line that the request asked for it. This is a Sequencing fork (DA-9): narrated, never posed as "Proceed to Plan/Run?". The sole pause condition is a **firing E3 hard-fork** (>1 incompatible architectural path with no objective DA-3 tiebreaker), surfaced as a DA-5 single question with a marked default.
+
+## On a 4.0 Workspace
+
+Taken when the resolved workspace's entry in `workspace.json` carries `"format": "4"`; the steps below replace the workflow steps above, and every other section of this body applies unchanged. On any other workspace this section is skipped.
+
+A set has no registry, no specification layers and no coverage by Canonical References: the registry audit and repair, the Canonical References check, the confidence taxonomy and the rationale audit that rests on them do not apply. Mode A is the reverse mode below; Modes B, C and D are the audit, Mode D narrowed to its focus.
+
+### The Audit
+
+The audit writes no document of the set. A workspace with no `product.md` has nothing to audit: report it, narrate `[DR] Next: /magicspec analyze first-time — the workspace has no documents. (Override: stop here)` and stop.
+
+1. **Engine and project steps**: of Mode C, these apply as written: step 1 (self-check); the Router Parity, Phantom Commands and Setting Parity checks of step 2 and the Link Integrity check of step 3; step 6a (scaffold boundary); steps 7 and 7a (prompt quality and coherence, over the units and the plan of the set); steps 8 and 9 (graph and communities, as `workflows/graph.md` §On a 4.0 Workspace states); steps 10 and 11; and the wiki refresh of step 13.
+2. **The set**: `node scripts/executor.js check-docs --workspace={active-workspace}`. Each finding is reported with the stage that owns it: `plan` for `plan.md` and what a missing milestone causes, `task` for a task file and what a missing task causes, `spec` for the rest, an open question included.
+3. **The map and the code**: `node scripts/executor.js analyze-coverage --workspace={active-workspace}`. A requirement `unobserved` is owned by `task`, one `unchecked` by `spec`. A line `map:{key}: {path} is missing` or `{file}: no map row` is a finding owned by `spec`, which records what changed; the audit never edits `memory/map.md`.
+4. **Containment**: Mode C step 6 as written, over the product files, with the classes of `references/rules/containment.md` §On a 4.0 Workspace besides its own; each finding keeps its remediation path.
+5. **Rules**: the code is checked against the rule units of the workspace's `rules.md` and of `stack/{stack}/rules.md` in place of a workspace `RULES.md`, and against the conventions of the global constitution as before.
+6. **Report**: activate `@role:project-auditor`, then the Advisory Report; each action proposal is the command of the stage that owns the finding. Update the engine snapshot as written.
+
+### The Reverse Mode
+
+`/magicspec analyze first-time` on a workspace with code and no `product.md` writes the set from the code, then replays its build against the code that exists. A workspace that holds `product.md` is not written this way (a change is `/magicspec spec`), and a workspace with no code has nothing to read: say which in one line and name `/magicspec spec {workspace}`. Depth Control applies. No product file is changed.
+
+1. **Documents**: write the neutral layer, its cross-stack review and the stack layer by step 2 of `workflows/spec.md` §On a 4.0 Workspace, with the code as the source: a unit states what the code does, a premise only the requester can confirm is an `Assumption`, and behaviour the code leaves in doubt or that no check can observe is an `- Open:` line.
+2. **Memory**: write the missing files of `memory/` from `templates/set/` without their comments and placeholder entries (`map.md` keeps its table header and no row); `mark-built` records into them and is the map's one writer.
+3. **Plan and tasks**: write the milestones by `workflows/plan.md` §On a 4.0 Workspace, then the tasks of every milestone, one after another, by `workflows/task.md` §On a 4.0 Workspace; a task's `Creates` names the existing files it accounts for and its tests, and `node scripts/executor.js pack {task} --workspace={active-workspace}` runs for each.
+4. **Replay in place of a build**: for each milestone in order, and each of its tasks after the tasks it is `After`, run every `Observe` of its `Done when` against the existing code. Only when all hold, record `- Done: {task} — {outcome}` in `memory/state.md`; an observation that fails or cannot run is an `- Open:` line on the unit it concerns, never a change of the code, and the task stays not done.
+5. **Milestones**: when every `must` and `should` task of a milestone is done and its `Observed by` holds, run `node scripts/executor.js mark-built M{n} --workspace={active-workspace}`.
+6. **Check and report**: run `check-docs` after each layer and after the replay, and `analyze-coverage` once at the end for the files no row holds; refresh the wiki; the report lists what was observed, what is open and what stays undescribed. Name `/magicspec spec {workspace}` for an open question, and otherwise the step the set waits for.
 
 ## Task Completion Checklist
 

@@ -1,5 +1,11 @@
 # Engine Workspace Changelog
 
+## Phase 82 — 2026-11-26 (The Analysis on a 4.0 Workspace)
+
+- **`analyze` works on a 4.0 workspace.** The audit checks the document set, compares its map with the code and looks for the set's addresses in product files, and changes no document of the set; `analyze first-time` writes a set from existing code and records a milestone built only when its checks hold on that code.
+- **Coverage compares the map with the code.** It names a path the map lists that is gone and a file no map row holds. A file added inside a folder a row already claims is not reported.
+- **Records:** harness 523; engine 3.0.220. **Specifications:** `l2-sdd-document-set-engine` 1.7.1, `l1-sdd-reference-containment` 1.8.4, `l2-role-cards-governance` 1.4.12, `l2-engine-automation` 1.33.5, `l2-test-suite` 1.48.16, `l1-product-simulation` 1.1.6; registry 1.107.1. Phase 85, the migration, is next.
+
 ## Phase 84 — 2026-11-26 (Maintenance: The Finalization's Git Probes Print Nothing of Git's)
 
 - **`finalize` shows only what the engine says.** In a repository with no commit yet it no longer prints git's `fatal:` lines, and where git converts line endings it no longer prints its warnings.

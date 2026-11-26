@@ -29,6 +29,8 @@ Pre-advisory audit for `/magicspec analyze` workflow. Reviews all Mode A/B/C/D f
 5. Verify anti-fabrication (`.magicspec/RULES.md` C13 §5, Anti-Hallucination Audit): is each finding grounded in a concrete file/reference, not inferred?
 6. Emit refined findings set for the Advisory Report.
 
+On a 4.0 workspace the audit reads units, the map and the code: the check-docs report, the map compared with the code by analyze-coverage, and the product scanned for the addresses and paths of the set.
+
 ## Anti-patterns
 
 - Upgrading severity to make the report look more urgent.

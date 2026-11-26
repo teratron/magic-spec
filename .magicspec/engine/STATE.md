@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-26 11:59
-**Phase:** 82 — The Analysis on a 4.0 Workspace
+**Updated:** 2026-11-26 16:33
+**Phase:** 85 — The Migration to 4.0
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-84F01 The probes of the finalization discard git's standard error
+- **Task:** T-82T01 Validation: static checks, full harness, C14
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec task engine to decompose Phase 85
+- **Next Action:** Execute T-85F01 The fixture: a 3.x workspace with a written `next/` via /magicspec run engine
 
 ## Progress
 
 ```
-Phase 82: [0/8] ░░░░░░░░ 0%
-Overall: [82/83] ████████ 99%
+Phase 85: [0/11] ░░░░░░░░ 0%
+Overall: [83/84] ████████ 99%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-26 **Decision:** PLAN 1.99.0 on registry 1.107.1: revalidated after Phase 82; Phase 85 decomposable now; the map comparison's blind spot (mark-built writes a folder as Where) parked in the Backlog as a concept question
+- 2026-11-26 **Decision:** Phase 82 complete. Provides: analyze on a 4.0 workspace (audit and reverse mode), the map compared with the code by analyze-coverage, the 4.0 containment classes, scenarios S-18 and S-19, harness 523, engine 3.0.220; Phase 85 (migrate --to 4) is next after a plan revalidation
 - 2026-11-26 **Decision:** PLAN 1.98.0 on registry 1.107.0: Phase 85 (migrate --to 4: the subcommand, the in-flight stop, next/ skipped by 3.x readers, the bodies) planned in full; Phase 82 unchanged and decomposed; Phase 83 the release
 - 2026-11-26 **Decision:** PLAN 1.97.0: Phase 82 = analyze on a 4.0 workspace (audit with the map compared with the code, reverse mode by the lab's method), planned in full; the migration split out as Phase 85, waiting for /magicspec spec on migrate's argument (l1-command-surface CS-6) and the case-insensitive tree collision (l2 §5.5); Phase 83 the release
 - 2026-11-26 **Decision:** Phase 84 complete (maintenance, feedback note n7): finalize prints no line of git's; engine 3.0.217, ported to v2.1 as 2.1.150 (local commit, no push)
-- 2026-11-26 **Decision:** Phase 81 complete. Provides: the goal file of a 4.0 workspace, the 4.0 sections of goal, fix, simulate, status, rule, graph, sync and help, scenarios S-16 and S-17, harness 519, engine 3.0.213; Phase 82 (analyze and migrate) needs its plan
-- 2026-11-26 **Decision:** Concept and realization 1.6.0: memory/goal.md holds the goal record, scenarios stay in simulations/. PLAN 1.95.0: Phase 81 (remaining bodies and the goal file) planned in full; analyze moved to Phase 82 with migrate; Phase 83 the release
 
 ## Blockers
 

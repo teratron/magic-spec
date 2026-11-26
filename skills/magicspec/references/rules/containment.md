@@ -67,6 +67,22 @@ self-containment test — if the sentence stops making sense once `.magicspec/` 
 absent, it denotes the plan's phase and is a leak; if it reads fine, it is
 domain vocabulary and is not. Every other class above is unconditional.
 
+### On a 4.0 Workspace
+
+A workspace whose entry in `workspace.json` carries `"format": "4"` names its
+work by address instead of task and phase. A project that holds one forbids these
+classes too, beside every `.magicspec/` path:
+
+- **Always**: a task `M{n}.T{k}`; a binding unit `{key}.b{n}`, where `{key}`
+  is a component of the set; `map:{key}`, `term:{word}` and `asset:{path}`.
+- **After the self-containment test**, because a product can write the same
+  characters as words of its own: the short forms `R{n}`, `S{n}`, `P{n}`,
+  `X{n}`, `D{n}`, `C{n}` and `M{n}`, a requirement `{key}.{n}`, and a file
+  of the set named without the state folder (`product.md`, `plan.md`,
+  `changes.md`, `spec/`, `stack/`, `memory/`).
+- **Never a finding**: a component key written where the bindings use it as a
+  name.
+
 If design rationale matters at a code site, restate it in plain language.
 Provenance ("which task produced this") lives in the SDD layer (task `Changes`
 fields, phase files) and git metadata (commit messages, PR descriptions) —

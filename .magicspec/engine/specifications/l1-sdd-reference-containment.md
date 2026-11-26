@@ -1,6 +1,6 @@
 # SDD Reference Containment Specification
 
-**Version:** 1.8.3
+**Version:** 1.8.4
 **Status:** Stable
 **Layer:** concept
 
@@ -170,6 +170,7 @@ The check is deliberately a five-point inspection rather than an attempt to actu
 5. Purge engine-workspace references from already-shipped files (workflow bodies, templates, agent rules): replace dead spec links with inline restatement, replace baked-in workspace names with `{workspace}` placeholders, replace governance file-name citations with protocol names (RC-9). `[ADDED]`
 6. Extend the ventilation checklist with the RC-12 scaffold-removal check (§4.4), and state the scaffold framing once in the distributed agent rules — the ambient surface is where it matters most, since coupling is typically introduced by a direct user-prompted edit ("add a lint script", "wire this into CI") rather than inside a `run` workflow the role cards mediate. Both modify engine files → C14 applies at implementation time. `[ADDED]`
 7. Rescope the quoting precondition of the ventilation scan (RC-2.2): `skills/magicspec/workflows/analyze.md` step 6 names the SH-1 precondition as holding for the engine's own authored files and states that in a consumer project a code-quoted occurrence is reported. Correct the hook claim (RC-12) where it is repeated: `skills/magicspec/workflows/analyze.md` step 6a's exemption line and `skills/magicspec/CONSTITUTION.md` §6's exemption sentence say the hook "goes away with" or "is removed with" the scaffold; they say instead that the hook disarms itself when the engine is absent. `skills/magicspec/CONSTITUTION.md` is a hardlinked pair, **[C-001]**. Every file here modifies the engine → C14 applies at implementation time. `[ADDED]`
+8. **The classes of a 4.0 workspace** `[ADDED]` (as built in Phase 82, the supersession [l1-sdd-document-set.md](l1-sdd-document-set.md) §6 declares; the classes of RC-2 are unchanged). `references/rules/containment.md` adds, for a project that holds a workspace in the 4.0 format, beside every `.magicspec/` path: always a task `M{n}.T{k}`, a binding unit `{key}.b{n}` of a component of the set, `map:{key}`, `term:{word}` and `asset:{path}`; after the self-containment test (RC-3) the short addresses `R{n}`, `S{n}`, `P{n}`, `X{n}`, `D{n}`, `C{n}` and `M{n}`, a requirement `{key}.{n}` and the set's file and folder names written without the state folder; never a component key used as a name where the bindings use it. The names of the set's files are judged by self-containment rather than unconditionally, because `spec/` is a test folder in many products and `plan.md` or `product.md` an ordinary document. The ventilation scan of a 4.0 workspace reads these classes (`workflows/analyze.md` §On a 4.0 Workspace).
 
 ## 6. Drawbacks & Alternatives
 
@@ -195,6 +196,7 @@ The check is deliberately a five-point inspection rather than an attempt to actu
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.8.4 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed for 3.x: §5 item 8 states the classes a 4.0 workspace adds, as the shipped reference rule holds them. |
 | 1.8.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.8.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.8.1 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |

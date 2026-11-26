@@ -335,16 +335,30 @@ function detectShadowSpecs(specRefs, scannedFiles) {
 
 const rootDir = resolveProjectRoot();
 
-// A 4.0 workspace: the coverage of its requirements, read from the set; no code file is walked.
+const isIgnored = loadGitignore(rootDir);
+const scannedFiles = scanProjectFiles(rootDir, isIgnored);
+const scopeSet = workspaceScope ? compilePathSet(workspaceScope.split(',')) : null;
+const files = scopeSet ? scannedFiles.filter((f) => scopeSet.matches(f)) : scannedFiles;
+
+// A 4.0 workspace: the coverage of its requirements, read from the set, and its map compared
+// with the files of its scope.
 const workspaceDir = path.join(rootDir, designDir);
 if (isDocSetWorkspace(workspaceDir)) {
-    const { requirements, summary, lines } = setCoverage(workspaceDir);
+    const { requirements, summary, map, lines } = setCoverage(workspaceDir, {
+        root: rootDir,
+        files,
+    });
     console.log(
         jsonOutput
             ? JSON.stringify(
                   {
                       requirements,
                       summary,
+                      ...(map === null
+                          ? {}
+                          : {
+                                map,
+                            }),
                   },
                   null,
                   2,
@@ -359,15 +373,10 @@ const specsDir = path.join(rootDir, designDir, 'specifications');
 const { pathToSpec, refEntries, specRefs } = buildRefIndex(specsDir);
 const { parents, grandparents } = buildAncestorSets(pathToSpec, refEntries);
 
-const isIgnored = loadGitignore(rootDir);
-const scannedFiles = scanProjectFiles(rootDir, isIgnored);
-
 // Zero-Match Guard: an entry that matches nothing is reported, so an empty scan is never
 // mistaken for a clean one.
 /** @type {Array<{type: string, message: string, fix: string}>} */
 const warnings = [];
-const scopeSet = workspaceScope ? compilePathSet(workspaceScope.split(',')) : null;
-const files = scopeSet ? scannedFiles.filter((f) => scopeSet.matches(f)) : scannedFiles;
 if (scopeSet) {
     for (const entry of scopeSet.unmatched(scannedFiles)) {
         warnings.push({

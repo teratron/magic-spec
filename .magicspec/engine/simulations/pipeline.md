@@ -70,3 +70,21 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** an input after the first version, "an item due today is listed first": `/magicspec spec` records it in `changes.md` before editing a unit, edits the units at a new revision and sets the change `placed` (composed; `spec.md` §On a 4.0 Workspace, step 3); until the later stages run, `check-docs` reports only the change without its milestone and its stale units (printed; step 4); the invocation ends with `Next: /magicspec plan {workspace} — deep reasoning` (printed). A stack not named by the idea: no stack layer is written, the finalization names no command, and the invocation asks for the stack through `/magicspec spec` (composed; step 6).
 
 **Last run:** never
+
+## S-18: An existing project with no documents on a 4.0 workspace gets a set written from its code
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l2-sdd-document-set-engine.md §5.4 row `analyze`, l1-sdd-document-set.md §5.5 Plan rules, l1-sdd-document-set.md §5.7 Memory
+**Preconditions:** a disposable project with the engine installed, a small product with its tests that runs, and one registered workspace whose entry in `workspace.json` carries `"format": "4"`, holding no `product.md`.
+
+**Steps:**
+
+1. `/magicspec analyze` → expect: the audit reports that the workspace has no documents and names `/magicspec analyze first-time`, writing no document (composed; `analyze.md` §On a 4.0 Workspace, The Audit).
+2. `/magicspec analyze first-time` → expect: the neutral layer, a reading by a reader of another stack and the stack layer are written from the code, a behaviour the code leaves in doubt standing as an `Open` line (composed; The Reverse Mode, step 1); `check-docs` reports 0 findings after each layer (printed).
+3. The same invocation writes the memory files, the milestones and their tasks → expect: `memory/map.md` holds its table header and no row until a milestone is recorded, every milestone has a task file and `pack` prints each task's pack within its budget (composed and printed; steps 2 and 3).
+4. The same invocation replays the build → expect: each task's `Observe` runs against the existing code, a task is recorded `- Done:` only when all hold, and no product file differs from before the command (composed; step 4; printed: the files).
+5. Each milestone whose `Observed by` holds is recorded → expect: `mark-built M{n}` prints the map rows it wrote and `memory/map.md` gains them, the existing files of each component under its path (printed; l2-sdd-document-set-engine.md §5.2, `mark-built`); the report ends with `check-docs` at 0 findings and the files `analyze-coverage` finds under no row (composed; step 6).
+
+**Variants:** an observation fails because the code does not do what a unit states → the unit gains an `Open` line, the task stays not done, its milestone is not recorded and the product code is not changed (composed; step 4). A workspace that already holds `product.md` is not written again: one line says so and names `/magicspec spec {workspace}` (composed).
+
+**Last run:** never

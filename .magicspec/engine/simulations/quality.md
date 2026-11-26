@@ -70,3 +70,20 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** the report describes what the units state and the product does → the change is recorded `satisfied` with the stating units as its `Evidence`, no product file differs and nothing is planned for it (composed; `fix.md` §On a 4.0 Workspace, step 3); `check-docs` accepts it (printed).
 
 **Last run:** never
+
+## S-19: An audit of a 4.0 workspace reports where the map, the code and the product disagree, and writes no document
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l2-sdd-document-set-engine.md §5.4 row `analyze`, l1-sdd-reference-containment.md §3 RC-7, l1-sdd-document-set.md §5.9 The checker
+**Preconditions:** a disposable project with one 4.0 workspace whose set is built, in which since then a source file the map names has been removed, a new source file has been added in a folder no map row covers, and a product file names a task of the set in a comment.
+
+**Steps:**
+
+1. Take a digest of every document of the set and every product file, then `/magicspec analyze` → expect: the report holds the checker's result with the stage that owns each finding (composed; `analyze.md` §On a 4.0 Workspace, The Audit, step 2).
+2. Read the map comparison → expect: `analyze-coverage` prints `map:{key}: {path} is missing` for the removed file and `{file}: no map row` for the new one, and its summary counts both; each is a finding that names `/magicspec spec {workspace}` (printed; step 3).
+3. Read the containment findings → expect: the comment naming the task is reported as `SDD_REFERENCE_LEAK` with its file and line and the remediation path, and the product file is not edited (composed; step 4, `references/rules/containment.md` §On a 4.0 Workspace).
+4. Take the digest again → expect: no document of the set and no product file differs from the first digest; only the engine snapshot of the global registry and the graph folder may (printed; the audit, step 6).
+
+**Variants:** a component key written where the bindings use it as a name is no finding (composed; `references/rules/containment.md`).
+
+**Last run:** never

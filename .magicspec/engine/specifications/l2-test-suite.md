@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.15
+**Version:** 1.48.16
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -209,6 +209,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.16 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: the `document-set` module grows from 56 to 59 cases — the map compared with the files of the scope, the containment classes of a 4.0 workspace and the `analyze` body's section, with the auditor line in the role-card case — each under mutation control; the earlier 4.0 coverage case follows the new output, the 3.x cases are unedited. |
 | 1.48.15 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: the `document-set` module grows from 47 to 56 cases — the goal file of a 4.0 workspace written, read, refused and removed, and the 4.0 section of each of the eight remaining bodies at its place with its scripts, its role and the phrases of its row — each under mutation control; the four earlier body cases keep their names. |
 | 1.48.14 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: the `document-set` module grows from 41 to 47 cases — the graph, the wiki, the index, coverage, `sync` and the three writers on a 4.0 workspace — each under mutation control; the 3.x cases of those subcommands unchanged. |
 | 1.48.13 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `document-set` module grows from 33 to 41 cases — the three role-card lines held by card and mirror, the 4.0 section of each of the four bodies (place, Contents, opening paragraph, script calls, role), the builder's inputs in `run`, the map row naming files only, and the next step at each stage of a set; each new case under mutation control. `artifact-index` has drifted from the formatter and stays unformatted: formatted it passes the line bound of HL-7 (3,436 lines), so it waits for a split. |
