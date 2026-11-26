@@ -38,6 +38,19 @@ function isDocSetWorkspace(dir, name = path.basename(dir)) {
 }
 
 /**
+ * The line of a script that writes a 3.x file and is called on a 4.0 workspace, which holds no
+ * such file.
+ *
+ * @param {string} tag - The script's name in its messages.
+ * @param {string} dir - The folder of the workspace.
+ * @param {string} instead - What takes the place of the file.
+ * @returns {string}
+ */
+function nothingWritten(tag, dir, instead) {
+    return `[${tag}] ${path.basename(dir)} is a 4.0 workspace: ${instead}; nothing written.`;
+}
+
+/**
  * The addresses `memory/state.md` records as done.
  *
  * @param {string} text - `memory/state.md`.
@@ -134,6 +147,7 @@ function withNextLine(text, next) {
 
 module.exports = {
     isDocSetWorkspace,
+    nothingWritten,
     doneAddresses,
     nextReadyTask,
     nextStep,

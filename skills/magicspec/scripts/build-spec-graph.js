@@ -23,6 +23,8 @@ const {
 } = require('./utils');
 const { parseCanonicalRefs } = require('./lib/canonical-refs');
 const graphCache = require('./graph-cache');
+const { isDocSetWorkspace } = require('./lib/doc-set-state');
+const { docSetGraph } = require('./lib/doc-set-graph');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPECIFICATION KNOWLEDGE GRAPH — BUILD & EXPORT
@@ -64,7 +66,10 @@ const rootDir = resolveProjectRoot();
 const { designDir, designAbs } = resolveDesignRoot(rootDir);
 
 /** Per-run cache hit/miss counter — surfaced in summary output on non-JSON runs. */
-const cacheStats = { hits: 0, misses: 0 };
+const cacheStats = {
+    hits: 0,
+    misses: 0,
+};
 
 /** Default HTML output path relative to project root. */
 const DEFAULT_HTML_PATH = path.relative(rootDir, graphPaths(designAbs).html);
@@ -89,7 +94,13 @@ const edges = [];
  */
 function addNode(id, label, type, extra = {}) {
     if (nodes.has(id)) return;
-    nodes.set(id, { id, label, type, group: type, ...extra });
+    nodes.set(id, {
+        id,
+        label,
+        type,
+        group: type,
+        ...extra,
+    });
 }
 
 /**
@@ -100,7 +111,11 @@ function addNode(id, label, type, extra = {}) {
  * @param {string} relation - One of EDGE_RELATIONS.
  */
 function addEdge(from, to, relation) {
-    edges.push({ from, to, relation });
+    edges.push({
+        from,
+        to,
+        relation,
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -116,10 +131,16 @@ function addEdge(from, to, relation) {
  */
 function wholeProjectScope() {
     const isIgnored = loadGitignore(rootDir);
-    const skip = new Set([...BUILD_NOISE_DIRS, '.references', STATE_DIR_NAME]);
+    const skip = new Set([
+        ...BUILD_NOISE_DIRS,
+        '.references',
+        STATE_DIR_NAME,
+    ]);
     let entries;
     try {
-        entries = fs.readdirSync(rootDir, { withFileTypes: true });
+        entries = fs.readdirSync(rootDir, {
+            withFileTypes: true,
+        });
     } catch (_) {
         return [];
     }
@@ -147,7 +168,9 @@ function extractWorkspaces() {
 
     for (const [name, config] of Object.entries(workspaces)) {
         const wsId = `ws:${name}`;
-        addNode(wsId, name, 'workspace', { workspace: name });
+        addNode(wsId, name, 'workspace', {
+            workspace: name,
+        });
 
         const declared = Array.isArray(config.scope) ? config.scope : [];
         const scope = declared.length ? declared : wholeProjectScope();
@@ -155,7 +178,9 @@ function extractWorkspaces() {
 
         for (const s of scope) {
             const fileId = `file:${normalizePath(s)}`;
-            addNode(fileId, normalizePath(s), 'file', { workspace: name });
+            addNode(fileId, normalizePath(s), 'file', {
+                workspace: name,
+            });
             addEdge(wsId, fileId, 'scopes');
         }
     }
@@ -230,7 +255,13 @@ function extractSpecRegistry(wsName) {
             });
             addEdge(`ws:${wsName}`, specId, 'contains');
 
-            specs.push({ file: fileName, description, status, layer, version });
+            specs.push({
+                file: fileName,
+                description,
+                status,
+                layer,
+                version,
+            });
         }
     }
 
@@ -252,7 +283,11 @@ function parseSpecBody(specPath) {
     try {
         content = fs.readFileSync(specPath, 'utf8');
     } catch (_) {
-        return { refs: [], parent: null, conventions: [] };
+        return {
+            refs: [],
+            parent: null,
+            conventions: [],
+        };
     }
 
     const refs = parseCanonicalRefs(content);
@@ -268,7 +303,13 @@ function parseSpecBody(specPath) {
         if (num >= 1 && num <= 99) found.add(num);
     }
 
-    return { refs, parent, conventions: [...found].sort((a, b) => a - b) };
+    return {
+        refs,
+        parent,
+        conventions: [
+            ...found,
+        ].sort((a, b) => a - b),
+    };
 }
 
 /**
@@ -289,7 +330,9 @@ function extractSpecDetails(wsName) {
 
         // Ensure spec node exists (may have been created from INDEX.md)
         if (!nodes.has(specId)) {
-            addNode(specId, specFile, 'spec', { workspace: wsName });
+            addNode(specId, specFile, 'spec', {
+                workspace: wsName,
+            });
             addEdge(`ws:${wsName}`, specId, 'contains');
         }
 
@@ -351,10 +394,15 @@ function extractConventions() {
         if (match) {
             const num = parseInt(match[1], 10);
             const name = match[2].trim();
-            conventions.push({ num, name });
+            conventions.push({
+                num,
+                name,
+            });
 
             const convId = `conv:C${num}`;
-            addNode(convId, `C${num} — ${name}`, 'convention', { num });
+            addNode(convId, `C${num} — ${name}`, 'convention', {
+                num,
+            });
         }
     }
 
@@ -402,10 +450,62 @@ function extractPhases(wsName) {
         });
         addEdge(`ws:${wsName}`, phaseId, 'contains');
 
-        phases.push({ phaseNum, description, status });
+        phases.push({
+            phaseNum,
+            description,
+            status,
+        });
     }
 
     return phases;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXTRACTION — DOCUMENT SETS (workspaces in the 4.0 format)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** The workspaces of this build that are in the 4.0 format: no coverage is computed for them. */
+const docSets = new Set();
+
+/**
+ * Adds the units of a 4.0 workspace as nodes, each contained in its workspace, and the
+ * references between them as edges.
+ *
+ * @param {string} wsName - Workspace name.
+ */
+function extractDocSet(wsName) {
+    docSets.add(wsName);
+    const graph = docSetGraph(path.join(designAbs, wsName), wsName);
+    for (const node of graph.nodes) {
+        addNode(node.id, node.label, 'unit', node.extra);
+        addEdge(`ws:${wsName}`, node.id, 'contains');
+    }
+    for (const edge of graph.edges) addEdge(edge.from, edge.to, 'references');
+}
+
+/**
+ * Adds what a workspace holds: the units of a set, or the specifications and phases else.
+ *
+ * @param {string} wsName - Workspace name.
+ */
+function extractWorkspaceContent(wsName) {
+    if (isDocSetWorkspace(path.join(designAbs, wsName), wsName)) {
+        extractDocSet(wsName);
+        return;
+    }
+    extractSpecRegistry(wsName);
+    extractSpecDetails(wsName);
+    extractPhases(wsName);
+}
+
+/**
+ * Whether coverage is computed for a node: a workspace that is not a set.
+ *
+ * @param {{type: string, label: string}} node
+ * @returns {boolean}
+ */
+function isCoveredWorkspace(node) {
+    return node.type === 'workspace' && !docSets.has(node.label);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -447,7 +547,9 @@ function computeDegrees() {
  * @returns {Array<{id: string, label: string, type: string, degree: number}>}
  */
 function findGodNodes(degrees, topN = 5) {
-    return [...degrees.entries()]
+    return [
+        ...degrees.entries(),
+    ]
         .sort((a, b) => b[1] - a[1])
         .slice(0, topN)
         .map(([id, degree]) => {
@@ -472,11 +574,14 @@ function findOrphanedFiles() {
     const coveredFiles = new Set();
 
     for (const edge of edges) {
-        if (edge.relation === 'scopes') scopedFiles.add(edge.to);
+        if (edge.relation === 'scopes' && !docSets.has(edge.from.slice('ws:'.length)))
+            scopedFiles.add(edge.to);
         if (edge.relation === 'covers') coveredFiles.add(edge.to);
     }
 
-    return [...scopedFiles].filter((scopedId) => {
+    return [
+        ...scopedFiles,
+    ].filter((scopedId) => {
         const scopedPath = scopedId.replace(/^file:/, '');
         for (const coveredId of coveredFiles) {
             const coveredPath = coveredId.replace(/^file:/, '');
@@ -501,7 +606,11 @@ function findMissingImplements() {
     const missing = [];
     for (const [id, node] of nodes) {
         if (node.type === 'spec' && node.layer >= 2 && !implementsSources.has(id)) {
-            missing.push({ id, label: node.label, workspace: node.workspace || '' });
+            missing.push({
+                id,
+                label: node.label,
+                workspace: node.workspace || '',
+            });
         }
     }
 
@@ -529,7 +638,10 @@ function analyzeConventionCoverage() {
         }
     }
 
-    return { enforced, orphaned };
+    return {
+        enforced,
+        orphaned,
+    };
 }
 
 /**
@@ -552,7 +664,10 @@ function findBridgeSpecs(workspaceScopes) {
 
     /** Compiled scope of each workspace, built once (the matcher compiles patterns to regular expressions). */
     const scopeSets = Object.fromEntries(
-        Object.entries(workspaceScopes).map(([ws, scope]) => [ws, compilePathSet(scope)]),
+        Object.entries(workspaceScopes).map(([ws, scope]) => [
+            ws,
+            compilePathSet(scope),
+        ]),
     );
 
     /**
@@ -584,7 +699,9 @@ function findBridgeSpecs(workspaceScopes) {
             bridges.push({
                 id: specId,
                 label: node ? node.label : specId,
-                workspaces: [...wsSet],
+                workspaces: [
+                    ...wsSet,
+                ],
             });
         }
     }
@@ -601,7 +718,7 @@ function computeCoverageStats() {
     const stats = {};
 
     for (const [id, node] of nodes) {
-        if (node.type !== 'workspace') continue;
+        if (!isCoveredWorkspace(node)) continue;
         const ws = node.label;
 
         const wsSpecs = edges
@@ -667,7 +784,13 @@ function runAnalysis(degrees, workspaceScopes) {
     const coverageStats = computeCoverageStats();
 
     // Count by type
-    const typeCounts = { workspaces: 0, specs: 0, files: 0, conventions: 0, phases: 0 };
+    const typeCounts = {
+        workspaces: 0,
+        specs: 0,
+        files: 0,
+        conventions: 0,
+        phases: 0,
+    };
     for (const node of nodes.values()) {
         if (node.type === 'workspace') typeCounts.workspaces++;
         else if (node.type === 'spec') typeCounts.specs++;
@@ -675,6 +798,11 @@ function runAnalysis(degrees, workspaceScopes) {
         else if (node.type === 'convention') typeCounts.conventions++;
         else if (node.type === 'phase') typeCounts.phases++;
     }
+
+    // The units of 4.0 workspaces are counted only where there are any, so a 3.x graph is unchanged.
+    const units = [
+        ...nodes.values(),
+    ].filter((n) => n.type === 'unit').length;
 
     return {
         god_nodes: godNodes,
@@ -687,6 +815,11 @@ function runAnalysis(degrees, workspaceScopes) {
             total_nodes: nodes.size,
             total_edges: edges.length,
             ...typeCounts,
+            ...(units > 0
+                ? {
+                      units,
+                  }
+                : {}),
         },
     };
 }
@@ -704,7 +837,9 @@ function runAnalysis(degrees, workspaceScopes) {
 function toJSON(analysis) {
     return JSON.stringify(
         {
-            nodes: [...nodes.values()],
+            nodes: [
+                ...nodes.values(),
+            ],
             edges,
             analysis,
         },
@@ -734,7 +869,9 @@ const VIS_NETWORK_INTEGRITY =
  * @returns {string} Complete HTML document string.
  */
 function toHTML(analysis) {
-    const nodeArray = [...nodes.values()];
+    const nodeArray = [
+        ...nodes.values(),
+    ];
     // The data sits inside a <script>: a label such as `</script>` must not end it.
     const embed = (value) =>
         JSON.stringify(value)
@@ -1052,6 +1189,22 @@ function toHTML(analysis) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * The table of node counts by type; units are listed only where there are any.
+ *
+ * @param {object} s - The summary of the analysis.
+ */
+function printTypeCounts(s) {
+    console.log('  Type          Count');
+    console.log('  ─────────── ───────');
+    console.log(`  Workspaces  ${String(s.workspaces).padStart(7)}`);
+    console.log(`  Specs       ${String(s.specs).padStart(7)}`);
+    console.log(`  Files       ${String(s.files).padStart(7)}`);
+    console.log(`  Conventions ${String(s.conventions).padStart(7)}`);
+    console.log(`  Phases      ${String(s.phases).padStart(7)}`);
+    if (s.units) console.log(`  Units       ${String(s.units).padStart(7)}`);
+}
+
+/**
  * Prints a human-readable summary of the graph and analysis to stdout.
  *
  * @param {object} analysis - Analysis results from runAnalysis.
@@ -1074,13 +1227,7 @@ function printSummary(analysis) {
     }
     console.log('');
 
-    console.log('  Type          Count');
-    console.log('  ─────────── ───────');
-    console.log(`  Workspaces  ${String(s.workspaces).padStart(7)}`);
-    console.log(`  Specs       ${String(s.specs).padStart(7)}`);
-    console.log(`  Files       ${String(s.files).padStart(7)}`);
-    console.log(`  Conventions ${String(s.conventions).padStart(7)}`);
-    console.log(`  Phases      ${String(s.phases).padStart(7)}`);
+    printTypeCounts(s);
     console.log('');
 
     // God Nodes
@@ -1169,11 +1316,7 @@ function buildAndExport() {
     extractConventions();
 
     // 3. For each workspace: extract spec registry, spec details, phases, plan links
-    for (const wsName of workspaceNames) {
-        extractSpecRegistry(wsName);
-        extractSpecDetails(wsName);
-        extractPhases(wsName);
-    }
+    for (const wsName of workspaceNames) extractWorkspaceContent(wsName);
 
     // 4. Compute degrees and run analysis
     const degrees = computeDegrees();

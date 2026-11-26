@@ -24,7 +24,12 @@ const path = require('path');
 const MAX_SECTION_CHARS = 2000;
 
 /** Kinds a query excludes unless it asks for history. */
-const HISTORY_KINDS = Object.freeze(['archive', 'history', 'retrospective', 'changelog']);
+const HISTORY_KINDS = Object.freeze([
+    'archive',
+    'history',
+    'retrospective',
+    'changelog',
+]);
 
 /** Every kind a section can have. */
 const KINDS = Object.freeze([
@@ -38,8 +43,14 @@ const KINDS = Object.freeze([
 ]);
 
 /** Folders and files of the state folder that are derived or hold no artifact. */
-const SKIPPED_DIRS = Object.freeze(['.cache', 'graph', 'node_modules']);
-const SKIPPED_FILES = Object.freeze(['CONTEXT.md']);
+const SKIPPED_DIRS = Object.freeze([
+    '.cache',
+    'graph',
+    'node_modules',
+]);
+const SKIPPED_FILES = Object.freeze([
+    'CONTEXT.md',
+]);
 
 /** Separator of a heading path. */
 const PATH_SEPARATOR = ' › ';
@@ -69,7 +80,46 @@ function kindOf(rel) {
     if (name === 'RETROSPECTIVE.md') return 'retrospective';
     if (name === 'CHANGELOG.md') return 'changelog';
     if (name === 'INDEX.md') return 'registry';
-    return null;
+    return setKindOf(parts.slice(1));
+}
+
+/** The documents at the root of a workspace in the 4.0 format, with their kinds. */
+const SET_DOCUMENTS = Object.freeze(
+    new Map([
+        [
+            'product.md',
+            'spec',
+        ],
+        [
+            'rules.md',
+            'rules',
+        ],
+        [
+            'plan.md',
+            'plan',
+        ],
+        [
+            'changes.md',
+            'plan',
+        ],
+    ]),
+);
+
+/**
+ * The kind of a document of a 4.0 set, by its place in the workspace folder. Its units are
+ * headed by their addresses, so the sections of the index are the units; no 3.x file lies at
+ * these places. The task files of a set are `tasks` files by the rule above.
+ *
+ * @param {string[]} inside - The parts of the path below the workspace folder.
+ * @returns {string|null} The kind, or null for a file that is no document of a set.
+ */
+function setKindOf(inside) {
+    const name = inside[inside.length - 1];
+    if (inside.length === 1) return SET_DOCUMENTS.get(name) ?? null;
+    if (inside[0] === 'memory') return inside.length === 2 ? 'state' : null;
+    if (inside[0] === 'spec') return inside.length === 2 ? 'spec' : null;
+    if (inside[0] !== 'stack') return null;
+    return name === 'rules.md' ? 'rules' : 'spec';
 }
 
 /**
@@ -105,7 +155,11 @@ function paragraphsOf(body) {
         if (marker) fence = fence === null ? marker[1] : fence === marker[1] ? null : fence;
         if (fence === null && line.trim() === '') {
             if (current.length > 0) {
-                paragraphs.push({ text: current.join('\n'), from, to: offset - 1 });
+                paragraphs.push({
+                    text: current.join('\n'),
+                    from,
+                    to: offset - 1,
+                });
             }
             current = [];
         } else {
@@ -114,7 +168,11 @@ function paragraphsOf(body) {
         }
     });
     if (current.length > 0) {
-        paragraphs.push({ text: current.join('\n'), from, to: from + current.length - 1 });
+        paragraphs.push({
+            text: current.join('\n'),
+            from,
+            to: from + current.length - 1,
+        });
     }
     return paragraphs;
 }
@@ -131,11 +189,23 @@ function paragraphsOf(body) {
 function atomsOf(body) {
     return paragraphsOf(body).flatMap((paragraph) => {
         if (paragraph.text.length <= MAX_SECTION_CHARS) {
-            return [{ text: paragraph.text, gap: '\n\n', from: paragraph.from, to: paragraph.to }];
+            return [
+                {
+                    text: paragraph.text,
+                    gap: '\n\n',
+                    from: paragraph.from,
+                    to: paragraph.to,
+                },
+            ];
         }
         return paragraph.text.split('\n').map((line, i) => {
             const offset = paragraph.from + i;
-            return { text: line, gap: i === 0 ? '\n\n' : '\n', from: offset, to: offset };
+            return {
+                text: line,
+                gap: i === 0 ? '\n\n' : '\n',
+                from: offset,
+                to: offset,
+            };
         });
     });
 }
@@ -153,7 +223,13 @@ function atomsOf(body) {
  */
 function splitBody(body) {
     if (body.length <= MAX_SECTION_CHARS) {
-        return [{ text: body, from: 0, to: body.split('\n').length - 1 }];
+        return [
+            {
+                text: body,
+                from: 0,
+                to: body.split('\n').length - 1,
+            },
+        ];
     }
     const parts = [];
     /** @type {{text: string, from: number, to: number}|null} */
@@ -162,9 +238,17 @@ function splitBody(body) {
         const joined = current === null ? atom.text : `${current.text}${atom.gap}${atom.text}`;
         if (current !== null && joined.length > MAX_SECTION_CHARS) {
             parts.push(current);
-            current = { text: atom.text, from: atom.from, to: atom.to };
+            current = {
+                text: atom.text,
+                from: atom.from,
+                to: atom.to,
+            };
         } else {
-            current = { text: joined, from: current?.from ?? atom.from, to: atom.to };
+            current = {
+                text: joined,
+                from: current?.from ?? atom.from,
+                to: atom.to,
+            };
         }
     }
     if (current !== null) parts.push(current);
@@ -183,7 +267,10 @@ function specHeader(text) {
         const match = new RegExp(`^\\*\\*${name}:\\*\\*[ \\t]*(.+?)[ \\t]*$`, 'm').exec(head);
         return match ? match[1] : '';
     };
-    return { status: field('Status'), version: field('Version') };
+    return {
+        status: field('Status'),
+        version: field('Version'),
+    };
 }
 
 /**
@@ -203,12 +290,22 @@ function blocksOf(text, fallbackTitle) {
     const blocks = [];
     let title = null;
     let h2 = null;
-    let current = { heading: null, headingText: '', headingLine: 0, entries: [] };
+    let current = {
+        heading: null,
+        headingText: '',
+        headingLine: 0,
+        entries: [],
+    };
     let fence = null;
 
     const open = (heading, headingText, headingLine) => {
         blocks.push(current);
-        current = { heading, headingText, headingLine, entries: [] };
+        current = {
+            heading,
+            headingText,
+            headingLine,
+            entries: [],
+        };
     };
 
     text.split('\n').forEach((line, index) => {
@@ -223,15 +320,33 @@ function blocksOf(text, fallbackTitle) {
             current.headingLine = no;
         } else if (heading && heading[1] === '##') {
             h2 = `## ${heading[2]}`;
-            open([title, h2].filter(Boolean).join(PATH_SEPARATOR), heading[2], no);
+            open(
+                [
+                    title,
+                    h2,
+                ]
+                    .filter(Boolean)
+                    .join(PATH_SEPARATOR),
+                heading[2],
+                no,
+            );
         } else if (heading && heading[1] === '###') {
             open(
-                [title, h2, `### ${heading[2]}`].filter(Boolean).join(PATH_SEPARATOR),
+                [
+                    title,
+                    h2,
+                    `### ${heading[2]}`,
+                ]
+                    .filter(Boolean)
+                    .join(PATH_SEPARATOR),
                 heading[2],
                 no,
             );
         } else {
-            current.entries.push({ text: line, no });
+            current.entries.push({
+                text: line,
+                no,
+            });
         }
     });
     blocks.push(current);
@@ -281,7 +396,12 @@ function sectionsOf(rel, text) {
 
     const normalized = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
     const { status, version } =
-        fileKind === 'spec' ? specHeader(normalized) : { status: '', version: '' };
+        fileKind === 'spec'
+            ? specHeader(normalized)
+            : {
+                  status: '',
+                  version: '',
+              };
     const workspace = workspaceOf(rel);
     const units = [];
 
@@ -397,7 +517,9 @@ function listArtifacts(designAbs) {
     const files = [];
     const unkinded = [];
     const walk = (dir, prefix) => {
-        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        for (const entry of fs.readdirSync(dir, {
+            withFileTypes: true,
+        })) {
             const rel = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
             if (entry.isDirectory()) {
                 if (!SKIPPED_DIRS.includes(entry.name)) walk(path.join(dir, entry.name), rel);
@@ -407,7 +529,10 @@ function listArtifacts(designAbs) {
         }
     };
     if (fs.existsSync(designAbs)) walk(designAbs, '');
-    return { files: files.sort(), unkinded: unkinded.sort() };
+    return {
+        files: files.sort(),
+        unkinded: unkinded.sort(),
+    };
 }
 
 module.exports = {

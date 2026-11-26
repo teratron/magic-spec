@@ -17,6 +17,7 @@ const {
     BUILD_NOISE_DIRS,
     unregisteredWorkspaceMessage,
 } = require('./utils');
+const { isDocSetWorkspace, nothingWritten } = require('./lib/doc-set-state');
 
 // Every path below is relative to the project root: run from there whatever directory the caller is in.
 process.chdir(resolveProjectRoot());
@@ -42,6 +43,12 @@ if (unregistered) {
 if (!fs.existsSync(designDir) || !fs.statSync(designDir).isDirectory()) {
     console.error(`Error: ${designDir} directory not found`);
     process.exit(1);
+}
+
+// The documents of a 4.0 workspace are its own map: no context file is written into it.
+if (isDocSetWorkspace(path.resolve(designDir))) {
+    console.log(nothingWritten('generate-context', designDir, 'its documents are the set itself'));
+    process.exit(0);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -156,7 +163,9 @@ function buildTree(
 }
 
 /** Build directories always hidden from the tree, even when not gitignored. */
-const ignoreList = [...BUILD_NOISE_DIRS];
+const ignoreList = [
+    ...BUILD_NOISE_DIRS,
+];
 
 /**
  * Root-level directories that must always appear on the map. The tree exists
@@ -171,7 +180,10 @@ const ENGINE_ROOT_SEGMENT = /^(\.\.|\/|[A-Za-z]:)/.test(ENGINE_REL)
     ? null
     : ENGINE_REL.split('/')[0];
 const FORCE_VISIBLE_ROOTS = new Set(
-    [normalizePath(designDir).split('/')[0], ENGINE_ROOT_SEGMENT].filter(Boolean),
+    [
+        normalizePath(designDir).split('/')[0],
+        ENGINE_ROOT_SEGMENT,
+    ].filter(Boolean),
 );
 
 // Invariant 7 (Gitignore Safety) — shared with the other engine scanners.
@@ -186,7 +198,10 @@ if (process.env.MAGIC_WORKSPACE_SCOPE) {
     } catch {
         scopes = process.env.MAGIC_WORKSPACE_SCOPE.split(',').map((s) => s.trim());
     }
-    if (!Array.isArray(scopes)) scopes = [scopes];
+    if (!Array.isArray(scopes))
+        scopes = [
+            scopes,
+        ];
 }
 
 try {

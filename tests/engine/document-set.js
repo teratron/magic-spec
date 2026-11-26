@@ -1200,6 +1200,184 @@ module.exports = () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────
+    // the remaining subcommands on a 4.0 workspace
+    // ───────────────────────────────────────────────────────────────────────
+
+    /** Runs a subcommand in a copy of the `good` set and returns what it printed, expecting exit 0. */
+    const runGood = (/** @type {string} */ dir, /** @type {string[]} */ ...args) => {
+        const r = simExec(dir, args);
+        assert.strictEqual(r.status, 0, `${args.join(' ')}: ${r.stdout}${r.stderr}`);
+        return r.stdout;
+    };
+
+    test('document set: build-spec-graph makes a node of every unit and an edge of every reference', () => {
+        const dir = makeSetProject('good');
+        try {
+            // An address written in a text, and in no field, is a reference too.
+            writeIn(dir, '.magicspec/docs/spec/hello.md', 'It greets as R1 says.\n', true);
+            const graph = JSON.parse(runGood(dir, 'build-spec-graph', '--json'));
+            const unit = graph.nodes.find((n) => n.id === 'unit:docs:hello.1');
+            assert.deepStrictEqual(
+                [
+                    unit?.type,
+                    unit?.label,
+                    unit?.form,
+                    unit?.layer,
+                ],
+                [
+                    'unit',
+                    'hello.1',
+                    'requirement',
+                    'neutral',
+                ],
+            );
+            const edge = (
+                /** @type {string} */ relation,
+                /** @type {string} */ from,
+                /** @type {string} */ to,
+            ) => graph.edges.some((e) => e.relation === relation && e.from === from && e.to === to);
+            assert.ok(edge('contains', 'ws:docs', 'unit:docs:hello.1'));
+            assert.ok(edge('references', 'unit:docs:M2.T1', 'unit:docs:hello.1'), 'a field');
+            assert.ok(edge('references', 'unit:docs:hello.1', 'unit:docs:R1'), 'a mention');
+            assert.strictEqual(graph.analysis.summary.units, 13);
+            assert.deepStrictEqual(graph.analysis.orphaned_files, [], 'a set has no coverage');
+            assert.match(runGood(dir, 'build-spec-graph'), /^ {2}Units +13$/m);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: export-wiki writes an article for every document of the set', () => {
+        const dir = makeSetProject('good');
+        try {
+            const out = runGood(dir, 'export-wiki');
+            assert.match(out, /1 workspaces · 0 specs · 7 documents · 13 units · 1 index/);
+            const page = (/** @type {string} */ name) =>
+                fs.readFileSync(path.join(dir, '.magicspec', 'graph', 'wiki', name), 'utf8');
+            assert.match(page('index.md'), /\[\[workspace__docs\|docs\]\] — 7 documents/);
+            assert.match(
+                page('workspace__docs.md'),
+                /\[\[doc__docs__spec-hello\|spec\/hello\.md\]\] — 1 unit$/m,
+            );
+            const hello = page('doc__docs__spec-hello.md');
+            assert.match(hello, /^## hello\.1$/m);
+            assert.match(hello, /^- Referenced by: .*\[\[doc__docs__tasks-M2\|M2\.T1\]\]/m);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: memory-query cites a unit of the set by its address, with its kind', () => {
+        const dir = makeSetProject('good');
+        try {
+            const spec = runGood(dir, 'memory-query', 'hello', '--kind', 'spec');
+            assert.match(spec, /spec\/hello\.md:\d+-\d+ › ## Requirements › ### hello\.1 — Greets/);
+            const plan = runGood(dir, 'memory-query', 'greeting', '--kind', 'plan');
+            assert.match(plan, /plan\.md:\d+-\d+ › ## M2 — Greeting {3}\(plan,/);
+            const state = runGood(dir, 'memory-query', 'shared types', '--kind', 'state');
+            assert.match(state, /memory\/state\.md/);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: analyze-coverage counts the requirements a task observes', () => {
+        const dir = makeSetProject('good');
+        try {
+            assert.strictEqual(
+                runGood(dir, 'analyze-coverage').trim(),
+                '1 of 1 requirements covered',
+            );
+            writeIn(
+                dir,
+                '.magicspec/docs/spec/hello.md',
+                '\n### hello.2 — Silent\n\nNo other line is printed.\n\n- Accept: one line\n\n### hello.3 — Loose\n\nIt is fast.\n',
+                true,
+            );
+            assert.strictEqual(
+                runGood(dir, 'analyze-coverage').trim(),
+                'hello.2: unobserved\nhello.3: unchecked\n1 of 3 requirements covered',
+            );
+            const { summary } = JSON.parse(runGood(dir, 'analyze-coverage', '--json'));
+            assert.deepStrictEqual(summary, {
+                total: 3,
+                covered: 1,
+                unobserved: 1,
+                unchecked: 1,
+            });
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: sync recomputes the Next line and names the stage of every finding', () => {
+        const dir = makeSetProject('good');
+        try {
+            assert.ok(!runGood(dir, 'sync', 'registry').includes('is missing'));
+            writeIn(
+                dir,
+                '.magicspec/docs/memory/state.md',
+                '# State\n\n- Done: M1 — shared types compile\n- Next: none\n',
+            );
+            rewriteSet(dir, 'tasks/M2.md', ' and its unit test', '');
+            rewriteSet(
+                dir,
+                'plan.md',
+                '- Priority: must\n- Works after it: the greeting',
+                '- Priority: urgent\n- Works after it: the greeting',
+            );
+            writeIn(dir, '.magicspec/docs/spec/hello.md', '- Open: how loud?\n', true);
+            const preview = runGood(dir, 'sync', 'state', '--dry-run');
+            assert.match(
+                preview,
+                /would write state: .*state\.md — Next line recomputed \(M2\.T1\)/,
+            );
+            assert.match(preview, /M2\.T1: Creates names no tests → \/magicspec task$/m);
+            assert.match(preview, /plan\.md: M2 Priority is urgent → \/magicspec plan$/m);
+            assert.match(preview, /which has an open question → \/magicspec spec$/m);
+            assert.match(readDocs(dir, 'memory/state.md'), /^- Next: none$/m);
+            runGood(dir, 'sync', 'state');
+            assert.match(readDocs(dir, 'memory/state.md'), /^- Next: M2\.T1$/m);
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('document set: archive-phases, update-state and generate-context write nothing on a set', () => {
+        const dir = makeSetProject('good');
+        try {
+            const before = treeHashes(dir);
+            for (const [args, line] of [
+                [
+                    [
+                        'archive-phases',
+                    ],
+                    '[Archive] docs is a 4.0 workspace: done milestones stay in plan.md; nothing written.',
+                ],
+                [
+                    [
+                        'update-state',
+                        '--next-action=x',
+                    ],
+                    '[update-state] docs is a 4.0 workspace: its state is memory/state.md; nothing written.',
+                ],
+                [
+                    [
+                        'generate-context',
+                    ],
+                    '[generate-context] docs is a 4.0 workspace: its documents are the set itself; nothing written.',
+                ],
+            ]) {
+                assert.strictEqual(runGood(dir, ...args).trim(), line);
+            }
+            assert.strictEqual(runGood(dir, 'archive-phases', '--check').trim(), '');
+            assert.ok(sameTree(before, treeHashes(dir)), 'a script wrote into the set');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────
     // templates: the thirteen files a writer starts from, and the neutral writing table
     // ───────────────────────────────────────────────────────────────────────
 

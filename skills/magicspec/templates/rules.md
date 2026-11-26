@@ -22,6 +22,8 @@ Read by the agent before every operation. Updated only via explicit triggers.
 - **Stable → RFC**: substantive amendment (minor/major bump) requires re-review.
 - **Any → Deprecated**: explicitly superseded; replacement must be named.
 
+**Scope**: the statuses above, and the conventions that act on a specification's status (C6, C12), apply to workspaces in the 3.x layout. A workspace whose entry in `workspace.json` carries `"format": "4"` has no specification statuses: its units are revised (`Rev: n`), its changes move `open` → `placed` → `built` or are `satisfied`, and nothing waits in its plan for a status.
+
 ## 3. Versioning Rules
 
 - `patch` (0.0.X): typo fixes, clarifications — no structural change.

@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { resolveProjectRoot, STATE_DIR_NAME } = require('./utils');
 const { createReport, formatReport, routerCommandOf } = require('./lib/sync-report');
+const { isDocSetWorkspace } = require('./lib/doc-set-state');
 const { readSyncConfig } = require('./lib/sync-config');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -38,7 +39,14 @@ const RUNNERS = {
     docs: (ctx) => require('./lib/sync-docs').syncDocs(ctx),
     graph: (ctx) => require('./lib/sync-graph').syncGraph(ctx),
 };
-const ORDER = ['registry', 'state', 'projections', 'versions', 'docs', 'graph'];
+const ORDER = [
+    'registry',
+    'state',
+    'projections',
+    'versions',
+    'docs',
+    'graph',
+];
 
 // ───────────────────────────────────────────────────────────────────────────
 // Scope
@@ -73,9 +81,26 @@ function registeredWorkspaces(designAbs) {
 function readScope(argv, workspaces) {
     const dryRun = argv.includes('--dry-run');
     const word = argv.find((arg) => !arg.startsWith('--')) || null;
-    if (word === null) return { dryRun, areas: ORDER, only: null };
-    if (ORDER.includes(word)) return { dryRun, areas: [word], only: null };
-    if (workspaces.some((w) => w.name === word)) return { dryRun, areas: ORDER, only: word };
+    if (word === null)
+        return {
+            dryRun,
+            areas: ORDER,
+            only: null,
+        };
+    if (ORDER.includes(word))
+        return {
+            dryRun,
+            areas: [
+                word,
+            ],
+            only: null,
+        };
+    if (workspaces.some((w) => w.name === word))
+        return {
+            dryRun,
+            areas: ORDER,
+            only: word,
+        };
     return {
         error: `Unknown area or workspace '${word}'. Areas: ${ORDER.join(', ')}. Workspaces: ${workspaces.map((w) => w.name).join(', ') || 'none registered'}.`,
     };
@@ -98,12 +123,18 @@ function nextLineOf(report, workspaces) {
     if (!first) return null;
     try {
         const { handoffLine } = require('./finalize');
-        const named = [...report.disagreements, ...report.stale]
+        const named = [
+            ...report.disagreements,
+            ...report.stale,
+        ]
             .map((item) => routerCommandOf(item.command))
             .find(Boolean);
         if (named) return handoffLine(`Run ${named} ${first.name}`, first.name);
-        const state = fs.readFileSync(path.join(first.dir, 'STATE.md'), 'utf8');
-        const recorded = /^- \*\*Next Action:\*\*[ \t]+(.+)$/m.exec(state)?.[1];
+        const recorded = isDocSetWorkspace(first.dir, first.name)
+            ? require('./lib/doc-set-sync').recordedSetStep(first)
+            : /^- \*\*Next Action:\*\*[ \t]+(.+)$/m.exec(
+                  fs.readFileSync(path.join(first.dir, 'STATE.md'), 'utf8'),
+              )?.[1];
         return recorded ? handoffLine(recorded, first.name) : null;
     } catch {
         return null; // the report is complete without its last line
@@ -133,7 +164,10 @@ function main() {
         return 1;
     }
     const inScope = scope.only ? registered.filter((w) => w.name === scope.only) : registered;
-    const report = createReport({ dryRun: scope.dryRun, projectRoot });
+    const report = createReport({
+        dryRun: scope.dryRun,
+        projectRoot,
+    });
     const ctx = {
         report,
         projectRoot,
@@ -157,4 +191,7 @@ if (require.main === module) {
     process.exit(main());
 }
 
-module.exports = { readScope, ORDER };
+module.exports = {
+    readScope,
+    ORDER,
+};

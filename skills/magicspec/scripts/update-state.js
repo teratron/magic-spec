@@ -21,6 +21,7 @@ const {
 const { stripQuoted } = require('./lib/scan-hygiene');
 const { countItems } = require('./lib/checklist');
 const diagnostics = require('./lib/diagnostics');
+const { isDocSetWorkspace, nothingWritten } = require('./lib/doc-set-state');
 const { withFileLock } = require('./lib/file-lock');
 const { GoalError, normalizeGoal, renderGoalSection } = require('./lib/goal-block');
 
@@ -54,7 +55,10 @@ function entryRanges(block, startRe) {
         const line = raw.replace(/\r?\n$/, '');
         if (startRe.test(line)) {
             if (current) ranges.push(current);
-            current = { start: offset, end: offset + raw.length };
+            current = {
+                start: offset,
+                end: offset + raw.length,
+            };
         } else if (current) {
             if (line.trim() === '') {
                 ranges.push(current);
@@ -183,7 +187,10 @@ function locateSection(content, marker) {
     const heading = headingRe(marker).exec(content);
     if (!heading) return null;
     const next = content.indexOf('\n## ', heading.index + 1);
-    return { start: heading.index, end: next !== -1 ? next : content.length };
+    return {
+        start: heading.index,
+        end: next !== -1 ? next : content.length,
+    };
 }
 
 /**
@@ -210,7 +217,11 @@ function locateSection(content, marker) {
  */
 function ensureSection(content, marker, statePath) {
     const found = locateSection(content, marker);
-    if (found) return { content, ...found };
+    if (found)
+        return {
+            content,
+            ...found,
+        };
 
     let at = content.length;
     for (const following of SECTION_ORDER.slice(SECTION_ORDER.indexOf(marker) + 1)) {
@@ -234,7 +245,10 @@ function ensureSection(content, marker, statePath) {
         message,
         locus: statePath,
     });
-    return { content: created, ...locateSection(created, marker) };
+    return {
+        content: created,
+        ...locateSection(created, marker),
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -297,14 +311,38 @@ function removeGoalSection(content) {
  * fields written as Markdown list items (see `wholeEntryRe`).
  */
 const FIELD_MAP = {
-    workspace: { re: /^\*\*Workspace:\*\* .*/m, prefix: '**Workspace:** ' },
-    updated: { re: /^\*\*Updated:\*\* .*/m, prefix: '**Updated:** ' },
-    phase: { re: /^\*\*Phase:\*\* .*/m, prefix: '**Phase:** ' },
-    status: { re: /^\*\*Status:\*\* .*/m, prefix: '**Status:** ' },
-    task: { re: /^- \*\*Task:\*\* .*/m, prefix: '- **Task:** ' },
-    spec: { re: /^- \*\*Spec:\*\* .*/m, prefix: '- **Spec:** ' },
-    nextAction: { re: /^- \*\*Next Action:\*\* .*/m, prefix: '- **Next Action:** ' },
-    bootstrap: { re: /^\*\*Bootstrap Mode:\*\* .*/m, prefix: '**Bootstrap Mode:** ' },
+    workspace: {
+        re: /^\*\*Workspace:\*\* .*/m,
+        prefix: '**Workspace:** ',
+    },
+    updated: {
+        re: /^\*\*Updated:\*\* .*/m,
+        prefix: '**Updated:** ',
+    },
+    phase: {
+        re: /^\*\*Phase:\*\* .*/m,
+        prefix: '**Phase:** ',
+    },
+    status: {
+        re: /^\*\*Status:\*\* .*/m,
+        prefix: '**Status:** ',
+    },
+    task: {
+        re: /^- \*\*Task:\*\* .*/m,
+        prefix: '- **Task:** ',
+    },
+    spec: {
+        re: /^- \*\*Spec:\*\* .*/m,
+        prefix: '- **Spec:** ',
+    },
+    nextAction: {
+        re: /^- \*\*Next Action:\*\* .*/m,
+        prefix: '- **Next Action:** ',
+    },
+    bootstrap: {
+        re: /^\*\*Bootstrap Mode:\*\* .*/m,
+        prefix: '**Bootstrap Mode:** ',
+    },
 };
 
 /**
@@ -313,9 +351,29 @@ const FIELD_MAP = {
  * section. `ensureField` places a missing line by this.
  */
 const FIELD_CONTAINERS = [
-    { section: null, keys: ['workspace', 'updated', 'phase', 'status'] },
-    { section: '## Current Position', keys: ['task', 'spec', 'nextAction'] },
-    { section: '## Session Continuity', keys: ['bootstrap'] },
+    {
+        section: null,
+        keys: [
+            'workspace',
+            'updated',
+            'phase',
+            'status',
+        ],
+    },
+    {
+        section: '## Current Position',
+        keys: [
+            'task',
+            'spec',
+            'nextAction',
+        ],
+    },
+    {
+        section: '## Session Continuity',
+        keys: [
+            'bootstrap',
+        ],
+    },
 ];
 
 /** A line that is itself a field: `**Label:** …` or `- **Label:** …`. */
@@ -396,12 +454,30 @@ function ensureField(content, key, line, statePath) {
  * fallback file uses.
  */
 const TEMPLATE_DEFAULTS = [
-    { re: /^\*\*Phase:\*\* .*/m, line: '**Phase:** 0' },
-    { re: /^\*\*Status:\*\* .*/m, line: '**Status:** Active' },
-    { re: /^- \*\*Task:\*\* .*/m, line: '- **Task:** none' },
-    { re: /^- \*\*Spec:\*\* .*/m, line: '- **Spec:** none' },
-    { re: /^- \*\*Next Action:\*\* .*/m, line: '- **Next Action:** Initialize project' },
-    { re: /^\*\*Bootstrap Mode:\*\* .*/m, line: '**Bootstrap Mode:** false' },
+    {
+        re: /^\*\*Phase:\*\* .*/m,
+        line: '**Phase:** 0',
+    },
+    {
+        re: /^\*\*Status:\*\* .*/m,
+        line: '**Status:** Active',
+    },
+    {
+        re: /^- \*\*Task:\*\* .*/m,
+        line: '- **Task:** none',
+    },
+    {
+        re: /^- \*\*Spec:\*\* .*/m,
+        line: '- **Spec:** none',
+    },
+    {
+        re: /^- \*\*Next Action:\*\* .*/m,
+        line: '- **Next Action:** Initialize project',
+    },
+    {
+        re: /^\*\*Bootstrap Mode:\*\* .*/m,
+        line: '**Bootstrap Mode:** false',
+    },
 ];
 
 /**
@@ -471,7 +547,10 @@ function updateState(designDir, patch, options = {}) {
     // `patch.goal` is a goal object to record, `null` to clear the block, or absent to leave it.
     // A goal is checked and rendered here, ahead of every write, so a refusal changes nothing.
     if (patch.goal !== undefined && patch.goal !== null) {
-        patch = { ...patch, goal: renderGoalSection(normalizeGoal(patch.goal)) };
+        patch = {
+            ...patch,
+            goal: renderGoalSection(normalizeGoal(patch.goal)),
+        };
     }
     const stateRoot =
         path.basename(designDir) === STATE_DIR_NAME ? designDir : path.dirname(designDir);
@@ -517,10 +596,14 @@ function applyStateUpdate(designDir, patch, options) {
                 '- **Next Action:** Initialize project',
                 '',
             ].join('\n');
-            fs.mkdirSync(path.dirname(statePath), { recursive: true });
+            fs.mkdirSync(path.dirname(statePath), {
+                recursive: true,
+            });
             fs.writeFileSync(statePath, minimal, 'utf8');
         } else {
-            fs.mkdirSync(path.dirname(statePath), { recursive: true });
+            fs.mkdirSync(path.dirname(statePath), {
+                recursive: true,
+            });
             fs.writeFileSync(
                 statePath,
                 instantiateStateTemplate(
@@ -623,7 +706,10 @@ function applyStateUpdate(designDir, patch, options) {
 
         const existingEntries = collectEntries(block, /^- \d{4}-\d{2}-\d{2}/);
         const newEntry = `- ${now.slice(0, 10)} **Decision:** ${patch.decision}`;
-        const decisionEntries = [newEntry, ...existingEntries].slice(0, 5);
+        const decisionEntries = [
+            newEntry,
+            ...existingEntries,
+        ].slice(0, 5);
 
         const rebuilt = [
             marker,
@@ -673,7 +759,10 @@ function applyStateUpdate(designDir, patch, options) {
         // not inflate the next id.
         const id = `C-${String(existingEntries.length + 1).padStart(3, '0')}`;
         const newEntry = `- [${id}] **${patch.constraint.title}**: ${patch.constraint.desc}`;
-        const constraintEntries = [newEntry, ...existingEntries];
+        const constraintEntries = [
+            newEntry,
+            ...existingEntries,
+        ];
 
         const rebuilt = [
             marker,
@@ -970,7 +1059,10 @@ function runCli() {
             '--constraint-desc',
             '--goal-file',
         ],
-        boolFlags: ['--auto-progress', '--goal-clear'],
+        boolFlags: [
+            '--auto-progress',
+            '--goal-clear',
+        ],
     });
 
     if (errors.length > 0) {
@@ -1022,11 +1114,7 @@ function runCli() {
     process.chdir(resolveProjectRoot());
     const workspaceArg = values['--workspace'] || process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
 
-    const unregistered = unregisteredWorkspaceMessage(workspaceArg);
-    if (unregistered) {
-        console.error(`[update-state] HALT: ${unregistered}`);
-        process.exit(1);
-    }
+    if (!writesStateInto(workspaceArg)) return;
 
     try {
         if (values['--goal-file'] !== undefined) parsed.goal = readGoalFile(values['--goal-file']);
@@ -1035,6 +1123,25 @@ function runCli() {
         if (!(error instanceof GoalError)) throw error;
         refuseGoal(error.message);
     }
+}
+
+/**
+ * Whether live memory is written into a folder: an unregistered workspace ends the run, and a
+ * set, whose state is `memory/state.md`, takes none.
+ *
+ * @param {string} workspaceArg - The design directory.
+ * @returns {boolean}
+ */
+function writesStateInto(workspaceArg) {
+    const unregistered = unregisteredWorkspaceMessage(workspaceArg);
+    if (unregistered) {
+        console.error(`[update-state] HALT: ${unregistered}`);
+        process.exit(1);
+    }
+    const wsDir = path.resolve(workspaceArg);
+    if (!isDocSetWorkspace(wsDir)) return true;
+    console.log(nothingWritten('update-state', wsDir, 'its state is memory/state.md'));
+    return false;
 }
 
 /**
@@ -1071,7 +1178,10 @@ function refuseGoal(message) {
     process.exit(1);
 }
 
-module.exports = { updateState, computeProgress };
+module.exports = {
+    updateState,
+    computeProgress,
+};
 
 if (require.main === module) {
     runCli();

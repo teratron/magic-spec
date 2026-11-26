@@ -1,9 +1,9 @@
 # Master Task Index (Registry)
 
-**Version:** 1.90.0
+**Version:** 1.91.0
 **Generated:** 2026-11-26
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.93.0
-**Based on RULES:** .magicspec/RULES.md v1.25.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.94.0
+**Based on RULES:** .magicspec/RULES.md v2.0.0
 **Execution Mode:** Parallel
 **Status:** Active
 
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 71](archives/tasks/phase-71.md) | The Scripts of the Remaining Commands on a 4.0 Workspace (4.0 Step 4, Part 1) — the subcommands the remaining commands call give a 4.0 workspace its own answer: the graph, the wiki and the artifact index read units by address, `analyze-coverage` counts observed requirements, `sync` recomputes a set's derived state, and `archive-phases`, `update-state` and `generate-context` write nothing there; every 3.x path unchanged; harness cases and the specifications as built; 9 tasks in eight tracks (G, M, C, Y, A, H, S, T) | `Done (Archived)` |
 | [Phase 80](archives/tasks/phase-80.md) | The Pipeline Bodies on a 4.0 Workspace (4.0 Step 3, Part 2) — `spec`, `plan`, `task` and `run` each gain one section for a 4.0 workspace, through the scripts of Phases 68 to 70 and the concept's steps, their 3.x text unchanged; the `spec-critic`, `planner` and `coder` cards read units, milestones and packs; the `pipeline` scenario of a 4.0 workspace; harness cases and the specifications as built; 11 tasks in six tracks (W, R, H, Y, S, T) | `Done (Archived)` |
 | [Phase 70](archives/tasks/phase-70.md) | The Scripts of the Pipeline on a 4.0 Workspace (4.0 Step 3, Part 1) — the subcommands the pipeline bodies will call work on a 4.0 workspace before any body calls them: `mark-built` records a done milestone, `check-log` checks the order of a change history, and `check-prerequisites`, `resume-state` and `finalize` take a 4.0 branch beside their unchanged 3.x one; harness cases and the specifications as built; 9 tasks in five tracks (M, A, H, S, T) | `Done (Archived)` |
 | [Phase 79](archives/tasks/phase-79.md) | The Format Brought to the Six Items of Run 4 (4.0 Step 1, after the Gate) — the scripts and templates of step 1 follow concept 1.5.0 before the pipeline is built on them: the pack's line states the component-key exception, the checker reports a comment left in a neutral file and reads no reference inside a code span, the templates and the neutral writing table carry the six items, and the specifications as built; 8 tasks in five tracks (F, P, C, H, S/T) | `Done (Archived)` |

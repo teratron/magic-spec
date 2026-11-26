@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.13
+**Version:** 1.48.14
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -209,6 +209,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.14 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: the `document-set` module grows from 41 to 47 cases — the graph, the wiki, the index, coverage, `sync` and the three writers on a 4.0 workspace — each under mutation control; the 3.x cases of those subcommands unchanged. |
 | 1.48.13 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `document-set` module grows from 33 to 41 cases — the three role-card lines held by card and mirror, the 4.0 section of each of the four bodies (place, Contents, opening paragraph, script calls, role), the builder's inputs in `run`, the map row naming files only, and the next step at each stage of a set; each new case under mutation control. `artifact-index` has drifted from the formatter and stays unformatted: formatted it passes the line bound of HL-7 (3,436 lines), so it waits for a split. |
 | 1.48.12 | 2026-11-26 | Agent | As built in Phase 70, Stable retained, no requirement changed: the `document-set` module grows from 28 to 33 cases — `mark-built` (a milestone with a revised unit and a placed change recorded, a second run writing nothing, an unknown milestone refused), `check-log` (an ordered history and one that goes back, in a disposable git repository), and the 4.0 branches of `check-prerequisites` (checker findings in place of the registry, even beside a leftover registry), `resume-state` and `finalize` — each under mutation control; the 3.x cases of the three subcommands unchanged. |
 | 1.48.11 | 2026-11-26 | Agent | As built in Phase 79, Stable retained, no requirement changed: the `document-set` module grows from 26 to 28 cases — a comment left in a neutral file is one finding for that file and none in a stack file; a value shaped like an address is a literal inside a code span and a reference when bare, a backticked key of an `Observed by` still checked — each under mutation control; the table case counts nineteen rows and the containment constant carries the component-key exception. |

@@ -16,6 +16,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeIfChanged } = require('./sync-report');
+const { isDocSetWorkspace } = require('./doc-set-state');
 
 const SPEC_ROW_RE = /^\|\s*\[[^\]]*\]\(specifications\/([a-z0-9][a-z0-9-]*\.md)\)\s*\|/;
 const SPEC_DISK_RE = /^[a-z0-9][a-z0-9-]*\.md$/;
@@ -64,7 +65,12 @@ function findTable(lines, first) {
         if (!/^\|[\s:|-]+\|?\s*$/.test(lines[i + 1])) continue;
         let end = i + 2;
         while (end < lines.length && lines[end].startsWith('|')) end += 1;
-        return { header, headerAt: i, bodyFrom: i + 2, bodyTo: end };
+        return {
+            header,
+            headerAt: i,
+            bodyFrom: i + 2,
+            bodyTo: end,
+        };
     }
     return null;
 }
@@ -83,7 +89,10 @@ function readLines(abs) {
         return null;
     }
     const eol = text.includes('\r\n') ? '\r\n' : '\n';
-    return { lines: text.split(/\r?\n/), eol };
+    return {
+        lines: text.split(/\r?\n/),
+        eol,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -179,16 +188,20 @@ function checkWorkspaceRegistry(workspace, report) {
  * @returns {string}
  */
 function newWorkspaceRow(header, workspace, count, linked) {
+    // A set has no registry of its own to link.
+    const registry = !isDocSetWorkspace(workspace.dir, workspace.name);
     const cells = header.map((name) => {
         switch (name.toLowerCase()) {
             case 'workspace':
-                return linked ? `[${workspace.name}](${workspace.name}/INDEX.md)` : workspace.name;
+                return linked && registry
+                    ? `[${workspace.name}](${workspace.name}/INDEX.md)`
+                    : workspace.name;
             case 'description':
                 return workspace.description || '';
             case 'specs':
                 return count === null ? '' : String(count);
             case 'registry':
-                return `[${workspace.name}/INDEX.md](${workspace.name}/INDEX.md)`;
+                return registry ? `[${workspace.name}/INDEX.md](${workspace.name}/INDEX.md)` : '';
             default:
                 return '';
         }
@@ -262,9 +275,17 @@ function syncGlobalRegistry(ctx, counts, report) {
 function syncRegistry(ctx) {
     const counts = new Map();
     for (const workspace of ctx.workspaces) {
-        counts.set(workspace.name, checkWorkspaceRegistry(workspace, ctx.report));
+        const count = isDocSetWorkspace(workspace.dir, workspace.name)
+            ? null
+            : checkWorkspaceRegistry(workspace, ctx.report);
+        counts.set(workspace.name, count);
     }
     syncGlobalRegistry(ctx, counts, ctx.report);
 }
 
-module.exports = { syncRegistry, findTable, cellsOf, columnOf };
+module.exports = {
+    syncRegistry,
+    findTable,
+    cellsOf,
+    columnOf,
+};

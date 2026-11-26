@@ -13,6 +13,7 @@ const {
     unregisteredWorkspaceMessage,
 } = require('./utils');
 const { findArchiveCandidates, archiveCompletedPhases } = require('./lib/phase-archiver');
+const { isDocSetWorkspace, nothingWritten } = require('./lib/doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ARCHIVE PHASES (CLI Entry Point)
@@ -82,6 +83,30 @@ function reportUnrecognized(unrecognized) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Folders With Nothing To Archive
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * The exit code of a run that archives nothing because of what the folder is: an unregistered
+ * workspace ends it with 1; a set, which keeps its done milestones in plan.md, with 0 — its
+ * pre-commit check says nothing, since nothing of it is ever pending.
+ *
+ * @param {string} wsDir - The folder of the workspace.
+ * @param {boolean} quiet - Whether this is the check the pre-commit hook runs.
+ * @returns {number|null} The exit code, or null for a 3.x workspace to archive.
+ */
+function nothingToArchive(wsDir, quiet) {
+    const unregistered = unregisteredWorkspaceMessage(wsDir);
+    if (unregistered) {
+        console.error(`HALT: ${unregistered}`);
+        return 1;
+    }
+    if (!isDocSetWorkspace(wsDir)) return null;
+    if (!quiet) console.log(nothingWritten('Archive', wsDir, 'done milestones stay in plan.md'));
+    return 0;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Main
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -93,11 +118,8 @@ function main() {
     const designDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
     const wsDir = path.resolve(projectRoot, designDir);
 
-    const unregistered = unregisteredWorkspaceMessage(wsDir);
-    if (unregistered) {
-        console.error(`HALT: ${unregistered}`);
-        return 1;
-    }
+    const stop = nothingToArchive(wsDir, opts.check);
+    if (stop !== null) return stop;
 
     if (opts.check) {
         const candidates = findArchiveCandidates(wsDir);

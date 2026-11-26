@@ -17,6 +17,8 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { computeProgress } = require('../update-state');
+const { isDocSetWorkspace } = require('./doc-set-state');
+const { syncDocSet } = require('./doc-set-sync');
 
 const PROGRESS_RE = /(^## Progress\s*\n+```\r?\n)([\s\S]*?)(\r?\n```)/m;
 
@@ -32,6 +34,54 @@ function storedProgress(content) {
 }
 
 /**
+ * Brings the progress counters of one 3.x workspace's live memory up to date.
+ *
+ * @param {{name: string, dir: string}} workspace
+ * @param {object} report - The report of the run.
+ */
+function syncLiveMemory(workspace, report) {
+    const statePath = path.join(workspace.dir, 'STATE.md');
+    let content;
+    try {
+        content = fs.readFileSync(statePath, 'utf8');
+    } catch {
+        return; // no live memory yet: nothing derived to bring up to date
+    }
+    const progress = computeProgress(workspace.dir, content);
+    if (progress === null || storedProgress(content) === progress.trim()) {
+        report.inSync += 1;
+        return;
+    }
+    if (!report.dryRun) {
+        const written = spawnSync(
+            process.execPath,
+            [
+                path.join(__dirname, '..', 'update-state.js'),
+                `--workspace=${workspace.dir}`,
+                '--auto-progress',
+            ],
+            {
+                encoding: 'utf8',
+                env: process.env,
+            },
+        );
+        if (written.status !== 0) {
+            report.disagreements.push({
+                location: report.shown(statePath),
+                difference: `the progress counters could not be recomputed (${(written.stderr || '').trim().split('\n')[0] || `exit ${written.status}`})`,
+                command: '/magicspec analyze',
+            });
+            return;
+        }
+    }
+    report.written.push({
+        area: 'state',
+        file: report.shown(statePath),
+        what: `progress counters ${storedProgress(content) === null ? 'created' : 'recomputed'}`,
+    });
+}
+
+/**
  * Runs the `state` area for the workspaces in scope.
  *
  * @param {{report: ReturnType<import('./sync-report').createReport>, workspaces: {name: string, dir: string}[]}} ctx
@@ -39,43 +89,12 @@ function storedProgress(content) {
 function syncState(ctx) {
     const { report } = ctx;
     for (const workspace of ctx.workspaces) {
-        const statePath = path.join(workspace.dir, 'STATE.md');
-        let content;
-        try {
-            content = fs.readFileSync(statePath, 'utf8');
-        } catch {
-            continue; // no live memory yet: nothing derived to bring up to date
-        }
-        const progress = computeProgress(workspace.dir, content);
-        if (progress === null || storedProgress(content) === progress.trim()) {
-            report.inSync += 1;
-            continue;
-        }
-        if (!report.dryRun) {
-            const written = spawnSync(
-                process.execPath,
-                [
-                    path.join(__dirname, '..', 'update-state.js'),
-                    `--workspace=${workspace.dir}`,
-                    '--auto-progress',
-                ],
-                { encoding: 'utf8', env: process.env },
-            );
-            if (written.status !== 0) {
-                report.disagreements.push({
-                    location: report.shown(statePath),
-                    difference: `the progress counters could not be recomputed (${(written.stderr || '').trim().split('\n')[0] || `exit ${written.status}`})`,
-                    command: '/magicspec analyze',
-                });
-                continue;
-            }
-        }
-        report.written.push({
-            area: 'state',
-            file: report.shown(statePath),
-            what: `progress counters ${storedProgress(content) === null ? 'created' : 'recomputed'}`,
-        });
+        if (isDocSetWorkspace(workspace.dir, workspace.name)) syncDocSet(workspace, report);
+        else syncLiveMemory(workspace, report);
     }
 }
 
-module.exports = { syncState, storedProgress };
+module.exports = {
+    syncState,
+    storedProgress,
+};

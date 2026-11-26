@@ -1,6 +1,6 @@
 # Artifact Memory Store (SQLite)
 
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-artifact-memory.md
@@ -79,7 +79,7 @@ A schema version mismatch rebuilds the database. The two line columns raise the 
 - A section starts at each `##` or `###` heading; the heading path (`# Title › ## A › ### B`) is stored with it.
 - A section over 2,000 characters is split at paragraph boundaries; every part keeps the heading path.
 - A `Document History` table is its own section of kind `history`.
-- Kinds by location: `specifications/` → `spec`; `RULES.md` → `rules`; `PLAN.md` → `plan`; `TASKS.md`, `tasks/` → `tasks`; `STATE.md` → `state`; `RETROSPECTIVE.md` → `retrospective`; `CHANGELOG.md` → `changelog`; `archives/` → `archive`; `INDEX.md` → `registry`.
+- Kinds by location: `specifications/` → `spec`; `RULES.md` → `rules`; `PLAN.md` → `plan`; `TASKS.md`, `tasks/` → `tasks`; `STATE.md` → `state`; `RETROSPECTIVE.md` → `retrospective`; `CHANGELOG.md` → `changelog`; `archives/` → `archive`; `INDEX.md` → `registry`. In a 4.0 workspace the places of the set give the kinds: `product.md`, `spec/`, a stack's `profile.md`, `deps.md` and `bind/` → `spec`; the `rules.md` files → `rules`; `plan.md`, `changes.md` → `plan`; `memory/` → `state`; so a section headed by a unit is cited by its address.
 
 ### 5.4 Query
 
@@ -150,6 +150,7 @@ An optional `apiKeyEnv` names the environment variable that holds a bearer key; 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.1 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: §5.3 states the kinds of a 4.0 set's documents; `KINDS` unchanged. |
 | 1.3.0 | 2026-11-13 | Agent | **As built in Phase 58, Stable retained.** §5.4 records what the build fixed: the history count absent under `--kind` as well as `--history`, the page past the end, the vector-mode first line, the size as the section's text, and the JSON `total` as the pool's size with `byMeaning`; §6 item 4 (f) records the fixed fused pool that replaced the per-call bound; item 5 moves from "to deploy" to "as built" with the decisions of the build (the file lines, `count` on both backends, the credential check in `embed()`, the query-time address check, the harness and the mutation list). No requirement changed. |
 | 1.2.0 | 2026-11-13 | Agent | **Follows `l1-artifact-memory.md` 1.1.0** (second reference-mining pass). §4 rows AM-2, AM-3, AM-7 and the new AM-9; §5.2 adds `line_start`/`line_end` (schema version 2, one rebuild); §5.4 adds the lines, the size estimate, the counts of a cut list and `--offset` for the next page (`--k` stays capped at 50), in text and JSON; §5.5 adds the missing-credential rule and the vector identity (`url` with `model` and `dimensions`); §6 item 5 records the four reproduced gaps and the shipped text that changes with them; §7 records the content-keyed vector store as not taken now. Specification only; deployment through `/magicspec plan`. |
 | 1.1.0 | 2026-11-12 | Agent | **As built in Phase 54, Stable retained.** §2: the open question of the first release that loads the module without a flag is settled (22.13 and 23.4, checked against the Node documentation) and the backend is chosen by trying the module and an FTS5 table, never by a version. §5.1 lists `lib/memory-refresh.js`; §5.5 gains the optional `apiKeyEnv`; §6 gains item 4 with the decisions of the build (what the index reads, the cut of a long table, OR terms, id-preserving replacement, where embedding happens, the two diagnostic codes, the skipped export runs, the wired consumers, the command-table field). No requirement changed. |

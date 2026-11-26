@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-26 07:25
-**Phase:** 80 — The Pipeline Bodies on a 4.0 Workspace
+**Updated:** 2026-11-26 10:43
+**Phase:** 71 — The Scripts of the Remaining Commands on a 4.0 Workspace
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-80T01 Validation
+- **Task:** T-71T01 Validation
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Run /magicspec plan engine to bring the plan up to date before decomposing Phase 71
+- **Next Action:** Run /magicspec plan engine once the amendment Phase 81 needs is made (goal record and scenario folder on 4.0)
 
 ## Progress
 
 ```
-Overall: [79/79] ████████ 100%
+Overall: [80/80] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-26 **Decision:** Phase 71 complete. Provides: graph, wiki, index, coverage, sync and the three writers on a 4.0 workspace, harness 510, engine 3.0.206; Phase 81 waits for a spec amendment on goal's record on 4.0
+- 2026-11-26 **Decision:** Constitution 2.0.0: status rules (§2), C6 and C12 scoped to 3.x workspaces. PLAN 1.94.0: step 4 split — Phase 71 scripts (planned in full), 81 remaining bodies, 82 migration and 4.0.0; goal's record on 4.0 needs a spec amend before 81
 - 2026-11-26 **Decision:** Phase 80 complete. Provides: the 4.0 sections of spec, plan, task and run, the three card lines, pipeline S-4, the 4.0 next step repaired, harness 504, engine 3.0.191; the plan is behind registry 1.104.3, then the owner's narrowing of the lifecycle rule precedes Phase 71
 - 2026-11-26 **Decision:** Phase 70 complete. Provides: mark-built, check-log, the 4.0 branches of check-prerequisites, resume-state and finalize, harness 496, engine 3.0.186; Phase 80 (the four pipeline bodies) is next
 - 2026-11-26 **Decision:** Phase 79 complete. Provides: the containment line with the component-key exception, the comment finding and the code-span literal in check-docs, the templates and neutral-writing.md at 1.5.0, harness 491, engine 3.0.179; Phase 70 (the pipeline on 4.0) is next
-- 2026-11-26 **Decision:** Six format items of run 4 specified: l1/l2 sdd-document-set 1.5.0 (registry 1.104.0); the harness table case is red until neutral-writing.md gains the runtime row
-- 2026-11-26 **Decision:** Owner's decision on run 4 (2026-11-26): criteria 3-4 on each check's stated result, criterion 5 on the reading that ends the review; run 4 passes, the gate is open; l1/l2 sdd-document-set 1.4.0; the six format items come first
 
 ## Blockers
 

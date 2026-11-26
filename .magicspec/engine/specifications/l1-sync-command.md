@@ -1,6 +1,6 @@
 # Sync Command: Bringing Derived State up to Date
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -39,7 +39,7 @@ Constitution C2 forbids new workflow commands unless explicitly authorized; the 
 
 ## 3. Core Invariants
 
-- **SY-1 Derived state only.** `sync` writes exactly the state that is fully computed from other files: the aggregate fields and rows of the registries (counts, the global registry's workspace rows), the always-on rule projection and the host copies of the installed engine, the specification graph and wiki, the engine-owned progress lines of live memory, the declared version anchors (SY-4) and the registered derived blocks of documentation (SY-6). It never writes a requirement, a specification's version or status, a rule, a task's state, a plan, a decision, or the `**Engine Version:**` snapshot — `analyze` stays its sole writer.
+- **SY-1 Derived state only.** `sync` writes exactly the state that is fully computed from other files: the aggregate fields and rows of the registries (counts, the global registry's workspace rows), the always-on rule projection and the host copies of the installed engine, the specification graph and wiki, the engine-owned progress lines of live memory, the declared version anchors (SY-4) and the registered derived blocks of documentation (SY-6). On a workspace in the 4.0 document-set format there are no registry cells and no engine-owned progress lines: what is derived is the next ready task in `memory/state.md` and the checker's report, whose findings `sync` does not repair but names with the command that owns them ([l1-sdd-document-set.md](l1-sdd-document-set.md) §6). It never writes a requirement, a specification's version or status, a rule, a task's state, a plan, a decision, or the `**Engine Version:**` snapshot — `analyze` stays its sole writer.
 - **SY-2 Disagreement is reported, not settled.** A difference that needs a judgement — a specification header against its registry row, a status mismatch, a registered block whose source is missing, an installed engine whose integrity check fails — is listed with its location and the one command that resolves it (`/magicspec spec`, `/magicspec analyze`, restoring the folder from the release archive). `sync` continues with the rest and changes nothing at that location.
 - **SY-3 Idempotent.** Running `sync` twice with no source change between the runs writes nothing on the second run and reports the project as in sync. A derived value is rewritten only when its recomputed content differs from what is stored; a timestamp alone is never a difference.
 - **SY-4 Declared version anchors.** The project's version is propagated from the version file finalization writes into the places the project declared as anchors, and nowhere else. `sync` never searches the project for strings that look like a version.
@@ -151,5 +151,6 @@ The `sync` section of `workspace.json` holds two lists, both optional; an absent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: SY-1 names the derived state of a 4.0 workspace as the document-set concept declares; the 3.x contract unchanged. |
 | 1.1.0 | 2026-11-12 | Agent | **As built in Phase 55; the registration form decided.** The open question of §2 is closed by a forecast: a `sync` section of `workspace.json` (§5.5), with the entry grammar, the neutral `sync:{key}` markers and the rule that a malformed entry is one disagreement; the runner-up (a file of its own) and its override are recorded. §6 items 7 to 10 record the as-built decisions: the area order and compare-before-write for the three writers that would otherwise write on every run, the preview reaching the graph build's extraction cache, the containment check written once in the shipped pass, and the retirement of the maintenance updater's version and history writes. Amendment Rule: `Stable → RFC`; re-promoted `Stable` after the Post-Update Review (`@role:spec-critic`, coherence check against the command surface, session-continuity and reference-containment specifications: no ordering conflict, contradiction, duplicate definition or interaction gap; `@role:prompt-engineer`: PASS). |
 | 1.0.0 | 2026-11-11 | Agent | Created from the owner's list of commands of 2026-11-11 (origin `user-stated`): `sync` as a user command for versions, documentation and other derived state; the maintenance command of the same name becomes its extension in the engine's repository. |

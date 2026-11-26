@@ -17,6 +17,14 @@ const {
     graphPaths,
     retireLegacyGraph,
 } = require('./utils');
+const { slugify, joinMarkdown } = require('./lib/wiki-text');
+const {
+    documentsOf,
+    unitLink,
+    documentSlug,
+    renderDocumentArticle,
+    renderSetWorkspaceArticle,
+} = require('./lib/doc-set-wiki');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPEC GRAPH WIKI EXPORT
@@ -82,36 +90,28 @@ function loadGraph() {
     }
 
     const executorPath = path.join(__dirname, 'executor.js');
-    const stdout = execFileSync(process.execPath, [executorPath, 'build-spec-graph', '--json'], {
-        cwd: rootDir,
-        env: process.env,
-        timeout: 60000,
-        // The graph arrives on stdout; the default 1 MiB buffer ended the run with a stack trace
-        // at about two thousand specifications.
-        maxBuffer: 256 * 1024 * 1024,
-    });
+    const stdout = execFileSync(
+        process.execPath,
+        [
+            executorPath,
+            'build-spec-graph',
+            '--json',
+        ],
+        {
+            cwd: rootDir,
+            env: process.env,
+            timeout: 60000,
+            // The graph arrives on stdout; the default 1 MiB buffer ended the run with a stack trace
+            // at about two thousand specifications.
+            maxBuffer: 256 * 1024 * 1024,
+        },
+    );
     return JSON.parse(stdout.toString('utf8'));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INDEXING HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Filesystem-safe slug for a node id or label fragment.
- *
- * @param {string} raw
- * @returns {string}
- */
-function slugify(raw) {
-    return (
-        String(raw)
-            .replace(/[\\/:*?"<>|]/g, '-')
-            .replace(/\s+/g, '_')
-            .replace(/[^\w.-]/g, '')
-            .slice(0, 120) || 'untitled'
-    );
-}
 
 /**
  * Returns the wiki filename (without extension) for a spec node.
@@ -159,24 +159,10 @@ function groupEdges(edges, nodeId, byId) {
             incoming[e.relation].push(byId.get(e.from));
         }
     }
-    return { outgoing, incoming };
-}
-
-/**
- * Joins rendered lines into a document with one trailing newline and no run of
- * blank lines (markdownlint MD012), so a section that renders empty cannot
- * double the separator its neighbours already emit.
- *
- * @param {string[]} lines
- * @returns {string}
- */
-function joinMarkdown(lines) {
-    const out = [];
-    for (const line of lines) {
-        if (line === '' && out[out.length - 1] === '') continue;
-        out.push(line);
-    }
-    return out.join('\n').replace(/\n+$/, '') + '\n';
+    return {
+        outgoing,
+        incoming,
+    };
 }
 
 /**
@@ -242,7 +228,9 @@ function renderSpecArticle(spec, edges, byId) {
 
     if (spec.workspace) {
         lines.push(
-            `> Part of [[${workspaceSlug({ label: spec.workspace })}|${spec.workspace}]] · See [[index]] to navigate.`,
+            `> Part of [[${workspaceSlug({
+                label: spec.workspace,
+            })}|${spec.workspace}]] · See [[index]] to navigate.`,
         );
     } else {
         lines.push(`> See [[index]] to navigate.`);
@@ -270,7 +258,9 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
         byLayer.get(layer).push(s);
     }
 
-    for (const layer of [...byLayer.keys()].sort()) {
+    for (const layer of [
+        ...byLayer.keys(),
+    ].sort()) {
         lines.push(`## Layer ${layer}`, '');
         for (const s of byLayer.get(layer).sort((a, b) => a.label.localeCompare(b.label))) {
             const tags = [];
@@ -297,6 +287,78 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
 }
 
 /**
+ * The counts under the index title; documents are counted only where a workspace holds a set.
+ *
+ * @param {object[]} specs
+ * @param {object[]} workspaces
+ * @param {Map<string, Map<string, object[]>>} documents
+ * @returns {string}
+ */
+function headline(specs, workspaces, documents) {
+    const files = [
+        ...documents.values(),
+    ].reduce((sum, set) => sum + set.size, 0);
+    const documented = files > 0 ? ` · ${files} documents` : '';
+    return `${specs.length} specs · ${workspaces.length} workspaces${documented}`;
+}
+
+/**
+ * One index line per workspace, with what it holds: documents for a set, specifications else.
+ *
+ * @param {object[]} workspaces
+ * @param {Map<string, object[]>} specsByWs
+ * @param {Map<string, Map<string, object[]>>} documents
+ * @returns {string[]}
+ */
+function workspaceLines(workspaces, specsByWs, documents) {
+    return workspaces
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .map((ws) => {
+            const set = documents.get(ws.label);
+            const count = set
+                ? `${set.size} documents`
+                : `${(specsByWs.get(ws.label) || []).length} specs`;
+            return `- [[${workspaceSlug(ws)}|${ws.label}]] — ${count}`;
+        });
+}
+
+/**
+ * The name of a most connected node: a specification or a unit links to its article.
+ *
+ * @param {object} node - A god node of the analysis.
+ * @param {object[]} specs
+ * @param {Map<string, object>} byId
+ * @returns {string}
+ */
+function godNodeName(node, specs, byId) {
+    const spec = node.type === 'spec' ? specs.find((s) => s.id === node.id) : undefined;
+    if (spec) return `[[${specSlug(spec)}|${node.label}]]`;
+    const unit = node.type === 'unit' ? byId.get(node.id) : undefined;
+    return unit ? unitLink(unit) : node.label;
+}
+
+/**
+ * The most connected nodes of the index, or nothing when the analysis names none.
+ *
+ * @param {object} analysis
+ * @param {object[]} specs
+ * @param {Map<string, object>} byId
+ * @returns {string[]}
+ */
+function godNodeLines(analysis, specs, byId) {
+    const nodes = analysis?.god_nodes;
+    if (!Array.isArray(nodes) || nodes.length === 0) return [];
+    return [
+        '## God Nodes',
+        '',
+        '_Most connected nodes — the load-bearing abstractions._',
+        '',
+        ...nodes.map((g) => `- ${godNodeName(g, specs, byId)} — ${g.degree} edges (${g.type})`),
+        '',
+    ];
+}
+
+/**
  * Renders the top-level index article.
  *
  * @param {object[]} workspaces
@@ -305,39 +367,18 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
  * @param {Map<string, object[]>} specsByWs
  * @returns {string}
  */
-function renderIndex(workspaces, specs, analysis, specsByWs) {
+function renderIndex(workspaces, specs, analysis, specsByWs, documents, byId) {
     const lines = [];
     lines.push('# Specification Knowledge Graph — Wiki Index', '');
     lines.push(
         '> Auto-generated by `export-wiki`. Start here — read a workspace page for a map, then drill into spec articles for detail.',
         '',
     );
-    lines.push(`${specs.length} specs · ${workspaces.length} workspaces`, '');
+    lines.push(headline(specs, workspaces, documents), '');
 
     lines.push('## Workspaces', '');
-    for (const ws of workspaces.sort((a, b) => a.label.localeCompare(b.label))) {
-        const count = (specsByWs.get(ws.label) || []).length;
-        lines.push(`- [[${workspaceSlug(ws)}|${ws.label}]] — ${count} specs`);
-    }
-    lines.push('');
-
-    if (analysis && Array.isArray(analysis.god_nodes) && analysis.god_nodes.length) {
-        lines.push('## God Nodes', '');
-        lines.push('_Most connected nodes — the load-bearing abstractions._', '');
-        for (const g of analysis.god_nodes) {
-            if (g.type === 'spec') {
-                const match = specs.find((s) => s.id === g.id);
-                if (match) {
-                    lines.push(
-                        `- [[${specSlug(match)}|${g.label}]] — ${g.degree} edges (${g.type})`,
-                    );
-                    continue;
-                }
-            }
-            lines.push(`- ${g.label} — ${g.degree} edges (${g.type})`);
-        }
-        lines.push('');
-    }
+    lines.push(...workspaceLines(workspaces, specsByWs, documents), '');
+    lines.push(...godNodeLines(analysis, specs, byId));
 
     if (analysis && Array.isArray(analysis.orphaned_files) && analysis.orphaned_files.length) {
         lines.push('## Knowledge Gaps', '');
@@ -371,7 +412,9 @@ function renderIndex(workspaces, specs, analysis, specsByWs) {
  * @param {string} content
  */
 function writeAtomic(absPath, content) {
-    fs.mkdirSync(path.dirname(absPath), { recursive: true });
+    fs.mkdirSync(path.dirname(absPath), {
+        recursive: true,
+    });
     const tmp = `${absPath}.tmp`;
     fs.writeFileSync(tmp, content, 'utf8');
     try {
@@ -422,12 +465,19 @@ function refreshArtifactIndex() {
     try {
         const out = execFileSync(
             process.execPath,
-            [path.join(__dirname, 'executor.js'), 'memory-index'],
+            [
+                path.join(__dirname, 'executor.js'),
+                'memory-index',
+            ],
             {
                 cwd: rootDir,
                 env: process.env,
                 encoding: 'utf8',
-                stdio: ['ignore', 'pipe', 'pipe'],
+                stdio: [
+                    'ignore',
+                    'pipe',
+                    'pipe',
+                ],
                 timeout: 300000,
                 maxBuffer: 16 * 1024 * 1024,
             },
@@ -444,6 +494,62 @@ function refreshArtifactIndex() {
     }
 }
 
+/**
+ * Writes the article of every document of every 4.0 workspace.
+ *
+ * @param {ReturnType<typeof documentsOf>} documents
+ * @param {object[]} edges
+ * @param {Map<string, object>} byId
+ * @returns {{files: number, units: number}} How many documents and units were written.
+ */
+function writeDocumentArticles(documents, edges, byId) {
+    const count = {
+        files: 0,
+        units: 0,
+    };
+    for (const [workspace, files] of documents) {
+        for (const [file, units] of files) {
+            const article = renderDocumentArticle(workspace, file, units, edges, byId);
+            writeAtomic(path.join(outDir, `${documentSlug(workspace, file)}.md`), article);
+            count.files++;
+            count.units += units.length;
+        }
+    }
+    return count;
+}
+
+/**
+ * Writes the article of every workspace: the documents of a set, the specifications else.
+ *
+ * @param {object[]} workspaces
+ * @param {object} analysis
+ * @param {Map<string, object[]>} specsByWs
+ * @param {ReturnType<typeof documentsOf>} documents
+ */
+function writeWorkspaceArticles(workspaces, analysis, specsByWs, documents) {
+    const bridges = Array.isArray(analysis.bridge_specs) ? analysis.bridge_specs : [];
+    for (const ws of workspaces) {
+        const set = documents.get(ws.label);
+        const article = set
+            ? renderSetWorkspaceArticle(ws.label, set)
+            : renderWorkspaceArticle(ws, specsByWs.get(ws.label) || [], bridges);
+        writeAtomic(path.join(outDir, `${workspaceSlug(ws)}.md`), article);
+    }
+}
+
+/**
+ * Says where the wiki went and what it holds.
+ *
+ * @param {object[]} workspaces
+ * @param {object[]} specs
+ * @param {{files: number, units: number}} set - The documents and units written.
+ */
+function printExported(workspaces, specs, set) {
+    console.log(`Wiki exported → ${normalizePath(path.relative(rootDir, outDir) || outDir)}`);
+    const documented = set.files > 0 ? ` · ${set.files} documents · ${set.units} units` : '';
+    console.log(`  ${workspaces.length} workspaces · ${specs.length} specs${documented} · 1 index`);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
@@ -454,7 +560,12 @@ function main() {
     const edges = graph.edges || [];
     const analysis = graph.analysis || {};
 
-    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const byId = new Map(
+        nodes.map((n) => [
+            n.id,
+            n,
+        ]),
+    );
     const specs = nodes.filter((n) => n.type === 'spec');
     const workspaces = nodes.filter((n) => n.type === 'workspace');
 
@@ -466,18 +577,20 @@ function main() {
         specsByWs.get(ws).push(s);
     }
 
-    fs.mkdirSync(outDir, { recursive: true });
+    fs.mkdirSync(outDir, {
+        recursive: true,
+    });
     pruneWiki(outDir);
 
     // Index
-    writeAtomic(path.join(outDir, 'index.md'), renderIndex(workspaces, specs, analysis, specsByWs));
+    const documents = documentsOf(nodes);
+    writeAtomic(
+        path.join(outDir, 'index.md'),
+        renderIndex(workspaces, specs, analysis, specsByWs, documents, byId),
+    );
 
     // Workspaces
-    const bridges = Array.isArray(analysis.bridge_specs) ? analysis.bridge_specs : [];
-    for (const ws of workspaces) {
-        const article = renderWorkspaceArticle(ws, specsByWs.get(ws.label) || [], bridges);
-        writeAtomic(path.join(outDir, `${workspaceSlug(ws)}.md`), article);
-    }
+    writeWorkspaceArticles(workspaces, analysis, specsByWs, documents);
 
     // Specs
     for (const s of specs) {
@@ -485,9 +598,7 @@ function main() {
         writeAtomic(path.join(outDir, `${specSlug(s)}.md`), article);
     }
 
-    const relOut = normalizePath(path.relative(rootDir, outDir) || outDir);
-    console.log(`Wiki exported → ${relOut}`);
-    console.log(`  ${workspaces.length} workspaces · ${specs.length} specs · 1 index`);
+    printExported(workspaces, specs, writeDocumentArticles(documents, edges, byId));
 
     // The graph folder now holds everything; the earlier locations are derived and
     // regenerated, so they go once the new tree exists. A custom --out leaves them be.

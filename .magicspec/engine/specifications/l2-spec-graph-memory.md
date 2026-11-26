@@ -1,6 +1,6 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.4.2
+**Version:** 1.4.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -110,6 +110,8 @@ node skills/magicspec/scripts/executor.js export-wiki --out .magicspec/graph/wik
 ```
 
 **Agent contract:** after this spec lands, `CLAUDE.md` and `magic.analyze` can recommend "read `.magicspec/graph/wiki/index.md` before scanning raw specs" — for structural questions; a content question takes the route of §4.5.
+
+**A 4.0 workspace** `[ADDED]` ([l1-sdd-document-set.md](l1-sdd-document-set.md) §6 declares the supersession, [l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.2 the realization): the graph takes the units of the set as its nodes, keyed by address, and the references between them as edges, and the wiki writes an article per document of the set in place of the per-specification articles; the 3.x layout is unchanged.
 
 ### 4.3 Token-Budget Truncation on `query_graph`
 
@@ -233,6 +235,7 @@ Everything the graph subsystem derives lives in one folder, `$designDir/graph/`:
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.3 | 2026-11-26 | Agent | As built in Phase 71, Stable retained, no requirement changed: §4.2 states the graph and wiki of a 4.0 workspace; the 3.x contract unchanged. |
 | 1.4.2 | 2026-10-29 | Agent | Clarification (no requirement changed): §4.6 states whose graph it is — always the resolved project's own state folder, never shipped, product code only through `Canonical References` — answering the owner's question of 2026-10-29 ("for which project is the wiki-graph created"). |
 | 1.4.1 | 2026-10-29 | Agent | New **§4.8 Reading the Graph from a Child Process (Scale)**: the explicit output buffer of `export-wiki` and `serve-spec-graph`, found by a load ramp (the default 1 MiB ended the run at about 2000 specifications). |
 | 1.4.0 | 2026-10-29 | Agent | New **§4.7 The Interactive Page**: the palette and legend fix (the improved layout re-coloured most nodes), a pinned library with an integrity hash, a visible failure state with the summary drawn first, a narrow-screen layout and the accessibility minimum, from a browser pass over the generated page. Specification changed together with the code; the page cases are in [l2-test-suite.md](l2-test-suite.md). |

@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 71 — 2026-11-26 (The Scripts of the Remaining Commands on a 4.0 Workspace)
+
+- **The graph, the wiki and the search read a 4.0 workspace.** Units are graph nodes, each document gets a wiki article listing its units and their references, and a search cites a unit by its address.
+- **Coverage and `sync` answer for a set.** Coverage counts the requirements a task observes; `sync` recomputes the next ready task and names, for each finding of the checker, the command that closes it.
+- **Three scripts write nothing on a 4.0 workspace** — phase archival, the state update and the context file — and say what takes their place. On a 3.x workspace every script prints and writes exactly what it did.
+- **Records:** harness 510; engine 3.0.206. **Specifications:** `l2-sdd-document-set-engine` 1.5.4, `l2-spec-graph-memory` 1.4.3, `l2-artifact-memory-store` 1.3.1, `l1-sync-command` 1.1.1, `l2-engine-automation` 1.33.3, `l2-test-suite` 1.48.14; registry 1.104.4. Phase 81, the bodies of the remaining commands, waits for a specification amendment on where `goal` keeps its record.
+
 ## Phase 80 — 2026-11-26 (The Pipeline Bodies on a 4.0 Workspace)
 
 - **The pipeline works on a 4.0 workspace.** `spec`, `plan`, `task` and `run` each carry a section for it: an idea becomes the documents of a set, reviewed across stacks; a later input becomes a change; milestones are planned, their tasks written and packed within budget, and each task built from its pack. On a 3.x workspace each command reads exactly as before.

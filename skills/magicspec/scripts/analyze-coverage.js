@@ -19,6 +19,8 @@ const {
     BUILD_NOISE_DIRS,
 } = require('./utils');
 const { parseCanonicalRefs } = require('./lib/canonical-refs');
+const { isDocSetWorkspace } = require('./lib/doc-set-state');
+const { setCoverage } = require('./lib/doc-set-coverage');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIDENCE TAXONOMY — COVERAGE ANALYSIS
@@ -43,7 +45,10 @@ const workspaceScope =
  * `.magicspec` is deliberately NOT skipped by the walk: its files are reported, as EXEMPT,
  * so the exclusion stays auditable. The engine folder is classified like any source.
  */
-const SKIP_DIRS = new Set([...BUILD_NOISE_DIRS, '.references']);
+const SKIP_DIRS = new Set([
+    ...BUILD_NOISE_DIRS,
+    '.references',
+]);
 
 /** Confidence taxonomy definitions. */
 const TAXONOMY = {
@@ -99,7 +104,12 @@ function buildRefIndex(specsDir) {
     /** @type {Map<string, string[]>} spec filename → all refs (for shadow detection) */
     const specRefs = new Map();
 
-    if (!fs.existsSync(specsDir)) return { pathToSpec, refEntries, specRefs };
+    if (!fs.existsSync(specsDir))
+        return {
+            pathToSpec,
+            refEntries,
+            specRefs,
+        };
 
     const specFiles = listMarkdownFiles(specsDir);
 
@@ -110,12 +120,20 @@ function buildRefIndex(specsDir) {
 
         for (const ref of refs) {
             const matcher = compilePathEntry(ref);
-            refEntries.push({ ref, spec: specFile, matcher });
+            refEntries.push({
+                ref,
+                spec: specFile,
+                matcher,
+            });
             if (!matcher.isPattern && !ref.endsWith('/')) pathToSpec.set(matcher.source, specFile);
         }
     }
 
-    return { pathToSpec, refEntries, specRefs };
+    return {
+        pathToSpec,
+        refEntries,
+        specRefs,
+    };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -140,7 +158,9 @@ function scanProjectFiles(rootDir, isIgnored) {
     function walk(dir) {
         let entries;
         try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
+            entries = fs.readdirSync(dir, {
+                withFileTypes: true,
+            });
         } catch {
             return;
         }
@@ -263,7 +283,10 @@ function buildAncestorSets(pathToSpec, refEntries) {
         if (gp !== '.') grandparents.add(gp);
     }
 
-    return { parents, grandparents };
+    return {
+        parents,
+        grandparents,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -296,7 +319,10 @@ function detectShadowSpecs(specRefs, scannedFiles) {
             }
         }
         if (orphaned.length > 0) {
-            shadows.push({ spec, orphaned_refs: orphaned });
+            shadows.push({
+                spec,
+                orphaned_refs: orphaned,
+            });
         }
     }
 
@@ -308,6 +334,26 @@ function detectShadowSpecs(specRefs, scannedFiles) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const rootDir = resolveProjectRoot();
+
+// A 4.0 workspace: the coverage of its requirements, read from the set; no code file is walked.
+const workspaceDir = path.join(rootDir, designDir);
+if (isDocSetWorkspace(workspaceDir)) {
+    const { requirements, summary, lines } = setCoverage(workspaceDir);
+    console.log(
+        jsonOutput
+            ? JSON.stringify(
+                  {
+                      requirements,
+                      summary,
+                  },
+                  null,
+                  2,
+              )
+            : lines.join('\n'),
+    );
+    process.exit(0);
+}
+
 const specsDir = path.join(rootDir, designDir, 'specifications');
 
 const { pathToSpec, refEntries, specRefs } = buildRefIndex(specsDir);
@@ -342,11 +388,22 @@ for (const { ref, spec, matcher } of refEntries) {
 }
 
 const coverage = [];
-const counts = { extracted: 0, inferred: 0, ambiguous: 0, uncovered: 0, exempt: 0 };
+const counts = {
+    extracted: 0,
+    inferred: 0,
+    ambiguous: 0,
+    uncovered: 0,
+    exempt: 0,
+};
 
 for (const file of files) {
     if (isExemptFile(file)) {
-        coverage.push({ file, confidence: 'EXEMPT', spec: null, reason: TAXONOMY.EXEMPT });
+        coverage.push({
+            file,
+            confidence: 'EXEMPT',
+            spec: null,
+            reason: TAXONOMY.EXEMPT,
+        });
         counts.exempt++;
         continue;
     }
