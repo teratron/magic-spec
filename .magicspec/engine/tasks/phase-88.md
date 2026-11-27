@@ -131,7 +131,6 @@ duration_minutes: ~
 - **Notes:** `.magicspec/RULES.md` is outside C14; the template and `CONSTITUTION.md` are inside it. `CONSTITUTION.md` and `.agents/rules/magicspec.md` are a hardlinked pair (`[C-001]`).
 - **Changes:** RULES.md 2.2.0 and the shipped template: C2 lists resume after status (user-stated; constitutional and wording review passed); CONSTITUTION.md section 10 says resume continues the recorded work (16376 of 16384 bytes); the rule projection refreshed by update-engine-meta; the broken CLAUDE.md and CODEX.md hardlinks (inherited) restored and validate-hardlinks passes; the C2 case fails only on the ledger recording the old constitution version, which task re-records after the replan.
 
-
 ### [T-88D01] Documentation of `resume`, the record and the reserved forms
 
 - **Spec:** l2-session-checkpoint.md §7 row 21; l1-command-surface.md §1.3
