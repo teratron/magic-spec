@@ -20,6 +20,7 @@ The engine is one skill folder, `skills/magicspec/`, driven by one command, `/ma
 - **A project's ignore rules reached outside it.** For an engine folder outside the project they could hide its files from the integrity check.
 - **On a 4.0 workspace the answer depended on the file system.** On Windows and macOS the pre-flight and the size report read the set's `rules.md` and `plan.md` as the 3.x constitution and plan; no script reads those names there now, and the constitution required is the global one.
 - **`remove` kept the engine of a project reached through a link or a short Windows name**, reporting it as lying outside the project.
+- **A planning run asked for by a replan directive could be halted** and sent to `/magicspec spec`: with every phase done and a Backlog item still open, the pre-flight raised the design-debt stop before the revalidation that records the item's disposition.
 
 An improvised `/magicspec-dev:test` crisis (a fresh project walked from `status` through `spec`, `plan`, `task` and `run`) found six places where shipped text named the wrong owner or the wrong next step. A harness case under mutation control now pins each one:
 

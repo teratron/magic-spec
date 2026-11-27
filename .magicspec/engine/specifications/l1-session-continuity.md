@@ -1,6 +1,6 @@
 # Session Continuity & Status Surface
 
-**Version:** 2.6.4
+**Version:** 2.7.0
 **Status:** Stable
 **Layer:** concept
 
@@ -127,6 +127,10 @@ This engine's own workspace does not exhibit the failure because its `TASKS.md` 
 
 **Requirement**: `DESIGN_DEBT_PENDING` is raised only on a plan whose recorded registry and constitution versions are current. On a stale plan Pre-flight reports `SYNC_GAP` alone, the planning workflow revalidates, and that revalidation sets each Backlog item's disposition (graduated, closed, Parked or left open); an item still open after it raises the halt on the next run. The Next Action computation is unchanged in kind: a stale plan is pending work and resolves to the planning funnel — also when a phase the ledger holds no row for is waiting for its tasks, because the task command refuses a stale plan and the decomposition waits for the revalidation (the repair of task T-62F01, feedback note n5).
 
+**Pending-Directive Precedence (SC-2.4 addendum)** `[ADDED]`: a replan directive that is pending — the finding a later stage handed back, read while the plan's version equals the one it records — marks a plan that still waits for its revalidation, even when its registry and constitution versions are current, and `Next Action` already names the planning command with that directive ahead of every other step. Observed in this engine's own workspace (2026-11-27): a directive left after the last phase closed met a complete, current plan whose two open Backlog items were waiting rather than asking for design; `check-prerequisites` raised `DESIGN_DEBT_PENDING`, so the planning command that live memory named would have halted and named the specification pass, which retires no directive and sets no Backlog disposition.
+
+**Requirement**: `DESIGN_DEBT_PENDING` is not raised while a replan directive is pending. The planning workflow revalidates with the directive and sets each Backlog item's disposition. A directive a rewritten plan has retired, or one inside a comment, holds nothing back, and an item still open then raises the halt as before.
+
 **Progress Granularity (SC-2.3):** the recomputed progress indicators MUST include a per-phase counter for the active phase whenever the workspace uses the canonical two-level task layout (`tasks/phase-{N}.md`), not only the aggregate phase-count line. A recompute that silently drops to an aggregate-only line because it cannot locate the active phase's checklist is an SC-2 defect of the same class as SC-2.1's contradiction: `STATE.md` is supposed to be more precise after an update, not less. Field report (engine 2.1.58): the same finalize pass that produced the Blocked contradiction above also collapsed a two-line `Phase {N}: [d/t] …` / `Overall: [d/t] …` block down to `Overall: [0/1]` alone — independent of the Blocked status, reproducible on any healthy in-progress phase using the two-level layout, because the recompute's phase-line source only ever checked for an inline `### Phase {N} Checklist` heading in `TASKS.md`, a legacy single-file layout most Stable-workflow projects — including this engine's own workspace — no longer use.
 
 ### SC-3 — Retired (formerly: Commit Suggestion Guarantee)
@@ -241,6 +245,7 @@ A separate handoff file is rejected (§5): it would be a third source of truth d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.7.0 | 2026-11-27 | Agent | New **Pending-Directive Precedence (SC-2.4 addendum)**, a specification gap closed by `/magicspec-dev fix` (Phase 87): `DESIGN_DEBT_PENDING` waits while a replan directive is pending, because the revalidation the directive names is the recorded next step and sets the Backlog dispositions. |
 | 2.6.4 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: SC-1 states who writes `memory/goal.md` of a 4.0 workspace and that the resume check reports the goal. |
 | 2.6.3 | 2026-11-26 | Agent | Coherence with the document-set concept 1.6.0, Stable retained, no requirement changed: SC-1 names `memory/goal.md` beside `memory/state.md` as the live memory of a 4.0 workspace that holds a goal. |
 | 2.6.2 | 2026-11-26 | Agent | As built in Phase 70, Stable retained, no requirement changed: SC-1 names the live memory of a 4.0 workspace (`memory/state.md`) as the document-set concept declares; the 3.x contract unchanged. |

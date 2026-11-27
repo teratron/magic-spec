@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.34.0
+**Version:** 1.34.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -317,6 +317,8 @@ GOOD: zero rows counts however it is spelled — marker, vacant section, or head
 
 As built in Phase 63 ([l1-session-continuity.md](l1-session-continuity.md) §Stale-Plan Precedence): the gate also requires the plan to be current — neither the registry gap nor the constitution gap that the same `findPendingWork` call returns (`syncGap`, `rulesGap`) is present. A stale plan reports `SYNC_GAP` alone, and `workflows/plan.md` Step 1 revalidates instead of halting. The Next Action computation reads the same predicate and is unchanged, because a stale plan already resolves to the planning funnel. Regression coverage: one harness case with the current plan as its control (the signal fires) and a plan behind the registry and a plan behind the constitution (the signal waits, `SYNC_GAP` reported), under one caught mutation.
 
+As built in Phase 87 ([l1-session-continuity.md](l1-session-continuity.md) §Pending-Directive Precedence): the same condition also requires that the `findPendingWork` result holds no pending directive (`replanDirective`), and `workflows/plan.md` Step 1 states it. Regression coverage: one harness case with no directive as its control (the signal fires), a pending one (it waits), a retired and a commented one (it fires), under two caught mutations, one in the script and one in the workflow body.
+
 ### Cache Retention — Every Cache Has an Owner and a Bound `[ADDED]`
 
 The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodically, and chose the same day that compaction of the SDD artifacts is not wanted now and that the cache is cleaned by a separate simple command. Measured in this repository the same day: the graph extraction cache under `graph/.cache/` holds 148 entries for a state folder of 40 specifications and 98 Markdown files — its entries are keyed by content hash and nothing ever removes the entry of a file that changed or disappeared.
@@ -401,6 +403,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.34.1 | 2026-11-27 | Agent | As built in Phase 87, Stable retained: the design-debt predicate also waits for a pending replan directive; the requirement moved with the concept amendment that declares it. |
 | 1.34.0 | 2026-11-27 | Agent | **Ignore rules stop at the project's edge** (origin: a failing harness run on a Linux runner). §Scan Hygiene states that the shared predicate applies a project's rules to paths inside that project only. Amendment Rule round trip: RFC, Post-Update Review (coherence: the manifested-path boundary and the scanners of the same section, no conflict; spec-critic PASS), Stable. |
 | 1.33.6 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the Components list gains `lib/migrate-to-4.js` and the stop of a move in flight. |
 | 1.33.5 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: on a 4.0 workspace `lib/doc-set-coverage.js` compares the map with the files `analyze-coverage` walks, reading the map rows through the checker's loader. |

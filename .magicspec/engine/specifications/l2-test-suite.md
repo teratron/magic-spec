@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.48.20
+**Version:** 1.48.21
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -215,6 +215,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.21 | 2026-11-27 | Agent | As built, Stable retained, no requirement changed: one case for the design-debt halt held back by a pending replan directive; 544 cases. |
 | 1.48.20 | 2026-11-27 | Agent | As built, Stable retained, no requirement changed: the harness made to hold on every runner (links removed one way, a generated copy compared only where it exists, the quoted hook path accepted) and three cases for the engine repairs; 543 cases. |
 | 1.48.19 | 2026-11-26 | Agent | As built, Stable retained, no requirement changed: two modules split at a case boundary after the second formatting change took them past the line bound, the artifact helpers moved to `lib/sim.js`, one shape pin reads a call across lines, and a case pins a reference at the end of a sentence; 540 cases in 37 modules. |
 | 1.48.18 | 2026-11-26 | Agent | As built in Phase 83, Stable retained, no requirement changed: the module `migrate-to-4` gains three cases (the readers during and after a move, the global registry's row written by the move and by `sync`) and its body case pins the revert hint; the memory modules' require case allows the move predicate; 539 cases in all. |

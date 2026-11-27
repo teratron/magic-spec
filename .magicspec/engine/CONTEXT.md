@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-11-26
+**Generated:** 2026-11-27
 
 ## Active Technologies
 
@@ -38,6 +38,7 @@
 │   ├── dev-test.md
 │   ├── development.md
 │   ├── distribution.md
+│   ├── document-set.md
 │   ├── fix.md
 │   ├── goal.md
 │   ├── graph.md

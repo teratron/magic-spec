@@ -1020,6 +1020,57 @@ module.exports = () => {
         }
     });
 
+    test('check-prerequisites.js holds the design-debt halt while a replan directive is pending: the revalidation the directive names runs first, and a retired or commented directive holds nothing (SC-2.4, PL-8)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = makeMinimalDesignDir(tempDir);
+            fs.writeFileSync(
+                path.join(designDir, 'PLAN.md'),
+                '# Plan\n\n**Version:** 1.1.0\n**Based on:** .magicspec/INDEX.md v1.0.0\n\n## Backlog\n\n- An open design item.\n',
+            );
+            const section = (version) =>
+                `## Replan Directive\n\n- **Plan version:** ${version}\n- **Directive:** Keep the release as pending work.\n`;
+            const debtWith = (tail) => {
+                fs.writeFileSync(
+                    path.join(designDir, 'TASKS.md'),
+                    `# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via \`/magicspec plan\`.*\n\n${tail}`,
+                );
+                return runCheckPrerequisites(tempDir).warnings.some(
+                    (w) => w.type === 'DESIGN_DEBT_PENDING',
+                );
+            };
+
+            assert.strictEqual(debtWith(''), true, 'the control: no directive, the halt stands');
+            assert.strictEqual(
+                debtWith(section('1.1.0')),
+                false,
+                'a pending directive is the next step, and only that revalidation can judge the Backlog',
+            );
+            assert.strictEqual(
+                debtWith(section('1.0.0')),
+                true,
+                'a directive a rewritten plan retired holds nothing',
+            );
+            assert.strictEqual(
+                debtWith(`<!-- An example.\n\n${section('1.1.0')}-->\n`),
+                true,
+                "the template's commented example is not a directive",
+            );
+            const planBody = fs.readFileSync(
+                path.resolve(__dirname, '..', '..', 'skills', 'magicspec', 'workflows', 'plan.md'),
+                'utf8',
+            );
+            assert.ok(
+                planBody.includes(
+                    'on a plan whose recorded registry and constitution versions are current and that has no pending replan directive — **HALT**.',
+                ),
+                'the planning body states the same condition for its halt',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 6b2-bis. check-prerequisites.js — DESIGN_DEBT_PENDING's openItems count
     //          skips Parked-marked Backlog bullets (SC-2.4 addendum, Backlog

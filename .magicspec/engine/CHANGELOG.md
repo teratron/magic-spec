@@ -1,5 +1,10 @@
 # Engine Workspace Changelog
 
+## Phase 87 — 2026-11-27 (Maintenance: The Design-Debt Halt Waits for a Pending Replan Directive)
+
+- **The planning run a directive names is no longer halted.** While a replan directive is pending, the pre-flight raises no `DESIGN_DEBT_PENDING`.
+- **Records:** harness 544; engine 4.0.0. **Specifications:** `l1-session-continuity` 2.7.0, `l2-engine-automation` 1.34.1, `l2-test-suite` 1.48.21; registry 1.109.0.
+
 ## Phase 86 — 2026-11-27 (Maintenance: The Engine and Its Harness Hold on Every Runner)
 
 - **The engine answers the same on Linux and Windows.** A project's ignore rules no longer reach outside it, no 3.x file is read in a 4.0 workspace, and `remove` deletes its engine however the project path is spelled.

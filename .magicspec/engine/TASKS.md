@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.97.0
+**Version:** 1.98.0
 **Generated:** 2026-11-27
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.101.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.103.0
 **Based on RULES:** .magicspec/RULES.md v2.0.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 87](archives/tasks/phase-87.md) | Maintenance: The Design-Debt Halt Waits for a Pending Replan Directive — the pre-flight raises no `DESIGN_DEBT_PENDING` while a directive is pending; 1 task | `Done (Archived)` |
 | [Phase 86](archives/tasks/phase-86.md) | Maintenance: The Engine and Its Harness Hold on Every Runner — ignore rules stop at the project's edge, no 3.x file name is read in a 4.0 workspace, `remove` compares real paths, and the harness passes on Linux and Windows; 4 tasks | `Done (Archived)` |
 | [Phase 83](archives/tasks/phase-83.md) | 4.0.0 (4.0 Step 4, Part 5) — the graph, the wiki and the artifact index leave out a workspace whose move to 4.0 is in flight, and the global registry row of a 4.0 workspace links no registry; a page on the 4.0 document set, the move from 3.x in the migration page, the README and the distribution page; the specifications as built; `SECURITY.md`, the version file at 4.0.0 and the `[4.0.0]` section; the release plan behind one consent question; 10 tasks in eight tracks (G, H, Y, D, S, T, V, R) | `Done (Archived)` |
 | [Phase 85](archives/tasks/phase-85.md) | The Migration to 4.0 (4.0 Step 4, Part 4) — `migrate --to 4` moves a 3.x workspace to the 4.0 document set: a dry run that writes nothing, the set written by `analyze` into `next/`, one consent question, an apply step that moves the files only on a clean check, sets the format last and resumes after an interruption; a move in flight stops every other command, and no 3.x reader reads `next/`; a fixture, harness cases, one scenario and the specifications as built; 11 tasks in seven tracks (F, M, G, W, H, Y, S/T) | `Done (Archived)` |

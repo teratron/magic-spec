@@ -445,7 +445,10 @@ if (planExists && indexExists) {
 // first: the pass that moved it may have answered the very item counted here,
 // and only the revalidation can record that disposition. Halting on it would
 // send the person back to the specification pass that just ran.
-const planIsCurrent = !pending?.syncGap && !pending?.rulesGap;
+//
+// A pending replan directive says the same: the revalidation it names is the
+// recorded next step, and it may park or close the item counted here.
+const planIsCurrent = !pending?.syncGap && !pending?.rulesGap && !pending?.replanDirective;
 if (pending?.planComplete && planIsCurrent && pending.openBacklogItems.length > 0) {
     const workspaceName = normalizePath(designDir).split('/').pop();
     warn(
