@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.62.0
+**Version:** 1.64.0
 **Status:** Active
 **Engine Version:** 4.0.0
 
@@ -13,7 +13,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 58 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 59 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## System Files
 
@@ -24,6 +24,8 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.64.0 | 2026-11-27 | Agent | No spec-count change (59/59 Stable). Model and effort routing made host-neutral: `l1-pipeline-stages.md` 1.2.0, `l2-demand-routing.md` 1.1.0. The engine registry is 1.111.0. |
+| 1.63.0 | 2026-11-27 | Agent | Spec count 58 → 59 (59/59 Stable). The owner's list of 2026-11-27: added `l2-demand-routing.md` 1.0.0; amended `l1-session-continuity.md` 2.8.0, `l2-session-checkpoint.md` 1.2.0, `l1-pipeline-stages.md` 1.1.0, `l1-command-surface.md` 2.6.0. The engine registry is 1.110.0. |
 | 1.62.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). A reference-mining pass over a model vendor's prompting guidance: `l1-goal-mode.md` 1.3.0, `l1-input-prompt-pass.md` 1.1.0, `l1-interface-design.md` 1.1.0. The engine registry is 1.91.0. |
 | 1.61.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 64 (maintenance): `l2-engine-finalization.md` 3.10.0, `l2-test-suite.md` 1.48.4. The engine registry is 1.90.0. |
 | 1.60.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 62 recorded as built: `l1-fix-command.md` 1.3.1. The engine registry is 1.89.0. |

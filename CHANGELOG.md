@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated 5 specifications (engine)
+- Updated global project rules (engine)
+- Updated implementation plan (engine)
+- Updated task index (engine)
+
 ## [4.0.0] - 2026-11-26
 
 The engine is one skill folder, `skills/magicspec/`, driven by one command, `/magicspec <command> [argument]`. A second workspace layout, the **4.0 document set**, now stands beside the 3.x one: small addressed units from which the engine computes what each task's builder reads. Every command works on a workspace of either layout; a workspace is on 4.0 when its entry in `workspace.json` carries `"format": "4"`. Existing 3.x workspaces keep working unchanged, and `/magicspec migrate --to 4` moves one when you ask — see [The 4.0 Document Set](docs/document-set.md) and [From 3.x to 4.0](docs/migration.md#from-3x-to-40).

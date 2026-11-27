@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** Stable
 **Based on:** `workflows/spec.md` of the engine folder
 
@@ -279,10 +279,20 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.m
 4. **Procedure still applies.** C1 (read first, trace impact, atomic update), C14 (`update-engine-meta` after any change inside `skills/magicspec/`), and `[C-001]` (hardlink recreation for the agent-instruction family) bind every engine change exactly as elsewhere.
 5. **The shipped guard stays intact.** Do not weaken the read-only rules in `skills/magicspec/CONSTITUTION.md` or `skills/magicspec/templates/rules.md` to match this repository's own freedom — a downstream project must keep receiving the stricter contract. A script distinguishing the two uses the predicate `hasEngineWriteTooling` (the folder's place and `scripts/generate-checksums.js`), the existing dev-repo signal — never an assumption.
 
+### C29 — Project Language
+
+All project content is in English: code, comments, strings, test data, file names, specifications, plans, rules, histories and documentation. Text in Russian or any other language is allowed in two places only:
+
+1. the `.drafts/` folder;
+2. documentation, as a separate file whose name carries the language suffix: `*.{lang}.md` or `*-{lang}.md` (for example `README.ru.md` or `README-ru.md`).
+
+A request quoted from someone who wrote in another language is quoted in English translation, marked as translated. Rationale: every contributor and agent reads one language, and a translation lives beside the original instead of inside it.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.1.0 | 2026-11-27 | Agent | **C29 Project Language added** (origin `user-stated`: the owner's instruction of 2026-11-27, translated from Russian — no Russian in the project except in `.drafts/` or in a separate documentation file suffixed `*.ru.md` or `*-ru.md`, and the same for every other language; wording composed by the agent, the `{lang}` pattern generalizing the two suffixes the owner named, the translated-quotation sentence added as the way to comply). Recorded at the stated strength with no blocking gate. Not mirrored in the shipped template: it governs this repository, not projects that install the engine. The same change translated the four Russian passages the repository held (a plan, a retrospective, an archived phase and a harness fixture). |
 | 2.0.0 | 2026-11-26 | Agent | **§2 is scoped to 3.x workspaces** (core amendment, the owner's consent of 2026-11-26; origin `agent`, the supersession [l1-sdd-document-set.md](engine/specifications/l1-sdd-document-set.md) §6 declares: the status lifecycle and the conventions that act on status, C6 and C12, do not apply to a workspace in the 4.0 document-set format, which has revisions and change statuses instead). The same paragraph is added to the shipped template. |
 | 1.25.0 | 2026-11-25 | Agent | **C11 lists `reverse`** (origin `user-stated`: the owner's request of 2026-11-25 for an internal command that perfects any engine mechanic by experiment, confirmed after a playback that named the amendment; wording composed by the agent from `l1-reverse-command.md` and mirrored word for word in the shipped template). |
 | 1.24.0 | 2026-11-12 | Agent | **C2 lists `sync` as shipped** (origin `user-stated`: the owner's list of commands of 2026-11-11, which asks for `sync` as a user command for versions, documentation and other derived state; wording composed by the agent from the sync command and command surface specifications and mirrored word for word in `skills/magicspec/templates/rules.md`). C2's sentence on the command set as it ships gains `sync` after `migrate`, in the order of the command surface specification, and no exception is left to come. A §7 amendment, so no core-amendment gate. Admission (RA-1, user-stated, soft form, recorded at its stated strength): without the change the constitution calls a command pending while its body, router row and documentation ship in the same phase, the mismatch Phases 52 and 53 closed for `fix`, `simulate` and `goal`. Constitutional review: APPROVE — no conflict with §1–6 or C2 (the command is the exception C2 itself authorizes), no practical conflict with C9, C11 or C27 (`sync` asks no question and finalizes nothing), no hole opened, no new question, gate or obligation; rule wording review: PASS. The body that ships with it is built in the same phase; until the router row lands, the constitution leads the router by a few tasks. |

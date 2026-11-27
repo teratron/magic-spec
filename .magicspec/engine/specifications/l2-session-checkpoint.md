@@ -1,13 +1,13 @@
 # Session Checkpoint Contract
 
-**Version:** 1.1.6
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
 
 ## Overview
 
-Implementation contract for the automatic-checkpoint invariants of [l1-session-continuity.md](l1-session-continuity.md): SC-1.3, SC-6 (with SC-6.1), SC-7, SC-8 and SC-9. It specifies the deliverables that let a session be ended at any checkpoint and resumed from persisted state alone, with no new user-facing command: a task-start record, the `Attempts` field, one shared resume-detection script and its call sites, the checkpoint claim in finalize output, the retirement of the fill-percentage triggers, and the removal of one dead field and one phantom command. It also fixes the regression coverage the previous pause/handoff path never had.
+Implementation contract for the automatic-checkpoint invariants of [l1-session-continuity.md](l1-session-continuity.md): SC-1.3, SC-6 (with SC-6.1), SC-7, SC-8 and SC-9. It specifies the deliverables that let a session be ended at any checkpoint and resumed from persisted state alone, with no guarantee that depends on a typed command: a task-start record, the `Attempts` field, one shared resume-detection script and its call sites, the checkpoint claim in finalize output, the retirement of the fill-percentage triggers, and the removal of one dead field and one phantom command. It also fixes the regression coverage the previous pause/handoff path never had. Version 1.2.0 adds SC-10 and SC-11: the invocation record written at each body's named checkpoints, and the `resume` command that acts on it.
 
 ## Related Specifications
 
@@ -37,7 +37,7 @@ The audit recorded in [l1-session-continuity.md](l1-session-continuity.md) §1.5
 
 ## 2. Constraints & Assumptions
 
-- **No new user-facing command** (SC-5 stays the only C2 exception). `resume-state` is an internal executor subcommand: reachable through `executor.js`'s generic dispatch, referenced only from engine prose, never advertised to the user.
+- **No guarantee behind a typed command** (SC-5 and SC-11 are the two C2 exceptions; `resume` acts on what the automatic check reports, it carries no guarantee of its own). `[MODIFIED]` `resume-state` and `checkpoint` are internal executor subcommands: reachable through `executor.js`'s generic dispatch, referenced only from engine prose, never advertised to the user.
 - **Layer placement** (`AGENTS.md` §1.3 classification): `resume-state.js` is named by L1 entry points (`context.md`, `status.md`, `skills/magicspec/CONSTITUTION.md`), so it is L1 and lives in `skills/magicspec/scripts/`. Its closure (`lib/phase-files.js`, `lib/scan-hygiene.js`, `lib/git-utils.js`) stays inside `skills/magicspec/`, and it references nothing under `dev/`.
 - **Read-only.** `resume-state` writes no artifact, so the read-only `/magicspec status` can call it (SC-4). Its one non-fatal condition — a registered workspace's `STATE.md` that exists but cannot be read — is recorded through the shared collector like every engine finding (DG-1: `warning`, code `RESUME_STATE_UNREADABLE`) and printed to stderr; a missing `STATE.md` is a fresh workspace, not a finding. The sink is runtime state under `.magicspec/.cache/`, not an artifact, and DG already accepts that read-only commands emit; a clean run writes nothing at all. The script never exits non-zero and never blocks a workflow.
 - **Engine Improvement.** Every `skills/magicspec/` change below is C14-governed. `skills/magicspec/CONSTITUTION.md` is outside C14 and is a hardlinked pair with `.agents/rules/magicspec.md`: after editing it, run the hardlink validator (`[C-001]`).
@@ -53,7 +53,9 @@ The audit recorded in [l1-session-continuity.md](l1-session-continuity.md) §1.5
 | SC-6.1 Checkpoint Claim | §5.5; pinned by H9, with the honesty case C5. |
 | SC-7 Observable Triggers | §5.6 retires the tiers and the POOR auto-pause and adds post-compaction re-grounding; pinned by H10(b) and C3. |
 | SC-8 Dead-End Record | §5.2; pinned by H7 and C4. |
-| SC-9 Resume From Recorded State | (a) §5.1 · (b), (d), (e), (f) §5.3 · (c) §5.4 and §5.6; pinned by H1–H6 and C1–C3. |
+| SC-9 Resume From Recorded State | (a) §5.1 · (b), (d), (e), (f) §5.3 · (c) §5.4 and §5.6 · (h) §5.11; pinned by H1–H6, H13 and C1–C3. |
+| SC-10 Invocation Checkpoint | §5.9 (the record and its writer), §5.10 (the checkpoints per body); pinned by H11, H12, H14, H15 and C6. `[ADDED]` |
+| SC-11 The Resume Command | §5.11; pinned by H13, H15 and C6–C8. `[ADDED]` |
 
 ## 5. Detailed Design
 
@@ -165,6 +167,73 @@ Call sites, each replacing prose that decides the same question independently:
 
 The decision and its evidence are in SC-9(g). What is removed: `skills/magicspec/pause.md`; `skills/magicspec/templates/handoff.json`; `update-state.js`'s `--handoff` flag (the `Handoff File` pointer is no longer patched — an existing line is left untouched and never read); the `Handoff File` line of `templates/state.md`; `resume-state.js`'s paused branch (`Status: Paused` is no longer an input); `context.md` §4's snapshot-loading and consumption bullets; `status.md`'s paused bullet; the `pause.md` entry in the internal-module list of [l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6 item 3 and any `docs/` mention; and the harness cases that pin the pointer field's patching and the paused variant. Ending a session needs no act: SC-6 carries it. Compatibility: no project has produced a snapshot, and an existing `HANDOFF.json` or `Status: Paused` is inert; the checksum manifest regeneration drops the two deleted files. Deployment is a deletion and is verified by a repository-wide search for the removed names (`pause.md`, `HANDOFF`, `--handoff`, `Handoff File`) returning only the specification history and this section.
 
+### 5.9 The Invocation Record (SC-10) `[ADDED]`
+
+One file per workspace, `.magicspec/.cache/invocation/{workspace}.json`, under the engine's untracked runtime folder (the folder `finalize-state.json` and `feedback.json` already live in; the repository's ignore rules already cover it, and `init` adds no rule). It is written only by a new internal subcommand, `checkpoint`, and removed by `finalize`.
+
+```plaintext
+node skills/magicspec/scripts/executor.js checkpoint --workspace=<name> --start --command=<command> [--argument="<text>"]
+node skills/magicspec/scripts/executor.js checkpoint --workspace=<name> --step="<step>" [--files=<a,b>] [--answer="<question> => <answer>"]... [--decision="<line>"]...
+node skills/magicspec/scripts/executor.js checkpoint --workspace=<name> --clear
+```
+
+```json
+{
+  "workspace": "engine",
+  "command": "spec",
+  "argument": "periodic snapshots …",
+  "parent": null,
+  "session": "d32839a5-…",
+  "started": "2026-11-27T09:10:00Z",
+  "updated": "2026-11-27T09:24:00Z",
+  "steps": [{ "step": "intake", "files": [], "at": "…" }, { "step": "dispatch", "files": ["specifications/l1-x.md"], "at": "…" }],
+  "answers": [{ "question": "…", "answer": "…" }],
+  "decisions": ["[DR] …"]
+}
+```
+
+`[REFERENCE]` Rules of the writer:
+
+- **`--start`** replaces any record of the workspace. Inside `goal` (and inside `fix`, which runs `run`'s steps as its own) the inner command does not start a record of its own: it writes its steps into the outer one, its name prefixed to the step (`run: T-3A01 done`), and `parent` stays the outer command — so a resume re-enters the outer command, which re-enters its step.
+- **`--step`** appends; `--files` are paths relative to the project root, deduplicated across steps; `--answer` and `--decision` append to their lists. Every value is bounded (an argument or an answer to 2,000 characters, a decision to one line, at most 200 files and 50 steps — the oldest step entries beyond it are folded into one `earlier` entry that keeps their files), so the file stays small whatever the invocation does.
+- **`session`** is the host's session identifier when the host exposes one in the environment (Claude Code: `CLAUDE_CODE_SESSION_ID`), otherwise `null`; it is informational, never a key.
+- **Writes are atomic** (a temporary file renamed over the record), so a crash during a checkpoint leaves the previous record, never a torn one. A failing write prints one warning to stderr and exits 0: a checkpoint never blocks a workflow.
+- **`--clear`**, and `finalize` after a successful state update (the same moment the checkpoint claim of §5.5 is earned), remove the record. `finalize --dry-run` and a failed state update leave it. A body that ends on a HALT, a refusal or a cancelled form without finalizing runs `checkpoint --clear` as its last step; a clear it misses costs one false resume line, and the `resume` that follows re-enters the command, which halts the same way and clears.
+- **Opt-out**: with finalization disabled (`MAGIC_FINALIZE=0`, or `finalization.enabled: false` in `workspace.json`) every `checkpoint` call exits 0 having written nothing (SC-10(c)); `MAGIC_RESUME_CHECK=0` does not stop the writes, only the session-start check that reads them.
+- **Product isolation**: the record holds paths and short text only, never file content or tool output; its path is under the state folder, so the containment rule covers it ([l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)).
+
+### 5.10 Checkpoint Steps per Body (SC-10(b), (e)) `[ADDED]`
+
+Each body names its checkpoints in its own steps, as one line `Checkpoint: {step}` — the closed list below, the record's start in the context load of every mutating body:
+
+| Body | Checkpoints after the start |
+| --- | --- |
+| `spec` | `intake` (after Step 0.5, with every survey answer and the argument-form choice), `dispatch` (after the Dispatch Notice: the mapping as one decision line), `written` (after each batch of specification and registry writes, with the files), `review` (after the Post-Update Review, with the verdicts as decisions) |
+| `plan` | `stabilized`, `written` (the plan file), `audited` |
+| `task` | `selected` (the phase), `written` (the ledger and the workbook) |
+| `run` | none of its own: the task events (§5.1, §5.2) are its checkpoints, and the record keeps only the argument and the phase |
+| `fix` | `reproduced`, `classified`, `repaired`, `regression` |
+| `simulate` | one per scenario run, with its verdict as a decision |
+| `rule` | `admitted`, `written` |
+| `analyze` | `audited` (the report), `dispatched` (each batch, with the files) — only when it dispatches |
+| `migrate` | none: `--apply` has its own resumption ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5); the record keeps only the argument |
+| `goal` | one per step it runs, named by the command it ran; the goal block stays the goal's own record ([l1-goal-mode.md](l1-goal-mode.md) GM-3) |
+
+A 4.0 workspace keeps the same record: its bodies name the same checkpoints where their steps match (`spec` intake, record and place; `run` the `Now` and `Done` lines as its task events).
+
+### 5.11 The `resume` Command (SC-11) `[ADDED]`
+
+A new body `skills/magicspec/workflows/resume.md` and a router row (`resume`, group `quality & automation` — its fourth command, so the group still fits a four-choice form — argument *a workspace*, *optional — the workspace the chain resolves; with nothing to resume there, every registered workspace*, demand `per step`, the value `lib/hosts.js` already accepts for a command that runs another). The body:
+
+1. Runs `resume-state --workspace={ws} --json` (or `--all` when the argument is absent and the resolved workspace reports nothing) and takes the first item in SC-11's order.
+2. **Interrupted invocation**: checks each recorded step's files against the working tree — a file recorded as written that is now missing, or whose specification or task the recorded argument names and that no longer exists, is a stale record (SC-11(d)): one line, `checkpoint --clear`, nothing runs. Otherwise narrates one line, `[Resume] /magicspec {command} {argument} — from {step after the last checkpoint} (interrupted {age} ago)`, reads `workflows/{command}.md` in full and follows it with the recorded argument, skipping the steps up to the last recorded checkpoint and taking the recorded answers and decisions as given. The re-entered body starts no new record: it continues the recorded one.
+3. **Task in flight** → `workflows/run.md` with that task's identifier; **recorded goal** → `workflows/goal.md` with no argument.
+4. **Nothing** → `Nothing to resume.` and, when live memory records one, `Next: {Next Action}`; nothing runs, no finalize.
+5. Finalization is that of the command continued; `resume` itself writes nothing.
+6. **On a 4.0 workspace** the body carries the section every other body carries ([l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.4): the task in flight is the `- Now:` line of `memory/state.md` and the recorded goal is `memory/goal.md`; the invocation record is the same.
+
+`resume-state` gains the interrupted-invocation branch (SC-9(h)), first in its output: `▶ Resume [{workspace}]: /magicspec {command} {argument} interrupted at {step} ({age} ago) — /magicspec resume`, the argument shortened to 60 characters; every other variant of the line gains the closing `— /magicspec resume`. `--json` gains `"invocation": { "command", "argument", "last_step", "age_minutes", "session" }` for a workspace with a record. A record with no step yet reads `interrupted at start`.
+
 ## 6. Regression Coverage
 
 Harness (`tests/engine.js`), deterministic:
@@ -181,6 +250,11 @@ Harness (`tests/engine.js`), deterministic:
 | H8 | Every field label in `templates/state.md` maps to a key of `update-state`'s field map, and the template has no `Last Session Ended`. | SC-1.3 |
 | H9 | `checkpoint saved` is printed on both finalize exit paths after a successful update, and absent under `--dry-run` and when the state update is forced to fail (a directory at the `STATE.md` path). Wording pinned. | SC-6.1 |
 | H10 | Shipped text: (a) nothing names `/magic.pause` as a command; (b) `context.md` has no percentage tier table and no `at {n}%` narration; (c) `run.md` has the Task Start step and all three `Attempts` events; (d) `skills/magicspec/CONSTITUTION.md` has §10 and `MAGIC_RESUME_CHECK=0`. | SC-7, SC-9 |
+| H11 | `checkpoint --start`, two `--step` calls with files, answers and decisions → the record holds them in order, files deduplicated; a second `--start` replaces it; bounds hold (51 steps fold the oldest into `earlier`, its files kept). `[ADDED]` | SC-10(a), (b), (d) |
+| H12 | `finalize` after a successful state update removes the record; under `--dry-run` and with the state update forced to fail it stays. `[ADDED]` | SC-10(c) |
+| H13 | A record present and nothing in flight → `resume-state` prints the interrupted-invocation line first, with the age; with a task in flight as well, both are named, the invocation first; every variant ends with `— /magicspec resume`. `[ADDED]` | SC-9(h), SC-11(f) |
+| H14 | A write forced to fail (a directory at the record path) → one stderr warning, exit 0; a crash simulated between the temporary write and the rename leaves the previous record readable. `[ADDED]` | SC-10(d) |
+| H15 | Shipped text: every mutating body names its checkpoints of §5.10; the router has the `resume` row; `help` lists it. `[ADDED]` | SC-10(b), SC-11 |
 
 Cognitive suite (`tests/suite.md`), the guarantees no script can hold — landed as T220–T224 (T213–T219 were already assigned to other cases by the time these were written; do not repeat a specific range here, `tests/suite.md`'s own closing line is the source of truth per [l2-test-suite.md](l2-test-suite.md)):
 
@@ -191,6 +265,9 @@ Cognitive suite (`tests/suite.md`), the guarantees no script can hold — landed
 | C3 | The context begins with a summary → `STATE.md` and the active entry are re-read; no fill percentage is cited. | SC-7 |
 | C4 | Step 3.5 failure → one `Attempts` line in the required shape before `Blocked [!]`; a sixth entry drops the oldest. | SC-8 |
 | C5 | Finalize with `STATE.md` unwritable → the agent relays the warning and does not tell the user it is safe to clear. | SC-6.1 |
+| C6 | `spec` interrupted after the intake survey was answered and one of three specifications written; a cold session types `/magicspec resume` → the survey is not asked again, the written specification is not rewritten, the two others are written with the recorded answers. `[ADDED]` | SC-10, SC-11(a) |
+| C7 | An interrupted `migrate` that had asked its consent question → `resume` asks it again before any apply. `[ADDED]` | SC-11(a) |
+| C8 | `resume` with nothing recorded → one line and the recorded `Next`; nothing runs, no finalize. `[ADDED]` | SC-11(c) |
 
 The full assertion list for each case lives here; [l2-test-suite.md](l2-test-suite.md) carries only the mandate.
 
@@ -216,6 +293,20 @@ Deployment inventory, routed to `/magicspec task engine`; every row outside `.ma
 
 Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row 8 with H9, then 10, then 11–13. Rows 3–9 change workflow bodies, so a single `update-engine-meta` pass tags them.
 
+Deployment of 1.2.0 (SC-10, SC-11), routed to `/magicspec plan engine`: `[ADDED]`
+
+| # | Touch-point | Change |
+| --- | --- | --- |
+| 14 | `skills/magicspec/scripts/checkpoint.js` (new, `// @ts-check`) | §5.9, with H11 and H14. |
+| 15 | `skills/magicspec/scripts/finalize.js` | Removes the record after a successful state update (H12). |
+| 16 | `skills/magicspec/scripts/resume-state.js` | The interrupted-invocation branch, the closing `— /magicspec resume` on every variant, the `invocation` object in `--json` (H13); the harness cases that pin the existing line wording follow. |
+| 17 | `skills/magicspec/workflows/*.md` (the ten bodies of §5.10), `references/context.md` | The start in the context load; the `Checkpoint:` lines (H15). |
+| 18 | `skills/magicspec/workflows/resume.md` (new), `skills/magicspec/SKILL.md` | §5.11; the router row. |
+| 19 | `.magicspec/RULES.md` C2 and the shipped constitution template | `resume` joins the command set as it ships — through `/magicspec rule` (origin `user-stated`) in the same delivery. |
+| 20 | `skills/magicspec/CONSTITUTION.md` §10 and `.agents/rules/magicspec.md` | The resume line names `/magicspec resume`; validate the hardlink pair afterwards. |
+| 21 | `docs/` (the command list, `status`, the session pages) | Documentation parity for `resume` and the record. |
+| 22 | `tests/engine/`, `tests/suite/` | §6 H11–H15, C6–C8. |
+
 ## 8. Drawbacks & Alternatives
 
 - **A script rather than prose** for detection: chosen. The predicate is mechanical, has to run at every cold context, and already had three disagreeing prose copies; a script is testable (H1–H6) and read-only. The cost is one more subcommand and a reader to keep aligned with finalize's, which the extraction in §5.2 removes. **Extending `check-prerequisites`** instead was rejected: it is a validator that records diagnostics (a write), and `/magicspec status` must stay write-free.
@@ -239,11 +330,14 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 | `[RULES]` | `skills/magicspec/CONSTITUTION.md` | Always-loaded rules; §10 Session Resume Check |
 | `[HARNESS]` | `tests/engine.js` | Deterministic regression harness (§6, H1–H10) |
 | `[SUITE]` | `tests/suite.md` | Cognitive regression suite (§6, C1–C5) |
+| `[CHECKPOINT]` | `skills/magicspec/scripts/checkpoint.js` | The invocation-record writer (SC-10, §5.9; to be built) |
+| `[RESUME-BODY]` | `skills/magicspec/workflows/resume.md` | The `resume` command (SC-11, §5.11; to be built) |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-11-27 | Agent | **The invocation record and `resume`**, implementing [l1-session-continuity.md](l1-session-continuity.md) 2.8.0 SC-10, SC-11 and SC-9(h) (origin `user-stated`: the owner's list of 2026-11-27). New §5.9 (one untracked record per workspace under `.magicspec/.cache/invocation/`, written by a new `checkpoint` subcommand — start, step, clear — atomic, bounded, nested commands writing into the outer record; removed by `finalize` when the checkpoint claim is earned), §5.10 (the closed list of checkpoints per body), §5.11 (the `resume` body and router row; `resume-state`'s new first branch and closing hint). §2's constraint on commands follows SC-5 and SC-11; §4 maps the two invariants; §6 gains H11–H15 and C6–C8; §7 the deployment rows 14–22. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 1.1.6 | 2026-11-12 | Agent | As built in Phase 53, Stable retained (the requirement moved with the goal mode specification that declared it, CH-9, and this record follows). §5.3: `resume-state` also reads the goal block and reports a recorded goal in the one line, a goal alone included, with `/magicspec goal` as its next step; silence needs no task in flight and no recorded goal; `--json` gains a `goal` object only for a workspace that records one, and `in_flight` still means a task in flight. |
 | 1.1.5 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.1.4 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

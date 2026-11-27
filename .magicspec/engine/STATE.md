@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-27 06:52
-**Phase:** 83 — 4.0.0 (4.0 Step 4, Part 5)
+**Updated:** 2026-11-27 08:04
+**Phase:** 88 — Crash Recovery Inside an Invocation, the resume Command and Reserved Forms
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-86F04 The harness holds on every runner
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Plan complete — nothing pending
+- **Next Action:** Execute T-88K01 `checkpoint`: the bounded, atomic invocation-record writer via /magicspec run engine
 
 ## Progress
 
 ```
-Overall: [87/87] ████████ 100%
+Phase 88: [0/11] ░░░░░░░░ 0%
+Overall: [87/88] ████████ 99%
 ```
 
 ## Recent Decisions

@@ -1,9 +1,9 @@
 # Master Task Index (Registry)
 
-**Version:** 1.98.0
+**Version:** 1.99.0
 **Generated:** 2026-11-27
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.103.0
-**Based on RULES:** .magicspec/RULES.md v2.0.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.105.0
+**Based on RULES:** .magicspec/RULES.md v2.1.0
 **Execution Mode:** Parallel
 **Status:** Active
 
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 88](tasks/phase-88.md) | Crash Recovery Inside an Invocation, the `resume` Command and Reserved Forms in the Argument Form — every mutating command keeps one untracked record of itself at its named checkpoints and `finalize` removes it, `resume-state` reports an interrupted command first, `/magicspec resume` re-enters it from its last checkpoint, and the argument form offers a command's reserved forms; the constitution, the documents, cognitive cases, three scenarios and the specifications as built; 11 tasks in eight tracks (K, R, B, F, C, D, S, T) | `Todo` |
 | [Phase 87](archives/tasks/phase-87.md) | Maintenance: The Design-Debt Halt Waits for a Pending Replan Directive — the pre-flight raises no `DESIGN_DEBT_PENDING` while a directive is pending; 1 task | `Done (Archived)` |
 | [Phase 86](archives/tasks/phase-86.md) | Maintenance: The Engine and Its Harness Hold on Every Runner — ignore rules stop at the project's edge, no 3.x file name is read in a 4.0 workspace, `remove` compares real paths, and the harness passes on Linux and Windows; 4 tasks | `Done (Archived)` |
 | [Phase 83](archives/tasks/phase-83.md) | 4.0.0 (4.0 Step 4, Part 5) — the graph, the wiki and the artifact index leave out a workspace whose move to 4.0 is in flight, and the global registry row of a 4.0 workspace links no registry; a page on the 4.0 document set, the move from 3.x in the migration page, the README and the distribution page; the specifications as built; `SECURITY.md`, the version file at 4.0.0 and the `[4.0.0]` section; the release plan behind one consent question; 10 tasks in eight tracks (G, H, Y, D, S, T, V, R) | `Done (Archived)` |
@@ -114,12 +115,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 *As of 2026-09-20 the Backlog briefly held one open item awaiting design input — the decomposition of `l2-finalize-state-accuracy.md` (`SPEC_DECOMPOSE`, 552 lines), promoted from the Parked `SPEC_BLOAT` watch when its trigger fired — and a `/magic.spec engine` pass closed it the same day (the register plus [l2-update-state-structure.md](specifications/l2-update-state-structure.md) and [l2-update-state-values.md](specifications/l2-update-state-values.md)). What remains in [PLAN.md](PLAN.md) Backlog is Parked (the `Status`-recompute question, the `l2-engine-diagnostics.md` `SPEC_BLOAT` watch) or deferred (`frontend-specialist`), with no phase-level item; the narrative below is the 2026-09-13 state. None at phase level — Phase 29 came from the `/magic.spec` pass that immediately preceded this planning invocation, not the Backlog: the reference-mining finding was fully specified with no remaining design work (the one open fork — a new C-numbered convention for the `PLAN.md`-tagging behavior — was explicitly routed to `/magic.rule` as a separate, non-blocking follow-up, not left as a blocker here). Pre-flight returned `ok: true` after this pass's own drift reconciliation, with only the expected `SYNC_GAP` warning — no `DESIGN_DEBT_PENDING`. Phase 28 came from this retrospective's own R25/R26 recommendations, not the Backlog: both remedies were concrete enough at recording time that planning wrote their governing spec sections directly, with no `/magic.spec` pass and no item ever queued. Pre-flight returned `ok: true` with no warnings at plan time — no `DESIGN_DEBT_PENDING`. Phase 27 came through the normal design-then-plan handoff, not the Backlog: the `/magic.spec` pass that preceded it authored [l1-idea-intake-gate.md](specifications/l1-idea-intake-gate.md) from a live owner directive and closed every fork inside it, so no item ever queued. Pre-flight returned `ok: true` with only the two expected warnings (`ORPHANED_SPEC` for the new spec, `SYNC_GAP` on the registry version) — no `DESIGN_DEBT_PENDING`. Phase 26 absorbed the commit-suggestion feature-removal item, which left the Backlog when a second `DESIGN_DEBT_PENDING` HALT on an already-answered design question confirmed no design work remained (same pattern as Phases 20/21/25). Phase 24 absorbs the dev-repo Engine-Version snapshot exemption, which left the Backlog when its design question was answered at explicit user request (the item had sat Parked since 2026-06-12). What remains in [PLAN.md](PLAN.md) Backlog is entirely Parked (the `Status`-recompute question, the `SPEC_BLOAT` watch — now naming `l2-finalize-state-accuracy.md` at 313 lines) or genuinely deferred (`frontend-specialist` role card), none of it forcing ordering against Phase 24. Historical note — the `check-prerequisites.js` registry-scan hygiene fix and the `DESIGN_DEBT_PENDING` counter's Parked-marker support moved from [PLAN.md](PLAN.md) Backlog into Phase 21's scope once a second same-session `DESIGN_DEBT_PENDING` HALT confirmed no design work remained, and the user authorized Engine Improvement directly. The debt-ceiling convention closed by explicit user rejection (Escalation Whitelist E4) this same session — Phases 15-20 already closed the backlog it was meant to gate, with no hard ceiling ever existing. What remains in [PLAN.md](PLAN.md) Backlog is now Parked (the `Status`-recompute question, the dev-repo snapshot drift, the `SPEC_BLOAT` watch) or genuinely deferred (`frontend-specialist` role card) — none of it forces ordering against Phase 21.*
 
-## Replan Directive
-
-- **Plan version:** 1.101.0
-- **Directive:** Phase 83 is complete without a release: on 2026-11-26 the owner ruled that nothing is released until the `develop` branch is brought to quality, and that work stays on that branch. Keep the 4.0.0 release as pending work that opens only on the owner's word (the version file reads 4.0.0 and the `[4.0.0]` section collects what changes before it), keep the consumer and engine migrations waiting for it, and revalidate the plan against registry 1.107.4.
-
 ## Meta Information
 
-- **Last Updated**: 2026-11-19
+- **Last Updated**: 2026-11-27
 - **Maintainer**: Core Team

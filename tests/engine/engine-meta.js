@@ -626,9 +626,9 @@ module.exports = () => {
             }
 
             // The verdict must not depend on multi-byte text surviving a round trip.
-            fs.writeFileSync(file, 'сводка — §1\r\n');
+            fs.writeFileSync(file, 'summary — §1\r\n');
             assert.strictEqual(
-                describeManifestDelta(file, sha256Hex('сводка — §1\n')).lineEndingsOnly,
+                describeManifestDelta(file, sha256Hex('summary — §1\n')).lineEndingsOnly,
                 true,
                 'non-ASCII bytes must round-trip exactly',
             );

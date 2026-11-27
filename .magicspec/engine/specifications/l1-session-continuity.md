@@ -1,12 +1,12 @@
 # Session Continuity & Status Surface
 
-**Version:** 2.7.0
+**Version:** 2.8.0
 **Status:** Stable
 **Layer:** concept
 
 ## Overview
 
-Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace live memory, a universal post-workflow state update, and a read-only status briefing surface for resuming work after a break. Consolidates the previously unspecified live-memory subsystem (state template, update utility, pause/handoff flow) under explicit invariants SC-1..SC-5, extended by SC-1.3 and SC-6..SC-9 in 2.3.0. The commit-message suggestion guarantee this spec originally also defined (SC-3) was retired 2026-08-27 by explicit user directive — see §3's SC-3 entry. The adjacent hard rule that survived that retirement — the engine and the agent never invoke a write-side git operation — was itself retired 2026-09-17, also by explicit user directive; see §1.4. Version 2.3.0 adds the automatic-checkpoint contract (SC-1.3, SC-6..SC-9): a session may be ended at any checkpoint — cleared, restarted, handed to another agent — and resumed from persisted state alone, with no user-typed command and no engine behavior that depends on the agent measuring its own context window.
+Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace live memory, a universal post-workflow state update, and a read-only status briefing surface for resuming work after a break. Consolidates the previously unspecified live-memory subsystem (state template, update utility, pause/handoff flow) under explicit invariants SC-1..SC-5, extended by SC-1.3 and SC-6..SC-9 in 2.3.0. The commit-message suggestion guarantee this spec originally also defined (SC-3) was retired 2026-08-27 by explicit user directive — see §3's SC-3 entry. The adjacent hard rule that survived that retirement — the engine and the agent never invoke a write-side git operation — was itself retired 2026-09-17, also by explicit user directive; see §1.4. Version 2.3.0 adds the automatic-checkpoint contract (SC-1.3, SC-6..SC-9): a session may be ended at any checkpoint — cleared, restarted, handed to another agent — and resumed from persisted state alone, with no user-typed command and no engine behavior that depends on the agent measuring its own context window. Version 2.8.0 extends the checkpoints into the inside of an invocation (SC-10), so a crash or an exhausted session mid-command loses no answer and no position, and adds `resume` (SC-11), the one word to type after one.
 
 ## Related Specifications
 
@@ -17,7 +17,9 @@ Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace
 - [l2-finalize-output-contract.md](l2-finalize-output-contract.md) - Implementation surface for the finalize pipeline's emitted artifacts: stdout listings and CHANGELOG bullets (commit-message composition retired alongside SC-3).
 - [l2-status-command.md](l2-status-command.md) - Implementation of the status briefing surface (SC-4, SC-5).
 - [l1-engine-diagnostics.md](l1-engine-diagnostics.md) - DG-6 surfaces the SC-2 `Next Action` in finalization stdout so the printed and persisted values cannot diverge; DG-5 places the diagnostics digest immediately before it.
-- [l2-session-checkpoint.md](l2-session-checkpoint.md) - Implementation contract for SC-1.3 and SC-6..SC-9: the task-start record, the `Attempts` field, the shared resume predicate, the checkpoint claim, and the retirement of fill-percentage triggers.
+- [l2-session-checkpoint.md](l2-session-checkpoint.md) - Implementation contract for SC-1.3 and SC-6..SC-11: the task-start record, the `Attempts` field, the invocation record, the shared resume predicate, the `resume` command, the checkpoint claim, and the retirement of fill-percentage triggers.
+- [l1-command-surface.md](l1-command-surface.md) - The command table that lists `resume` (SC-11) and its argument contract.
+- [l1-pipeline-stages.md](l1-pipeline-stages.md) - PS-1 and PS-4: `resume` continues a stage and never starts the next one; it carries the demand of the command it continues.
 
 ## 1. Motivation
 
@@ -51,15 +53,21 @@ A long session degrades: as the context window fills and ages, early facts are w
 
 SC-6..SC-9 replace the pause *act* with checkpoints the engine writes at events it can observe, and SC-1.3 removes the field that could never be kept true. §4.4 records why the widely recommended six-section handoff file was not adopted as a new artifact.
 
+### 1.6 Crash Recovery Inside an Invocation (user directive, 2026-11-27) `[ADDED]`
+
+The owner's list of 2026-11-27 asks that the engine periodically record the state of the agent's work, so that the work survives a crash of the host or a session that runs out of tokens, and allows a `/magicspec resume` command. Read against SC-6..SC-9, the checkpoints already cover the end of every mutating workflow and every task event — the start of a task, a dead end, its completion (the second item of the same list, a status update after every completed task, is that coverage: `run` updates live memory and the progress counter after each task, a 4.0 workspace records `Now` and `Done` lines, `goal` writes its block after every iteration). They do not cover the inside of an invocation that is not a task: a `spec` that has written two of five specifications, a `plan` halfway through its audit, a `fix` after its reproduction. A crash there leaves partial writes and no record of the invocation, its argument or how far it got; `resume-state` prints nothing, because no task is in flight. The costliest loss is what only the person holds: the answers given in an intake survey (E6) before the Draft was written. SC-10 closes that gap with a record written at the invocation's own step boundaries — events the agent observes, so SC-7 holds — and SC-11 gives the person one word to type after a crash.
+
 ## 2. Constraints & Assumptions
 
 - `STATE.md` stays a per-workspace file capped at 100 lines (template contract) — enforced by pruning `## Recent Decisions` down to a 1-entry floor (SC-1.2); this does not by itself bound `## Blocking Constraints`, which has no pruning of its own.
 - Read-only workflows stay read-only: a status briefing performs zero writes.
 - Git commit policy is out of scope for this engine: per SC-3's retirement (§1.3) the engine never composes or prints a suggested commit message, and per §1.4's retirement it takes no position on whether the agent itself may invoke a write-side git operation — that is left to the user and their agent.
-- New user-facing commands require an explicit Workflow Minimalism (C2) exception; this spec records exactly one (SC-5).
+- New user-facing commands require an explicit Workflow Minimalism (C2) exception; this spec records two: `status` (SC-5) and `resume` (SC-11). `[MODIFIED]`
 - No new artifact files are introduced: the briefing is composed from existing artifacts.
 - SC-2 is carried by the Finalization Protocol pipeline and inherits its documented opt-outs (`MAGIC_FINALIZE=0`, `finalization.enabled: false`): a user who disables finalization knowingly suspends the guarantee for that scope.
-- No new user-facing command (user directive, 2026-09-20): SC-5 remains the only C2 exception this spec records. Every guarantee in SC-6..SC-9 is delivered by workflow steps, scripts and always-loaded rules, never by something the user must type. An internal executor subcommand invoked by the engine is not a user-facing command and needs no C2 exception.
+- No guarantee depends on a typed command (user directive, 2026-09-20, kept by the directive of 2026-11-27, §1.6): every guarantee in SC-6..SC-10 is delivered by workflow steps, scripts and always-loaded rules, never by something the user must type. `resume` (SC-11) is a convenience over them — it acts on what the automatic check already reports — and a session that never types it loses nothing. An internal executor subcommand invoked by the engine is not a user-facing command and needs no C2 exception. `[MODIFIED]`
+- **Assumption (forecast):** the invocation record (SC-10) lives in the engine's untracked runtime folder (`.magicspec/.cache/`), not in `STATE.md`, because a write at every step boundary on a tracked file is the churn §5 rejected, while a crash leaves the untracked file in place just as well. Runner-up: a one-line field in `STATE.md`. Override: `/magicspec spec amend l1-session-continuity.md "the invocation record is a STATE.md field"`.
+- **Assumption (forecast):** one person runs one session per workspace at a time. A second live session in the same workspace overwrites the first one's invocation record; the resume line states the record's age so that a person who runs two sessions can tell a live record from an abandoned one. Runner-up: one record per session. Override: `/magicspec spec amend l1-session-continuity.md "one invocation record per session"`.
 - The engine cannot clear, restart or end a session — the host owns that — and it never sees a session close, a clear or a compaction as it happens. It can only make ending a session safe and starting one seamless. Continuity therefore rests on state written at events the engine can observe, never on an act performed when a session ends.
 
 ## 3. Core Invariants
@@ -178,6 +186,30 @@ In-flight work is a recorded state, and a session resumes from that state: never
 - **(e) In-flight product.** The files an in-flight task touched are recovered from the working tree, never from the agent's notes; the resume line reports how many when the project is a version-controlled tree and omits the count, without error, when it is not.
 - **(f) Multiplicity.** Parallel execution (C3) can hold several tasks in flight at once; detection reports each of them within a fixed bound.
 - **(g) Retired snapshot.** The optional pause snapshot — `pause.md`, `HANDOFF.json`, the `Handoff File` field and `Paused` as a written value — is retired. It was kept only until there was usage evidence; the evidence (2026-09-30) is that it was never produced or read: no `HANDOFF.json` committed or present, and no revision recording `Paused`, in this repository or in any of six projects with an installed engine, while SC-6..SC-9 already carry every guarantee without it. `Handoff File` is a dead field under SC-1.3 and is dropped from the template; existing files keep the line until their next structural rewrite and the engine never reads it. A hand-set `Status: Paused` is inert for resume purposes, and reconciliation (SC-1.4) never touches it.
+- **(h) Interrupted invocation.** `[ADDED]` An invocation record (SC-10) left behind by an invocation that did not finalize is work to resume as well: the same predicate reports it in the same line, before a task in flight and a recorded goal, with the command, its argument, the last step reached and the record's age.
+
+### SC-10 — Invocation Checkpoint `[ADDED]`
+
+Every invocation of a mutating command (`spec`, `plan`, `task`, `run`, `fix`, `simulate`, `rule`, `analyze` when it dispatches, `migrate` when it applies, `goal`) keeps one record of itself while it runs, written at events the agent observes:
+
+- **(a) Start.** Before its first write, the invocation records the command, its argument as entered, the workspace, the session it runs in and the time.
+- **(b) Step boundaries.** At each checkpoint step its body names — a closed list per body, at most one per numbered step — it records the step it completed, the files it wrote since the previous checkpoint and the decisions that exist nowhere else yet: the answers of an intake survey (E6) before the Draft that carries them is written, an argument chosen in the argument form (E7), a `[DR]` that no artifact holds yet. A decision already written into an artifact is not copied: the artifact is its record.
+- **(c) End.** Finalization removes the record once SC-2 succeeded. A record that survives therefore means one thing: the invocation was interrupted. A refused or halted invocation finalizes or removes its record as it ends; a HALT is an ending, not an interruption. Under an opt-out of finalization (§2) no record is written at all, as there is no checkpoint and no claim (SC-6.1): a record nothing would remove would announce an interruption at every cold context.
+- **(d) Bounds.** One record per workspace, replaced by the next invocation's start; never a log. It holds no file content, no tool output and no conversation text — the working tree is the product of the interrupted steps (SC-9(e)), the record says only which step produced what. It is runtime state of the engine, not an SDD artifact: it is never committed, never loaded as instruction, and never enters a product file.
+- **(e) Cost.** A checkpoint is one engine call. Bodies place checkpoints where losing the step costs more than recording it — after an intake, after a batch of writes, before a review — not after every action.
+
+The record makes the inside of an invocation a checkpoint under SC-6: a session that holds no conversation memory can tell what was being done, with which argument, how far it got and what the person had already answered.
+
+### SC-11 — The Resume Command `[ADDED]`
+
+`/magicspec resume [workspace]` continues the work the resume predicate (SC-9) reports, in its order: an interrupted invocation (SC-9(h)), then a task in flight, then a recorded goal.
+
+- **(a) An interrupted invocation** is re-entered: its command runs with the recorded argument, from the step after the last recorded checkpoint. The steps before it are not redone; their outputs are checked on disk first, and a step whose recorded output is missing or changed since is redone from that step. Recorded answers are used as given, so the person is not asked again for what they already answered. A consent question (E1, E2, E4) is never carried over: if the interrupted invocation was waiting for one, or passed one, it is asked again.
+- **(b) A task in flight** runs `run` on that task; **a recorded goal** runs `goal`. Both are what the person would have typed; `resume` only saves finding it.
+- **(c) Nothing to resume**: one line saying so and the next step live memory records (DA-6). Nothing runs: `resume` continues interrupted work and is not a way to start the next stage — that remains the next command (PS-1) or `goal`.
+- **(d) Stale record.** A record whose recorded argument names a file, a specification or a task that no longer exists is reported in one line and removed; nothing runs.
+- **(e) Demand.** `resume` has no reasoning demand of its own: it carries the demand of the command it continues, like `goal` (PS-4).
+- **(f) C2 exception.** `resume` is an authorized Workflow Minimalism (C2) exception, requested by the owner's list of 2026-11-27. The automatic check stays (SC-9(c)): the resume line names `/magicspec resume` as the way to act on it.
 
 ## 4. Detailed Design
 
@@ -211,7 +243,7 @@ A widely recommended practice keeps a per-task handoff file with six sections an
 | Section | Carrier | Written |
 | --- | --- | --- |
 | Goal | Task entry: title, `Spec`, `Verify`; `STATE.md` `Task` and `Spec` | at planning time |
-| Current State | Task `Status`; `STATE.md` `Status` and `## Progress` | at task start (SC-9(a)) and at every checkpoint (SC-2) |
+| Current State | Task `Status`; `STATE.md` `Status` and `## Progress`; the invocation record (SC-10) while an invocation runs | at task start (SC-9(a)), at every checkpoint (SC-2) and at an invocation's step boundaries (SC-10) |
 | Active Files | The working tree, read at resume (SC-9(e)) | derived, never recalled |
 | Changes Made | Task `Changes` at completion; the working tree while in flight | at completion; derived in flight |
 | Failed Attempts | Task `Attempts` (SC-8) | when the dead end occurs |
@@ -226,7 +258,9 @@ A separate handoff file is rejected (§5): it would be a third source of truth d
 - **Churn**: updating `STATE.md` on every command increases write frequency on one file — mitigated by the 100-line cap with pruning, and by the file's role as disposable live memory (history lives in `PLAN.md`/`CHANGELOG.md`).
 - **A separate handoff file rewritten at every checkpoint** — rejected: a third source of truth derived from `STATE.md` and the phase workbook, holding nothing they do not (§4.4); the shipped one's mid-phase fields were empty.
 - **Keeping the fill-percentage tiers "as guidance"** — rejected: a tier that must be narrated forces a figure the agent cannot measure. SC-7 keeps the read-economy guidance (Read Hygiene) without the number.
-- **Per-step `STATE.md` writes for finer checkpoints** — rejected: churn on a tracked file for a gain the working tree already provides (SC-9(e)).
+- **Per-step `STATE.md` writes for finer checkpoints** — rejected: churn on a tracked file for a gain the working tree already provides (SC-9(e)). `[MODIFIED]` The gain the working tree does not provide — which invocation produced the changes, with which argument, how far it got, what the person answered — is recorded at step boundaries since 2026-11-27 (SC-10), in an untracked runtime file, so the rejection of churn on `STATE.md` stands.
+- **Time-based snapshots ("every N minutes")** — rejected: the agent observes no clock between its own actions, so a period would be a trigger SC-7 forbids; step boundaries are the observable period. `[ADDED]`
+- **A full conversation snapshot** — rejected: the host owns the conversation, and many hosts already restore it; the engine records what a fresh session needs to continue (SC-6), not what was said. `[ADDED]`
 - **Retiring the pause snapshot** — chosen 2026-09-30 (SC-9(g)): the earlier deferral waited for usage evidence, and the evidence is zero use in seven projects; keeping it costs a module, a template, a flag and a resume branch for a path nothing exercises.
 - **A task abandoned mid-flight keeps announcing itself** at every cold context until it is completed, blocked or cancelled — deliberate: it is unfinished work, and silence would be the failure.
 
@@ -245,6 +279,7 @@ A separate handoff file is rejected (§5): it would be a third source of truth d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.8.0 | 2026-11-27 | Agent | **Crash recovery inside an invocation** (origin `user-stated`: the owner's list of 2026-11-27, §1.6). New SC-10 Invocation Checkpoint (a record of the running invocation — command, argument, workspace, session, last checkpoint step, files written, decisions held nowhere else, intake answers included — written at the body's named step boundaries and removed by finalization, so a surviving record means an interruption) and SC-11 the `resume` command (re-enters an interrupted invocation from the step after its last checkpoint, else runs the task in flight or the recorded goal; consent never carried over; no demand of its own; the second C2 exception). SC-9 gains (h): the predicate reports an interrupted invocation first. The constraint on new commands now records two exceptions; the 2026-09-20 rule that no guarantee depends on a typed command is kept. Two premises forecast: the record is untracked runtime state, not a `STATE.md` field; one session per workspace at a time. The second item of the list (a status update after every completed task) was found already satisfied and is recorded in §1.6 with its carriers, nothing changed for it. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 2.7.0 | 2026-11-27 | Agent | New **Pending-Directive Precedence (SC-2.4 addendum)**, a specification gap closed by `/magicspec-dev fix` (Phase 87): `DESIGN_DEBT_PENDING` waits while a replan directive is pending, because the revalidation the directive names is the recorded next step and sets the Backlog dispositions. |
 | 2.6.4 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: SC-1 states who writes `memory/goal.md` of a 4.0 workspace and that the resume check reports the goal. |
 | 2.6.3 | 2026-11-26 | Agent | Coherence with the document-set concept 1.6.0, Stable retained, no requirement changed: SC-1 names `memory/goal.md` beside `memory/state.md` as the live memory of a 4.0 workspace that holds a goal. |
