@@ -15,7 +15,7 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 3. `/magicspec status` → expect: the briefing shows the project as it stood before the first step, with no step recorded for the dismissed command and the same single recommended command it would have named then (composed).
 4. `/magicspec spec` again and enter the idea into the form's free text → expect: the form is asked once and not again after the idea is given, and the specification is written as if the idea had been typed with the command (composed).
 
-**Variants:** in the project of step 4, once a specification exists, `/magicspec plan` with no argument (its argument is optional) runs its default, says in its first line which default ran and how to pass an argument, and asks nothing (composed).
+**Variants:** in the project of step 4, once a specification exists, `/magicspec plan` with no argument (its argument is optional) runs its default, says in its first line which default ran and how to pass an argument, and asks nothing (composed). In the same project, a bare `/magicspec spec` offers the suggested topics first and then `stabilize` and `amend {file}` as choices of the same form; choosing `amend` asks for the file in one follow-up step, offering the specifications with the most recently changed first and free text (composed).
 
 **Last run:** never
 

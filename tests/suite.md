@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.110
+**Version:** 1.9.111
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magicspec-dev:test test`
 
@@ -42,7 +42,7 @@ The cases are kept in one file per area, by the workflow or module each case tar
 | --- | --- | --- | --- | --- |
 | analyze | [suite/analyze.md](suite/analyze.md) | 43 | T27–T28, T31, T38, T46–T48, T59, T65, T68, T87–T91, T96–T102, T107–T110, T113–T121, T144–T145, T180–T181, T196, T229, T239, T364 | 42 KB |
 | context | [suite/context.md](suite/context.md) | 7 | T215, T222, T234, T254, T278–T280 | 10 KB |
-| engine-text | [suite/engine-text.md](suite/engine-text.md) | 34 | T36, T134, T184, T193, T216, T220–T221, T224, T231, T253, T260–T262, T264, T266–T267, T271–T272, T274, T276–T277, T281, T287–T288, T310–T311, T313, T336, T343–T344, T353, T356, T361–T362 | 51 KB |
+| engine-text | [suite/engine-text.md](suite/engine-text.md) | 37 | T36, T134, T184, T193, T216, T220–T221, T224, T231, T253, T260–T262, T264, T266–T267, T271–T272, T274, T276–T277, T281, T287–T288, T310–T311, T313, T336, T343–T344, T353, T356, T361–T362, T372–T374 | 53 KB |
 | fix | [suite/fix.md](suite/fix.md) | 12 | T300–T309, T354, T366 | 12 KB |
 | goal | [suite/goal.md](suite/goal.md) | 13 | T329–T335, T365, T367–T371 | 16 KB |
 | help | [suite/help.md](suite/help.md) | 6 | T268–T270, T275, T289, T316 | 8 KB |
@@ -60,4 +60,4 @@ The cases are kept in one file per area, by the workflow or module each case tar
 
 `spec-intake` holds the cases of the idea-intake gate (Step 0.5) of the `spec` workflow; `scripts` the cases whose target is a script; `engine-text` the cases whose target is the constitution, a role card, a template, a reference, or the status, graph, migrate and sync workflows.
 
-**Test Suite Finalized** - v1.9.110 (Last: T371)
+**Test Suite Finalized** - v1.9.111 (Last: T374)

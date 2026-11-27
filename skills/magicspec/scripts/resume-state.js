@@ -19,6 +19,7 @@ const { isGitRepo, headSha, changedPaths } = require('./lib/git-utils');
 const diagnostics = require('./lib/diagnostics');
 const { GOAL_FILE, countCriteria, describeScope, parseGoalSection } = require('./lib/goal-block');
 const { isDocSetWorkspace, moveInFlight } = require('./lib/doc-set-state');
+const { readInvocation, ownerOf } = require('./lib/invocation');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RESUME STATE (Shared Resume-Detection Predicate)
@@ -27,12 +28,13 @@ const { isDocSetWorkspace, moveInFlight } = require('./lib/doc-set-state');
 /**
  * Reports, from recorded state alone, which work a session would be resuming.
  *
- * Work is in flight when a task's tracking entry reads `Status: In Progress`
- * in a live phase workbook (or in the legacy flat `TASKS.md`). Nothing else
- * counts: the record of work in flight is the tracking entry, written when the
- * task starts, so no separate notes have to be kept in step with it.
+ * Three records say there is work to resume, in this order: the invocation record of a command
+ * that did not finish (written by `checkpoint`), a task whose tracking entry reads
+ * `Status: In Progress` in a live phase workbook (or in the legacy flat `TASKS.md`), and a
+ * recorded goal. Nothing else counts: each record is written at the event it describes, so no
+ * separate notes have to be kept in step with it. Every line names `/magicspec resume`.
  *
- * Silent when nothing is in flight. Read-only — it writes no artifact, and its
+ * Silent when there is nothing to resume. Read-only — it writes no artifact, and its
  * one non-fatal condition (a `STATE.md` that exists but cannot be read) is
  * recorded through the shared diagnostics collector like every engine finding;
  * a clean run writes nothing at all. It never exits non-zero: every caller
@@ -64,6 +66,12 @@ const MAX_TASKS_PER_WORKSPACE = 3;
 
 /** Workspace lines printed before the rest collapse to `+{n} more`. */
 const MAX_WORKSPACES = 3;
+
+/** An interrupted command's argument is cut to this many characters on its line. */
+const MAX_ARGUMENT_SHOWN = 60;
+
+/** The command that acts on any resume line. */
+const RESUME_HINT = ' — /magicspec resume';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Workspace Discovery
@@ -200,17 +208,57 @@ function readStateField(stripped, raw, labelRe) {
 }
 
 /**
+ * The interrupted invocation of a workspace, if its record is still there.
+ *
+ * @param {string} designAbs - Absolute path of the design root (`.magicspec/`).
+ * @param {string} name - The workspace name.
+ * @returns {{command: string, argument: string, last_step: string, age_minutes: number,
+ *            session: string|null}|null}
+ */
+function interruptedInvocation(designAbs, name) {
+    const record = readInvocation(designAbs, name);
+    if (record === null) return null;
+    const since = Date.parse(record.updated || record.started || '');
+    return {
+        command: ownerOf(record),
+        argument: record.argument || '',
+        last_step: record.steps.at(-1)?.step ?? 'start',
+        age_minutes: Number.isNaN(since)
+            ? 0
+            : Math.max(0, Math.floor((Date.now() - since) / 60000)),
+        session: record.session ?? null,
+    };
+}
+
+/**
  * Inspects one workspace.
  *
  * @param {{ name: string, dir: string }} workspace
  * @returns {{ workspace: string, source: string, tasks: Object[], attempts: number,
  *             nextAction: string|null, changedFiles: number|null,
- *             goal: ReturnType<typeof parseGoalSection> }|null}
- *          `null` when nothing is in flight, no goal is recorded or the workspace has
- *          no readable `STATE.md`. `changedFiles` is filled in by the caller.
+ *             goal: ReturnType<typeof parseGoalSection>,
+ *             invocation: ReturnType<typeof interruptedInvocation> }|null}
+ *          `null` when there is nothing to resume: no interrupted invocation, and either no
+ *          task in flight and no goal or no readable `STATE.md`. `changedFiles` is filled
+ *          in by the caller.
  */
 function inspectWorkspace(workspace) {
-    if (isDocSetWorkspace(workspace.dir, workspace.name)) return inspectDocSet(workspace);
+    const invocation = interruptedInvocation(path.dirname(workspace.dir), workspace.name);
+    if (isDocSetWorkspace(workspace.dir, workspace.name))
+        return inspectDocSet(workspace, invocation);
+    const interruptedOnly = () =>
+        invocation === null
+            ? null
+            : {
+                  workspace: workspace.name,
+                  source: 'in-progress',
+                  tasks: [],
+                  attempts: 0,
+                  nextAction: null,
+                  changedFiles: null,
+                  goal: null,
+                  invocation,
+              };
     const state = readText(path.join(workspace.dir, 'STATE.md'));
     if (state.error) {
         // A missing STATE.md is a fresh workspace and not a finding; one that
@@ -224,15 +272,15 @@ function inspectWorkspace(workspace) {
             message,
             locus: 'STATE.md',
         });
-        return null;
+        return interruptedOnly();
     }
-    if (state.text === undefined) return null;
+    if (state.text === undefined) return interruptedOnly();
 
     const stripped = stripQuoted(state.text);
     const tasks = collectInFlight(workspace.dir);
     // A goal recorded in the block (GM-3) is work to resume too, task in flight or not.
     const goal = parseGoalSection(state.text);
-    if (tasks.length === 0 && goal === null) return null;
+    if (tasks.length === 0 && goal === null && invocation === null) return null;
 
     return {
         workspace: workspace.name,
@@ -242,6 +290,7 @@ function inspectWorkspace(workspace) {
         nextAction: readStateField(stripped, state.text, /^- \*\*Next Action:\*\*[ \t]+(.+)$/),
         changedFiles: null,
         goal,
+        invocation,
     };
 }
 
@@ -255,12 +304,14 @@ const EMPTY_VALUE = /^(—|-|none|)$/i;
 /**
  * The resume summary of a 4.0 workspace, from `memory/state.md` — what is being built now, what
  * is next and how many questions are open — and from `memory/goal.md`, the goal being pursued.
- * Nothing to resume when neither `Now` nor `Open` holds something and no goal is recorded.
+ * Nothing to resume when neither `Now` nor `Open` holds something, no goal is recorded and no
+ * invocation was interrupted.
  *
  * @param {{ name: string, dir: string }} workspace
+ * @param {ReturnType<typeof interruptedInvocation>} invocation
  * @returns {object|null}
  */
-function inspectDocSet(workspace) {
+function inspectDocSet(workspace, invocation) {
     const state = readText(path.join(workspace.dir, 'memory', 'state.md'));
     const record = readText(path.join(workspace.dir, ...GOAL_FILE));
     const goal = record.text === undefined ? null : parseGoalSection(record.text);
@@ -272,7 +323,7 @@ function inspectDocSet(workspace) {
             .filter((v) => !EMPTY_VALUE.test(v));
     const now = values('Now')[0] ?? null;
     const open = values('Open').length;
-    if (now === null && open === 0 && goal === null) return null;
+    if (now === null && open === 0 && goal === null && invocation === null) return null;
     return {
         workspace: workspace.name,
         source: 'memory',
@@ -283,6 +334,7 @@ function inspectDocSet(workspace) {
         nextAction: values('Next')[0] ?? null,
         changedFiles: null,
         goal,
+        invocation,
     };
 }
 
@@ -310,13 +362,54 @@ function countModifiedFiles() {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Renders one workspace's resume line.
+ * Renders one workspace's resume line: an interrupted command first, then what is recorded in
+ * flight, closed by the command that continues it.
  *
  * @param {ReturnType<typeof inspectWorkspace>} summary - A non-null summary.
  * @returns {string}
  */
 function formatLine(summary) {
-    if (summary.source === 'memory') return formatDocSetLine(summary);
+    const interrupted = summary.invocation === null ? null : describeInvocation(summary.invocation);
+    const recorded = summary.source === 'memory' ? docSetBody(summary) : ledgerBody(summary);
+    const parts = [
+        interrupted,
+        recorded,
+    ].filter(Boolean);
+    return `▶ Resume [${summary.workspace}]: ${parts.join('; ')}${RESUME_HINT}`;
+}
+
+/**
+ * @param {NonNullable<ReturnType<typeof interruptedInvocation>>} invocation
+ * @returns {string} For example `/magicspec spec an idea interrupted at intake (5 min ago)`.
+ */
+function describeInvocation(invocation) {
+    const text = invocation.argument.replace(/\s+/g, ' ').trim();
+    const argument =
+        text.length > MAX_ARGUMENT_SHOWN ? `${text.slice(0, MAX_ARGUMENT_SHOWN - 1)}…` : text;
+    const typed = `/magicspec ${invocation.command}${argument ? ` ${argument}` : ''}`;
+    return `${typed} interrupted at ${invocation.last_step} (${formatAge(invocation.age_minutes)} ago)`;
+}
+
+/**
+ * @param {number} minutes - Whole minutes since the last checkpoint.
+ * @returns {string}
+ */
+function formatAge(minutes) {
+    if (minutes < 1) return 'under a minute';
+    if (minutes < 60) return `${minutes} min`;
+    if (minutes < 48 * 60) return `${Math.floor(minutes / 60)} h`;
+    return `${Math.floor(minutes / (24 * 60))} d`;
+}
+
+/**
+ * The tasks and goal of a 3.x workspace. A task in flight is resumed where it stopped, so its
+ * next action is named; a goal alone is continued by its command, unless an interrupted command
+ * comes first.
+ *
+ * @param {NonNullable<ReturnType<typeof inspectWorkspace>>} summary
+ * @returns {string|null} `null` when neither is recorded.
+ */
+function ledgerBody(summary) {
     const parts = [];
     if (summary.tasks.length > 0) {
         const named = summary.tasks
@@ -330,26 +423,28 @@ function formatLine(summary) {
         );
     }
     if (summary.goal !== null) parts.push(describeGoal(summary.goal));
-    // A task in flight is resumed where it stopped; a goal alone is continued by its command.
-    const next = summary.tasks.length > 0 ? summary.nextAction : '/magicspec goal';
-    return `▶ Resume [${summary.workspace}]: ${parts.join('; ')}.${next ? ` Next: ${next}` : ''}`;
+    if (parts.length === 0) return null;
+    const goalNext = summary.invocation === null ? '/magicspec goal' : null;
+    const next = summary.tasks.length > 0 ? summary.nextAction : goalNext;
+    return `${parts.join('; ')}.${next ? ` Next: ${next}` : ''}`;
 }
 
 /**
- * Renders the resume line of a 4.0 workspace. A task being built is resumed where it stopped,
- * with the goal named beside it; with none, a recorded goal is continued by its command.
+ * What a 4.0 workspace records. A task being built is resumed where it stopped, with the goal
+ * named beside it; with none, a recorded goal is continued by its command.
  *
  * @param {NonNullable<ReturnType<typeof inspectWorkspace>>} summary - Of a 4.0 workspace.
- * @returns {string}
+ * @returns {string|null} `null` when nothing of the set is recorded.
  */
-function formatDocSetLine(summary) {
-    const head = `▶ Resume [${summary.workspace}]: `;
+function docSetBody(summary) {
     const goal = summary.goal === null ? null : describeGoal(summary.goal, '4');
     if (summary.now === null && goal !== null) {
         const open = summary.open > 0 ? `Open ${summary.open}; ` : '';
-        return `${head}${open}${goal}. Next: /magicspec goal`;
+        const next = summary.invocation === null ? '. Next: /magicspec goal' : '';
+        return `${open}${goal}${next}`;
     }
-    const line = `${head}Now ${summary.now ?? '—'} · Next ${summary.nextAction ?? '—'} · Open ${summary.open}`;
+    if (summary.now === null && summary.open === 0) return null;
+    const line = `Now ${summary.now ?? '—'} · Next ${summary.nextAction ?? '—'} · Open ${summary.open}`;
     return goal === null ? line : `${line}; ${goal}`;
 }
 
@@ -437,6 +532,11 @@ function main() {
                     tasks: summary.tasks,
                     changed_files: summary.changedFiles,
                     next_action: summary.nextAction,
+                    ...(summary.invocation === null
+                        ? {}
+                        : {
+                              invocation: summary.invocation,
+                          }),
                     ...(summary.goal === null
                         ? {}
                         : {

@@ -12,7 +12,7 @@ The user bundle is one folder, `skills/magicspec/`, distributed through GitHub R
 | --- | --- |
 | `SKILL.md` | The router and the only command surface: the grammar `/magicspec <command> [argument]`, the command table (group, argument, what happens when it is missing) and a pointer to the workflow body. |
 | `CONSTITUTION.md` | The source of the always-on rule (engine upgrade detection, graph use, finalization, archival, replan, containment, decision posture, bug reporting, the cold-context resume check). |
-| `workflows/` | One body per command: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate`, `sync`, `help`. |
+| `workflows/` | One body per command: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `resume`, `analyze`, `rule`, `status`, `graph`, `migrate`, `sync`, `help`. |
 | `references/` | Shared modules the bodies name (`context`, `init`, `retrospective`) and, in `rules/`, the detail of the always-on rules. |
 | `roles/` | The role cards the workflows activate. |
 | `templates/` | File scaffolds for the state folder. |

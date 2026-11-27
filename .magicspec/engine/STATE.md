@@ -4,20 +4,20 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-27 08:04
+**Updated:** 2026-11-27 10:00
 **Phase:** 88 — Crash Recovery Inside an Invocation, the resume Command and Reserved Forms
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-86F04 The harness holds on every runner
+- **Task:** T-88C01 the constitution names resume
 - **Spec:** l1-goal-mode.md · l1-command-surface.md · l1-decision-autonomy.md (verified by T-67ST01)
-- **Next Action:** Execute T-88K01 `checkpoint`: the bounded, atomic invocation-record writer via /magicspec run engine
+- **Next Action:** Run /magicspec plan engine to apply the pending replan directive (constitution 2.2.0, the migration order) before T-88T02
 
 ## Progress
 
 ```
-Phase 88: [0/11] ░░░░░░░░ 0%
+Phase 88: [10/11] ███████░ 91%
 Overall: [87/88] ████████ 99%
 ```
 
@@ -25,11 +25,11 @@ Overall: [87/88] ████████ 99%
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-27 **Decision:** The constitution change ends the run (Sync guard): the plan is revalidated before T-88T02; the owner's migration order travels in the replan directive
 - 2026-11-27 **Decision:** Phase 86 complete: eight harness failures on the Linux and Windows runners came from three engine defects and three harness assumptions, all repaired; harness 543, engine 4.0.0, registry 1.108.0
 - 2026-11-26 **Decision:** Phase 83 complete without a release (the owner: nothing is released until develop is brought to quality). Provides: the two gaps of the move closed, the 4.0 documents, version 4.0.0 unreleased, format check green again, harness 540, registry 1.107.4
 - 2026-11-26 **Decision:** PLAN 1.100.0 on registry 1.107.2: Phase 83 planned in full — the two gaps Phase 85 left (readers of a workspace in flight, the global registry row), the documentation, the 4.0.0 version and the release behind one consent question
 - 2026-11-26 **Decision:** Phase 85 complete. Provides: migrate --to 4 (dry run, apply with resumption, the stop of a move in flight, next/ skipped by 3.x readers, the bodies), harness 536, engine 3.0.229, registry 1.107.2; Phase 83 (documentation and the 4.0.0 release) is next after a plan revalidation
-- 2026-11-26 **Decision:** PLAN 1.99.0 on registry 1.107.1: revalidated after Phase 82; Phase 85 decomposable now; the map comparison's blind spot (mark-built writes a folder as Where) parked in the Backlog as a concept question
 
 ## Blockers
 

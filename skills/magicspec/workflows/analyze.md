@@ -394,7 +394,7 @@ This is a `.magicspec/` write — it does NOT trigger C14 (engine meta bump).
 
 ### Dispatch Logic (Approved)
 
-1. **Specs**: call `spec.md` "Creating a New Specification" (direct to Stable).
+1. **Specs**: call `spec.md` "Creating a New Specification" (direct to Stable). Before the first write: `node scripts/executor.js checkpoint --workspace={active-workspace} --start --command=analyze` (with `--argument` when the invocation had one), then `Checkpoint: audited` with the report's findings as one decision; `Checkpoint: dispatched` after each batch, with the files.
 2. **Dispatch**:
    - Registry Sync: update `INDEX.md`. Bump Registry version.
    - **Engine Snapshot**: update the `**Engine Version:**` field in `.magicspec/INDEX.md` to the value of `.version`. This snapshot is consumed by [`CONSTITUTION.md` §1](../CONSTITUTION.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
@@ -402,6 +402,7 @@ This is a `.magicspec/` write — it does NOT trigger C14 (engine meta bump).
    - Context Regeneration: `node scripts/executor.js generate-context`.
    - **Graph Refresh**: `node scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
    - **Handoff (C9 / DA-6 / DA-9)**: after dispatch, compute the next step and narrate it as a Decision Record, then end the invocation — the next stage is named, never started: `[DR] Specs Stable — /magicspec plan is next. (Override: any /magicspec <command>)`. When the request's own words asked for the following stage too, run it and say in one line that the request asked for it. This is a Sequencing fork (DA-9): narrated, never posed as "Proceed to Plan/Run?". The sole pause condition is a **firing E3 hard-fork** (>1 incompatible architectural path with no objective DA-3 tiebreaker), surfaced as a DA-5 single question with a marked default.
+   - `analyze` has no finalization: after the dispatch, and on any HALT after the record started, `node scripts/executor.js checkpoint --workspace={active-workspace} --clear`.
 
 ## On a 4.0 Workspace
 
@@ -431,7 +432,7 @@ The audit writes no document of the set. A workspace with no `product.md` has no
 3. **Plan and tasks**: write the milestones by `workflows/plan.md` §On a 4.0 Workspace, then the tasks of every milestone, one after another, by `workflows/task.md` §On a 4.0 Workspace; a task's `Creates` names the existing files it accounts for and its tests, and `node scripts/executor.js pack {task} --workspace={active-workspace}` runs for each.
 4. **Replay in place of a build**: for each milestone in order, and each of its tasks after the tasks it is `After`, run every `Observe` of its `Done when` against the existing code. Only when all hold, record `- Done: {task} — {outcome}` in `memory/state.md`; an observation that fails or cannot run is an `- Open:` line on the unit it concerns, never a change of the code, and the task stays not done.
 5. **Milestones**: when every `must` and `should` task of a milestone is done and its `Observed by` holds, run `node scripts/executor.js mark-built M{n} --workspace={active-workspace}`.
-6. **Check and report**: run `check-docs` after each layer and after the replay, and `analyze-coverage` once at the end for the files no row holds; refresh the wiki; the report lists what was observed, what is open and what stays undescribed. Name `/magicspec spec {workspace}` for an open question, and otherwise the step the set waits for.
+6. **Check and report**: run `check-docs` after each layer and after the replay, and `analyze-coverage` once at the end for the files no row holds; refresh the wiki; the report lists what was observed, what is open and what stays undescribed. Name `/magicspec spec {workspace}` for an open question, and otherwise the step the set waits for. The record: before the first write `checkpoint --start --command=analyze`, then `Checkpoint: audited`, `Checkpoint: dispatched` after each layer with its files, and `checkpoint --clear` after the report.
 
 ## Task Completion Checklist
 

@@ -56,3 +56,37 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 **Variants:** the apply step is interrupted after its first move → `/magicspec run` on the workspace stops with `HALT: The move of {workspace} to 4.0 was started and not finished.` naming `/magicspec migrate --to 4`, writing nothing (printed), and that command shows the move under way, asks once and finishes it in the same tree (printed). A bare `/magicspec migrate` in the same project is the move from the earlier layout and answers that there is nothing to migrate, offering no move to 4.0 (printed). With a second workspace registered as the default and the move interrupted the same way, `/magicspec graph` is built for that workspace and leaves the moving one out whole: no node of it, of its specifications or of its phases (printed); once the move is finished the graph names it again (printed), and its row of the global registry names it without a link to a registry, every other line as it was (printed).
 
 **Last run:** never
+
+## S-21: A specification interrupted after its intake survey is resumed with `/magicspec resume`
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l1-session-continuity.md §3 SC-10, l1-session-continuity.md §3 SC-11, l1-command-surface.md §3 CS-1
+**Preconditions:** a disposable project: a scratch directory outside this repository, holding its own copy of the engine folder, initialised there, with one workspace and an empty registry.
+
+**Steps:**
+
+1. `/magicspec spec` with an idea that is thin enough to open the intake survey, and answer it → expect: one survey round is asked and answered (composed); a record of the running command exists under the engine's untracked runtime folder (printed).
+2. After the first specification is written, end the session → expect: the record is still there and no finalization ran (printed).
+3. Start a new session and send an unrelated message → expect: one resume line names `/magicspec spec`, the step it stopped at, its age and `/magicspec resume`, and the message is answered (composed, printed).
+4. `/magicspec resume` → expect: the command is re-entered from the step after its last checkpoint; the survey is not asked again and the specification already written is not rewritten; the rest is written (composed).
+5. Look at the runtime folder → expect: the record is gone, removed by the finalization of the re-entered command (printed).
+
+**Variants:** the written specification is changed by hand between steps 2 and 4 → expect: the work restarts from the step that wrote it, and says so (composed).
+
+**Last run:** never
+
+## S-22: `resume` with nothing interrupted says so, names the recorded next step and runs nothing
+
+**Actor:** a developer working in a project where the engine is installed
+**Verifies:** l1-session-continuity.md §3 SC-11
+**Preconditions:** a disposable project as in S-7, its last command finished, so no record, no task in flight and no goal, and a recorded next step in `STATE.md`.
+
+**Steps:**
+
+1. Take a digest of every file of the project → expect: a baseline to compare against (printed).
+2. `/magicspec resume` → expect: one line says there is nothing to resume and names the recorded next step (composed); no workflow runs and no question is asked (composed).
+3. Take the digest again → expect: it equals the baseline (printed).
+
+**Variants:** a record naming a file that no longer exists is left behind → expect: one line says the record is stale, it is removed and nothing runs (composed, printed).
+
+**Last run:** never

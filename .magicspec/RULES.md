@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 2.1.0
+**Version:** 2.2.0
 **Status:** Stable
 **Based on:** `workflows/spec.md` of the engine folder
 
@@ -67,7 +67,7 @@ The engine folder (`skills/magicspec/` in this repository, the skill folder of a
 
 Limit the SDD workflow to the core command set to maximize automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary and explicitly authorized as a C2 exception.
 
-The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate`, `sync` and `help`. `audit` is an alias of `analyze` and not a command.
+The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `resume`, `graph`, `migrate`, `sync` and `help`. `audit` is an alias of `analyze` and not a command.
 
 ### C3 — Parallel Task Execution Mode
 
@@ -292,6 +292,7 @@ A request quoted from someone who wrote in another language is quoted in English
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.2.0 | 2026-11-27 | Agent | **C2 lists `resume` as shipped** (origin `user-stated`: the owner's list of 2026-11-27, translated from Russian, which asks that interrupted work be recoverable and allows a `/magicspec resume` command; wording composed by the agent from `l1-session-continuity.md` SC-11 and `l1-command-surface.md` CS-1 and mirrored word for word in `skills/magicspec/templates/rules.md`). C2's sentence on the command set as it ships gains `resume` after `status`. A §7 amendment, so no core-amendment gate. Admission (RA-1, user-stated, soft form, recorded at its stated strength): without the change the constitution names fourteen commands while fifteen ship. Constitutional review: APPROVE — the command is the exception C2 itself authorizes; no practical conflict with C9 or C27 (it continues interrupted work and starts no stage), no new question, gate or obligation; rule wording review: PASS. |
 | 2.1.0 | 2026-11-27 | Agent | **C29 Project Language added** (origin `user-stated`: the owner's instruction of 2026-11-27, translated from Russian — no Russian in the project except in `.drafts/` or in a separate documentation file suffixed `*.ru.md` or `*-ru.md`, and the same for every other language; wording composed by the agent, the `{lang}` pattern generalizing the two suffixes the owner named, the translated-quotation sentence added as the way to comply). Recorded at the stated strength with no blocking gate. Not mirrored in the shipped template: it governs this repository, not projects that install the engine. The same change translated the four Russian passages the repository held (a plan, a retrospective, an archived phase and a harness fixture). |
 | 2.0.0 | 2026-11-26 | Agent | **§2 is scoped to 3.x workspaces** (core amendment, the owner's consent of 2026-11-26; origin `agent`, the supersession [l1-sdd-document-set.md](engine/specifications/l1-sdd-document-set.md) §6 declares: the status lifecycle and the conventions that act on status, C6 and C12, do not apply to a workspace in the 4.0 document-set format, which has revisions and change statuses instead). The same paragraph is added to the shipped template. |
 | 1.25.0 | 2026-11-25 | Agent | **C11 lists `reverse`** (origin `user-stated`: the owner's request of 2026-11-25 for an internal command that perfects any engine mechanic by experiment, confirmed after a playback that named the amendment; wording composed by the agent from `l1-reverse-command.md` and mirrored word for word in the shipped template). |

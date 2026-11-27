@@ -359,6 +359,108 @@ module.exports = () => {
         );
     });
 
+    test('shipped text: every mutating body names its checkpoints, the context load starts the record and every unfinished end clears it (SC-10(a),(b), H15)', () => {
+        const body = (name) => readShipped(`skills/magicspec/workflows/${name}.md`);
+        const named = (text) => [
+            ...new Set(
+                [
+                    ...text.matchAll(/`Checkpoint: (scenario {identifier}|{command}|[a-z]+)/g),
+                ].map((m) => m[1]),
+            ),
+        ];
+        const expected = {
+            spec: 'intake dispatch written review record place',
+            plan: 'stabilized audited written',
+            task: 'selected written',
+            run: '',
+            fix: 'reproduced classified repaired regression',
+            simulate: 'scenario {identifier}',
+            rule: 'admitted written',
+            analyze: 'audited dispatched',
+            goal: '{command}',
+            migrate: '',
+        };
+        for (const [name, steps] of Object.entries(expected)) {
+            const text = body(name);
+            const want =
+                name === 'simulate'
+                    ? [
+                          steps,
+                      ]
+                    : steps.split(' ').filter(Boolean);
+            assert.deepStrictEqual(named(text).sort(), want.sort(), `${name}.md checkpoint lines`);
+            assert.match(
+                text,
+                /checkpoint( --workspace={active-workspace})? --clear/,
+                `${name}.md clears an unfinished record`,
+            );
+        }
+        const context = readShipped('skills/magicspec/references/context.md');
+        const resume = context.indexOf('4. **Resume Detection**');
+        const record = context.indexOf('5. **Invocation Record**');
+        assert.ok(
+            resume !== -1 && record > resume,
+            'the record starts after the resume check, so a run is never reported as its own interruption',
+        );
+        const step = lineWith(context, 'checkpoint --workspace={workspace} --start');
+        assert.match(step, /--nested/);
+        assert.match(body('migrate'), /--start --command=migrate/);
+        assert.match(body('analyze'), /--start --command=analyze/);
+        assert.match(body('goal'), /starts with `--nested`/);
+
+        // SC-11: the command that acts on a resume line.
+        const rows = require(
+            path.join(shippedRoot, 'skills/magicspec/scripts/lib/hosts.js'),
+        ).readCommands();
+        const row = rows.find((r) => r.name === 'resume');
+        assert.strictEqual(row.group, 'quality & automation');
+        assert.strictEqual(row.demand, 'per step');
+        assert.strictEqual(
+            rows.filter((r) => r.group === row.group).length,
+            4,
+            'the group still fits a form that holds four choices',
+        );
+        const resumeBody = body('resume');
+        const order = [
+            '**An interrupted invocation**',
+            '**A task in flight**',
+            '**Nothing recorded**',
+        ].map((s) => resumeBody.indexOf(s));
+        assert.ok(
+            order.every((at, i) => at !== -1 && (i === 0 || at > order[i - 1])),
+            'an interrupted invocation comes first, then a task or goal, then nothing',
+        );
+        assert.match(resumeBody, /checkpoint --workspace=\{workspace\} --clear/);
+        assert.match(resumeBody, /is asked again before the action it guards/);
+        assert.match(resumeBody, /Run nothing and finalize nothing/);
+    });
+
+    test('shipped text: the argument form offers the reserved forms after the suggestions, with one follow-up step for an operand (CS-10)', () => {
+        const help = readShipped('skills/magicspec/workflows/help.md');
+        const step = help.slice(
+            help.indexOf('### 4. Ask for the Argument'),
+            help.indexOf('### 5. Hand Over'),
+        );
+        const reserved = lineWith(step, '**Reserved forms** are choices too');
+        assert.ok(reserved, 'Step 4 offers the reserved forms');
+        for (const form of [
+            '`stabilize` and `amend {file}` of `spec`',
+            '`amend {id}` and `remove {id}` of `rule`',
+            'follow the suggestions in the same form',
+            'from the *Entry* section of the body',
+        ])
+            assert.ok(reserved.includes(form), `the reserved forms line states: ${form}`);
+        assert.match(
+            lineWith(step, '**Operand**'),
+            /one follow-up step of the same argument form.*free text/,
+        );
+        assert.match(
+            lineWith(step, '**A form too small**'),
+            /recommended suggestion first, then the reserved forms/,
+        );
+        assert.match(help, /☐ Reserved forms offered after the suggestions/);
+    });
+
     // A registered specification's file name in shipped text is a dead pointer
     // on every consumer install (the specifications do not ship) and leaks this
     // repository's own workspace into the product. The class is unconditional
@@ -1444,7 +1546,7 @@ module.exports = () => {
         const c2 = sectionOf(constitution, 'C2');
         assert.ok(
             c2.includes(
-                'The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate`, `sync` and `help`. `audit` is',
+                'The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `resume`, `graph`, `migrate`, `sync` and `help`. `audit` is',
             ),
         );
         assert.ok(

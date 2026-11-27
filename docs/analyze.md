@@ -156,4 +156,4 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-26 (v4.0.0).
+Synchronized with engine workflows on 2026-11-27 (v4.0.2).

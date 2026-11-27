@@ -891,7 +891,7 @@ module.exports = () => {
         assert.ok(readme.includes('*Thought → Spec → Plan → Task → Run → Code*'));
         assert.ok(readme.includes('📋 Specification  →  🗺️ Plan  →  ✅ Task  →  ⚡ Run'));
         assert.ok(index.includes('*Thought → Spec → Plan → Task → Run → Code*'));
-        assert.ok(index.includes('**4 core workflows** and **6 auxiliary workflows**'));
+        assert.ok(index.includes('**4 core workflows** and **10 auxiliary workflows**'));
         assert.ok(
             index.includes('SPEC --> PLAN["🗺️ Plan"]') &&
                 index.includes('PLAN --> TASK["✅ Task"]') &&

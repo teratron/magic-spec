@@ -140,6 +140,47 @@ Cases of the area `engine-text` of the cognitive suite. The index, the way to ru
 - **Guards tested:** SC-6.1 claim honesty (the guarantee is no stronger than the script's output); verbatim relay of finalize output; non-blocking semantics of a `STATE.md` failure.
 - **Regression for:** a comforting "all saved, you can clear" said over a failed write, after which the next cold context resumes from stale state.
 
+### T372 — `resume` Re-enters an Interrupted `spec` From Its Last Checkpoint Without Asking Again (SC-10, SC-11(a))
+
+- **Workflow:** `resume.md` Step 2 + `spec.md` + `context.md` §Post-Resolution step 5
+- **Synthetic State:**
+  - The record `.magicspec/.cache/invocation/engine.json`: command `spec`, argument `"a booking feature"`, one answer (`Who is it for? => the front desk`), steps `intake` and `written`, the latter listing `.magicspec/engine/specifications/l1-booking.md`.
+  - That file exists and was not changed since the `written` step; two further specifications the dispatch named are missing.
+- **Action:** In a new session the person types `/magicspec resume`.
+- **Expected:**
+  - [ ] The record is read; one line `[Resume] /magicspec spec a booking feature — from …` names the step after the last checkpoint that holds.
+  - [ ] `workflows/spec.md` is read in full and followed with the recorded argument; the intake survey is **not** asked again and the recorded answer is used.
+  - [ ] `l1-booking.md` is not rewritten; the two missing specifications are written.
+  - [ ] No new record is started; the finalization of `spec` removes the record.
+- **Guards tested:** SC-10(b) answers survive; SC-11(a) no redone step, no repeated question; the record is reused.
+- **Regression for:** a restart that asks the survey twice or rewrites finished work.
+
+### T373 — A Consent Question Is Never Carried Over by `resume` (SC-11(a))
+
+- **Workflow:** `resume.md` Step 2 + `migrate.md` §The Move to 4.0
+- **Synthetic State:**
+  - A record with command `migrate`, argument `--to 4`; the interrupted run had printed the clean dry run, the person had answered yes, and the apply step had not started.
+- **Action:** `/magicspec resume`.
+- **Expected:**
+  - [ ] The move is re-entered through `migrate.md`.
+  - [ ] The consent question (E1) is asked again, once, before any apply step; the earlier yes is not reused.
+  - [ ] On *Not now* nothing changes.
+- **Guards tested:** SC-11(a) consent is never carried over; the one-question rule of the move.
+- **Regression for:** an apply step run on an answer given to a session that no longer exists.
+
+### T374 — `resume` With Nothing Recorded Runs Nothing (SC-11(c))
+
+- **Workflow:** `resume.md` Step 4
+- **Synthetic State:**
+  - No invocation record, no task `In Progress`, no goal; `STATE.md` `Next Action: Run /magicspec task engine to decompose Phase 2`.
+- **Action:** `/magicspec resume`.
+- **Expected:**
+  - [ ] `Nothing to resume.` and the line `Next: Run /magicspec task engine to decompose Phase 2`.
+  - [ ] No workflow body runs, no file is written, nothing is finalized.
+  - [ ] No question and no option menu.
+- **Guards tested:** SC-11(c) `resume` is not a way to start the next stage; DA-6.
+- **Regression for:** a `resume` that starts the next stage when there is nothing to continue.
+
 ### T231 — The Status Briefing Renders "Nothing Pending" as a Statement, Never as a Recommended Command (SC-2.4 addendum)
 
 - **Workflow:** `status.md` (Step 7 — Next)

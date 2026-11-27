@@ -76,7 +76,7 @@ module.exports = () => {
             .filter((f) => f.endsWith('.md'))
             .map((f) => f.slice(0, -3))
             .sort();
-        assert.strictEqual(bodies.length, 14, 'fourteen shipped bodies');
+        assert.strictEqual(bodies.length, 15, 'fifteen shipped bodies');
         const triggered = [
             ...card.matchAll(/- workflow: (\S+)\.md\n {4}gate: "Input Pass"/g),
         ]
@@ -112,6 +112,10 @@ module.exports = () => {
                 '## Workspace Resolution',
             ],
             'skills/magicspec/workflows/rule.md': [
+                '## Entry',
+                '## Core Invariants (Mandatory)',
+            ],
+            'skills/magicspec/workflows/resume.md': [
                 '## Entry',
                 '## Core Invariants (Mandatory)',
             ],

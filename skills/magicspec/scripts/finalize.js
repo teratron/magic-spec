@@ -44,6 +44,7 @@ const {
 } = require('./lib/doc-set-state');
 const diagnostics = require('./lib/diagnostics');
 const feedback = require('./lib/feedback');
+const { readInvocation, ownerOf, clearInvocation } = require('./lib/invocation');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FINALIZATION PROTOCOL (Post-Workflow Orchestrator)
@@ -906,6 +907,28 @@ function stateFileOf(stateResult) {
     return stateResult.stateFile || 'STATE.md';
 }
 
+/**
+ * SC-10(c): the invocation record of the command being finalized goes with its saved checkpoint —
+ * the same moment `${CHECKPOINT_CLAIM}` is earned. A record owned by another command stays: it
+ * belongs to an invocation that has not ended, such as a goal whose steps finalize one by one.
+ * Non-blocking.
+ *
+ * @param {{ workflow: string }} opts - Parsed CLI options.
+ * @param {string} designAbs - Absolute path of the state folder.
+ * @param {string} workspace
+ * @param {{ updated: boolean }} stateResult
+ * @returns {void}
+ */
+function releaseInvocation(opts, designAbs, workspace, stateResult) {
+    if (!stateResult.updated) return;
+    try {
+        const record = readInvocation(designAbs, workspace);
+        if (record && ownerOf(record) === opts.workflow) clearInvocation(designAbs, workspace);
+    } catch (e) {
+        console.warn(`⚠  Invocation record not removed (non-blocking): ${e.message}`);
+    }
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // A 4.0 Workspace (memory/state.md)
 // ───────────────────────────────────────────────────────────────────────────
@@ -1379,6 +1402,7 @@ function main() {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
         // SC-2: live memory reflects every completed command, bump or not.
         const stateResult = updateSessionState(opts, workspace, wsDir);
+        releaseInvocation(opts, designAbs, workspace, stateResult);
         // SC-6.1: this path prints no summary table, so the claim is its own
         // line — after the update it describes, and outside the terminal block.
         if (stateResult.updated)
@@ -1485,6 +1509,7 @@ function main() {
 
     // ── Session state (SC-2) ────────────────────────────────────────────────
     const stateResult = updateSessionState(opts, workspace, wsDir);
+    releaseInvocation(opts, designAbs, workspace, stateResult);
 
     // ── Diagnostics (DG-4) ──────────────────────────────────────────────────
     // After every other mutating step, so findings phase archival / CHANGELOG

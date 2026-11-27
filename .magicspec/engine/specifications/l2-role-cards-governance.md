@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.4.12
+**Version:** 1.4.13
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -228,6 +228,8 @@ triggers:
     gate: "Input Pass"
   - workflow: goal.md
     gate: "Input Pass"
+  - workflow: resume.md
+    gate: "Input Pass"
   - workflow: sync.md
     gate: "Input Pass"
 outputs:
@@ -309,6 +311,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.13 | 2026-11-27 | Clarification patch, Stable retained (as built in Phase 88; the mirror follows the card): the `prompt-engineer` card mirror lists `resume.md` among the Input Pass triggers. |
 | 1.4.12 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: the `project-auditor` card and its mirror end the operating protocol with the line for a 4.0 workspace. |
 | 1.4.11 | 2026-11-26 | Agent | As built in Phase 80, Stable retained, no requirement changed: the `spec-critic` card and its mirror end the operating protocol with the line for a 4.0 workspace. |
 | 1.4.10 | 2026-11-19 | Clarification patch, Stable retained (as built in Phase 65; the mirror follows the deployed card word for word): item 3 of the `prompt-engineer` card's *Input Pass* states the host's marking, its limit and the boundary of the person's own words, and its anti-pattern line names the instruction the person's words do not ask for. |

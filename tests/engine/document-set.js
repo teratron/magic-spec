@@ -1334,7 +1334,10 @@ module.exports = () => {
                     'resume-state',
                     '--all',
                 ]).stdout.trim();
-            assert.strictEqual(resume(), '▶ Resume [docs]: Now M2.T1 · Next M2.T1 · Open 0');
+            assert.strictEqual(
+                resume(),
+                '▶ Resume [docs]: Now M2.T1 · Next M2.T1 · Open 0 — /magicspec resume',
+            );
             writeIn(
                 dir,
                 '.magicspec/docs/memory/state.md',
@@ -1733,21 +1736,27 @@ module.exports = () => {
             const named = 'goal M2..M3 — 0 met, 1 open, 0 blocked';
             assert.strictEqual(
                 resume(),
-                `▶ Resume [docs]: Now M2.T1 · Next M2.T1 · Open 0; ${named}`,
+                `▶ Resume [docs]: Now M2.T1 · Next M2.T1 · Open 0; ${named} — /magicspec resume`,
             );
             const json = JSON.parse(runGood(dir, 'resume-state', '--all', '--json'));
             assert.strictEqual(json.workspaces[0].goal.scope, 'M2..M3');
 
             // With no task being built the goal's command is the step, state file or not.
             writeIn(dir, '.magicspec/docs/memory/state.md', '# State\n\n- Next: M2.T1\n');
-            assert.strictEqual(resume(), `▶ Resume [docs]: ${named}. Next: /magicspec goal`);
+            assert.strictEqual(
+                resume(),
+                `▶ Resume [docs]: ${named}. Next: /magicspec goal — /magicspec resume`,
+            );
             writeIn(dir, '.magicspec/docs/memory/state.md', '- Open: a question\n', true);
             assert.strictEqual(
                 resume(),
-                `▶ Resume [docs]: Open 1; ${named}. Next: /magicspec goal`,
+                `▶ Resume [docs]: Open 1; ${named}. Next: /magicspec goal — /magicspec resume`,
             );
             fs.rmSync(docsFile(dir, 'memory/state.md'));
-            assert.strictEqual(resume(), `▶ Resume [docs]: ${named}. Next: /magicspec goal`);
+            assert.strictEqual(
+                resume(),
+                `▶ Resume [docs]: ${named}. Next: /magicspec goal — /magicspec resume`,
+            );
             writeIn(dir, '.magicspec/docs/memory/state.md', recorded);
 
             // A goal beside another flag: the goal is recorded, the rest answered by one line.

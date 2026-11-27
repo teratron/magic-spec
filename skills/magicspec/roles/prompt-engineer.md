@@ -39,6 +39,8 @@ triggers:
     gate: "Input Pass"
   - workflow: goal.md
     gate: "Input Pass"
+  - workflow: resume.md
+    gate: "Input Pass"
   - workflow: sync.md
     gate: "Input Pass"
 outputs:

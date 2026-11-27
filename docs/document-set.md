@@ -60,6 +60,7 @@ The other commands work on the same files:
 | `simulate` | writes and runs the scenarios in `simulations/` |
 | `analyze` | audits the set against the code; on a workspace with code and no `product.md`, writes a set from the code |
 | `status` | reads only |
+| `resume` | continues unfinished work: the `- Now:` task, a recorded goal or an interrupted command; writes only through the command it continues |
 | `graph` | shows the units and the references between them |
 | `sync` | recomputes the next task in `memory/state.md` and reports the checker's findings |
 | `migrate --to 4` | moves a 3.x workspace to this layout ([Migrating](migration.md#from-3x-to-40)) |

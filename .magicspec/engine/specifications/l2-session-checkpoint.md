@@ -1,6 +1,6 @@
 # Session Checkpoint Contract
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -273,6 +273,17 @@ The full assertion list for each case lives here; [l2-test-suite.md](l2-test-sui
 
 ## 7. Implementation Notes
 
+**As built in Phase 88** `[ADDED]` (engine 4.0.x):
+
+- The writer is `scripts/checkpoint.js` over `scripts/lib/invocation.js`, which also gives `finalize` and `resume-state` the one reading of the record; `checkpoint` is in the command table and in the executor's move-safe set, because the record lives in the runtime folder and not in the workspace being moved.
+- **Nesting is explicit** (§5.9): a command run by `goal` or `fix` calls `--start --nested`; the writer cannot tell an abandoned `goal` record from a running one, so a plain `--start` always replaces. A nested step carries the inner command's name as a prefix, except a step named after that command (`goal`'s own marker).
+- A `--files` path is kept relative to the project root; one outside it is reported and dropped. A file written again belongs to the latest step.
+- `finalize` removes the record only when its owner (`parent`, else `command`) is the finalized workflow. `goal`, `analyze` and `migrate` clear their own record; the move from the earlier layout records none, because writing it would create the new state folder beside the old one.
+- With an interrupted invocation on a line, the line adds no `Next: /magicspec goal`: the resume command takes the invocation first.
+- The 4.0 section of `spec` names its checkpoints `intake`, `record` and `place`.
+- Coverage: H11, H12 and H14 in `tests/engine/checkpoint.js` (with the nesting, opt-out and refusal cases), H13 in `tests/engine/resume-and-checkpoint.js`, H15 and the reserved-forms case in `tests/engine/shipped-text-core.js`; the cognitive cases C6 to C8 are T372 to T374; the scenarios are S-21, S-22 and a variant of S-4.
+- Rows 14 to 18, 21 and 22 of the 1.2.0 deployment table are built; rows 19 and 20 (the constitution and the always-on rule) follow as the phase's constitution task.
+
 Deployment inventory, routed to `/magicspec task engine`; every row outside `.magicspec/` is beyond `/magicspec spec`'s write scope:
 
 | # | Touch-point | Change |
@@ -330,13 +341,15 @@ Deployment of 1.2.0 (SC-10, SC-11), routed to `/magicspec plan engine`: `[ADDED]
 | `[RULES]` | `skills/magicspec/CONSTITUTION.md` | Always-loaded rules; §10 Session Resume Check |
 | `[HARNESS]` | `tests/engine.js` | Deterministic regression harness (§6, H1–H10) |
 | `[SUITE]` | `tests/suite.md` | Cognitive regression suite (§6, C1–C5) |
-| `[CHECKPOINT]` | `skills/magicspec/scripts/checkpoint.js` | The invocation-record writer (SC-10, §5.9; to be built) |
-| `[RESUME-BODY]` | `skills/magicspec/workflows/resume.md` | The `resume` command (SC-11, §5.11; to be built) |
+| `[CHECKPOINT]` | `skills/magicspec/scripts/checkpoint.js` | The invocation-record writer (SC-10, §5.9) |
+| `[INVOCATION]` | `skills/magicspec/scripts/lib/invocation.js` | The one reading and writing of the record |
+| `[RESUME-BODY]` | `skills/magicspec/workflows/resume.md` | The `resume` command (SC-11, §5.11) |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.1 | 2026-11-27 | Agent | As built in Phase 88, Stable retained, no requirement changed: §7 records the script and library, the explicit `--nested` start, the path rule, which command removes a record, the resume line beside a goal, the 4.0 step names and the coverage; the Canonical References lose their *to be built* and gain the library. |
 | 1.2.0 | 2026-11-27 | Agent | **The invocation record and `resume`**, implementing [l1-session-continuity.md](l1-session-continuity.md) 2.8.0 SC-10, SC-11 and SC-9(h) (origin `user-stated`: the owner's list of 2026-11-27). New §5.9 (one untracked record per workspace under `.magicspec/.cache/invocation/`, written by a new `checkpoint` subcommand — start, step, clear — atomic, bounded, nested commands writing into the outer record; removed by `finalize` when the checkpoint claim is earned), §5.10 (the closed list of checkpoints per body), §5.11 (the `resume` body and router row; `resume-state`'s new first branch and closing hint). §2's constraint on commands follows SC-5 and SC-11; §4 maps the two invariants; §6 gains H11–H15 and C6–C8; §7 the deployment rows 14–22. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 1.1.6 | 2026-11-12 | Agent | As built in Phase 53, Stable retained (the requirement moved with the goal mode specification that declared it, CH-9, and this record follows). §5.3: `resume-state` also reads the goal block and reports a recorded goal in the one line, a goal alone included, with `/magicspec goal` as its next step; silence needs no task in flight and no recorded goal; `--json` gains a `goal` object only for a workspace that records one, and `in_flight` still means a task in flight. |
 | 1.1.5 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

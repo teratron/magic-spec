@@ -14,7 +14,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 ## 🔗 The Workflow Pipeline
 
-Magic operates through **4 core workflows** and **6 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
+Magic operates through **4 core workflows** and **10 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
 
 ```mermaid
 graph TD
@@ -59,6 +59,7 @@ graph TD
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. Level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 | **Status** | `status.md` | Read-only resume briefing: position, progress, blockers, and the one next command. Writes nothing. | [Detailed Guide](status.md) |
+| **Resume** | `resume.md` | Continues what a session left unfinished: an interrupted command from its last checkpoint, a task in flight or a recorded goal. | [Detailed Guide](resume.md) |
 | **Graph** | `graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export, and the artifact index (`memory-query`) that finds the sections bearing on a question, with their lines and size. | [Detailed Guide](graph.md) |
 | **Sync** | `sync.md` | Brings derived state back in line with its sources — registry counts, rule projections, the graph and wiki, progress counters, declared version anchors and registered documentation blocks — and reports what needs a judgement instead of settling it. | [Detailed Guide](sync.md) |
 

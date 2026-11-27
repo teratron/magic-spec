@@ -55,7 +55,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | State | Behavior |
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus one recommendation by pipeline order — `/magicspec spec` for an empty registry (planning halts on one), `/magicspec plan` when the plan does not hold the registered specifications, and so on. The first command that updates live memory creates the missing file; status still creates nothing. |
-| **In-flight session** | A task recorded `In Progress`, a recorded goal, or both, surface the resume line — the recorded next action and the dead ends already recorded against the task, and the goal with its criteria counts. |
+| **In-flight session** | An interrupted command, a task recorded `In Progress` or a recorded goal surface the resume line — the command and its last checkpoint, the recorded next action and the dead ends already recorded against the task, and the goal with its criteria counts — ending with `/magicspec resume`. |
 | **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
@@ -75,7 +75,8 @@ With no argument the workspace resolves through the standard priority chain. Pas
 | **Run** (`run.md`) | Primary source — status reports the position `run` last wrote |
 | **Task** (`task.md`) | Primary source — the active phase and its checklist |
 | **Analyze** (`analyze.md`) | Referenced — the engine line points at analysis when the snapshot has drifted |
+| **Resume** (`resume.md`) | Status reports; `/magicspec resume` continues what a session left unfinished ([Resume](resume.md)) |
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-26 (v4.0.0).
+Synchronized with engine workflows on 2026-11-27 (v4.0.2).

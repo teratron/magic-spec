@@ -162,7 +162,7 @@ module.exports = () => {
         assert.strictEqual(
             printed['\n'],
             '▶ Resume [engine]: T-1A01 Extract `finalize.js` in flight — 2 dead end(s) recorded, 2 file(s) modified. ' +
-                'Next: Execute T-1A01 Extract `finalize.js` via /magicspec run engine\n',
+                'Next: Execute T-1A01 Extract `finalize.js` via /magicspec run engine — /magicspec resume\n',
             'one line: title and Next Action with their code spans intact, the recorded dead ends, and the two product files (not the workbook)',
         );
     });
@@ -719,7 +719,7 @@ module.exports = () => {
             assert.strictEqual(alone.status, 0);
             assert.strictEqual(
                 alone.stdout,
-                `▶ Resume [engine]: goal "the import works" — ${RESUME_GOAL_COUNTS}. Next: /magicspec goal\n`,
+                `▶ Resume [engine]: goal "the import works" — ${RESUME_GOAL_COUNTS}. Next: /magicspec goal — /magicspec resume\n`,
             );
 
             writeResumeFixture(tempDir, {
@@ -737,7 +737,7 @@ module.exports = () => {
             assert.strictEqual(
                 both.stdout,
                 `▶ Resume [engine]: T-1A01 Thing in flight — 0 dead end(s) recorded; goal "the import works" — ${RESUME_GOAL_COUNTS}. ` +
-                    'Next: Execute T-1A01 Thing via /magicspec run engine\n',
+                    'Next: Execute T-1A01 Thing via /magicspec run engine — /magicspec resume\n',
             );
 
             // A phase or a task count is a goal like a statement, and names itself the way the commands spell it.
@@ -760,7 +760,7 @@ module.exports = () => {
                 runResumeState(tempDir, [
                     '--workspace=engine',
                 ]).stdout,
-                '▶ Resume [engine]: goal phase-3 5 tasks — 0 met, 1 open, 0 blocked. Next: /magicspec goal\n',
+                '▶ Resume [engine]: goal phase-3 5 tasks — 0 met, 1 open, 0 blocked. Next: /magicspec goal — /magicspec resume\n',
             );
 
             // A range of phases names itself the way the command accepts it.
@@ -783,7 +783,7 @@ module.exports = () => {
                 runResumeState(tempDir, [
                     '--workspace=engine',
                 ]).stdout,
-                '▶ Resume [engine]: goal phase-3..5 — 0 met, 1 open, 0 blocked. Next: /magicspec goal\n',
+                '▶ Resume [engine]: goal phase-3..5 — 0 met, 1 open, 0 blocked. Next: /magicspec goal — /magicspec resume\n',
             );
         } finally {
             cleanup(tempDir);
@@ -1034,6 +1034,128 @@ module.exports = () => {
             cleanup(tempDir);
         }
     };
+
+    // A record as `checkpoint` writes it, aged by `minutes`.
+    const writeInvocation = (tempDir, record, minutes = 5, workspace = 'engine') => {
+        const file = path.join(tempDir, '.magicspec', '.cache', 'invocation', `${workspace}.json`);
+        fs.mkdirSync(path.dirname(file), {
+            recursive: true,
+        });
+        const at = new Date(Date.now() - minutes * 60000).toISOString();
+        fs.writeFileSync(
+            file,
+            JSON.stringify({
+                workspace,
+                argument: '',
+                parent: null,
+                session: 's',
+                started: at,
+                updated: at,
+                steps: [],
+                ...record,
+            }),
+        );
+    };
+
+    test('resume-state reports an interrupted invocation first, with its age, and every line names /magicspec resume (SC-9(h), SC-11(f), H13)', () => {
+        const tempDir = createTempWorkspace();
+        const line = () =>
+            runResumeState(tempDir, [
+                '--workspace=engine',
+            ]).stdout;
+        try {
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                },
+            });
+            assert.strictEqual(line(), '', 'no record, nothing in flight: silence');
+
+            writeInvocation(tempDir, {
+                command: 'spec',
+                argument:
+                    'a holiday booking feature with a very long description that goes on and on',
+            });
+            assert.strictEqual(
+                line(),
+                '▶ Resume [engine]: /magicspec spec a holiday booking feature with a very long description that… interrupted at start (5 min ago) — /magicspec resume\n',
+            );
+
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [
+                        trackingEntry('T-1A01', 'Thing', 'In Progress'),
+                    ],
+                },
+            });
+            writeInvocation(
+                tempDir,
+                {
+                    command: 'run',
+                    parent: 'goal',
+                    argument: 'phase-3',
+                    steps: [
+                        {
+                            step: 'run: T-1A00 done',
+                            files: [],
+                            at: new Date().toISOString(),
+                        },
+                    ],
+                },
+                180,
+            );
+            assert.strictEqual(
+                line(),
+                '▶ Resume [engine]: /magicspec goal phase-3 interrupted at run: T-1A00 done (3 h ago); ' +
+                    'T-1A01 Thing in flight — 0 dead end(s) recorded. ' +
+                    'Next: Execute T-1A01 Thing via /magicspec run engine — /magicspec resume\n',
+                'one line, the invocation first, named by the command a resume re-enters',
+            );
+
+            const json = JSON.parse(
+                runResumeState(tempDir, [
+                    '--workspace=engine',
+                    '--json',
+                ]).stdout,
+            );
+            assert.deepStrictEqual(json.workspaces[0].invocation, {
+                command: 'goal',
+                argument: 'phase-3',
+                last_step: 'run: T-1A00 done',
+                age_minutes: 180,
+                session: 's',
+            });
+            assert.strictEqual(json.in_flight, true);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state reports an interrupted invocation of a 4.0 workspace and of one with no state file, and stays read-only (SC-9(h), H13)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                },
+            });
+            fs.rmSync(path.join(tempDir, '.magicspec', 'engine', 'STATE.md'));
+            writeInvocation(tempDir, {
+                command: 'rule',
+            });
+            const before = treeDigest(path.join(tempDir, '.magicspec'));
+            const bare = runResumeState(tempDir, [
+                '--workspace=engine',
+            ]);
+            assert.strictEqual(
+                bare.stdout,
+                '▶ Resume [engine]: /magicspec rule interrupted at start (5 min ago) — /magicspec resume\n',
+            );
+            assert.deepStrictEqual(treeDigest(path.join(tempDir, '.magicspec')), before);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
 
     test('finalize.js claims a saved checkpoint only once STATE.md was really updated, on both exit paths (SC-6.1, H9)', () => {
         const claim = /checkpoint saved/;

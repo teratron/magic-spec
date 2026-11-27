@@ -101,6 +101,9 @@ For a command chosen in the picker that takes an argument, and for a command who
 
 1. Take the command's row from the table. Its *When it is missing* cell names the suggestions and the default; the command's own body defines how they are computed (`spec`: *Blank Trigger*; `rule`: *Missing Rule Text*; `fix`: its *Entry*, the open findings; `goal`: its *Entry*, where the empty argument continues the recorded goal or runs the active phase).
 2. **Form**: a text entry, with the suggestions as choices where the command has them, the recommended one first and marked. For an optional argument the first choice runs the default and names it. A form that cannot hold a text entry on its own takes free text through its free-text choice; an argument with no suggestion at all is asked for in the chat in one message. A host with no form gets the suggestions as a numbered list and the line *or type your own*.
+   - **Reserved forms** are choices too: the keyword forms of the command's *Argument* cell that its body reads as a mode (`stabilize` and `amend {file}` of `spec`, `amend {id}` and `remove {id}` of `rule`, `visualize` of `graph`, `--to 4` of `migrate`, `plan` of `goal`) follow the suggestions in the same form, each with its one-line meaning from the *Entry* section of the body. A form valid only on another workspace format is left out (`stabilize` and `--to 4` on a 4.0 workspace).
+   - **Operand**: choosing a form that takes an operand (`amend {file}`) opens one follow-up step of the same argument form — the candidates (the specifications of the registry, the rule identifiers of the constitution, the phases or specifications of the plan), most recently changed first, and free text.
+   - **A form too small** for the suggestions and the reserved forms together shows the recommended suggestion first, then the reserved forms; the rest is reached through free text, where a typed reserved form is read exactly as when it follows the command.
 3. **Required**: nothing runs until the argument is given. **Optional**: the default runs when the user takes the first choice.
 4. **Cancel**: a dismissed form runs nothing; say so in one line.
 5. Free text entered in a form is read exactly as a typed argument is: it passes the Input Pass before the command runs (the line of the Entry section), and a suggestion the person chooses is engine-made text and passes none.
@@ -129,6 +132,7 @@ Help Checklist
   ☐ `help {command}`: the demand shown, an alias read as its command, `help help` explained once with no picker, a further command name ignored with one line, an unknown token answered with the near command and the list
   ☐ Picker by host capability: recommended first and marked; numbered list when there is no form
   ☐ Asked at most once for the command and once for the argument (E7); nothing asked for an optional argument of a typed command
+  ☐ Reserved forms offered after the suggestions, from the body's *Entry*; an operand asked in one follow-up step of the same form
   ☐ A cancelled form ran nothing and said so in one line
   ☐ The chosen command's body was read in full and followed with the argument as entered
 ```

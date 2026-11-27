@@ -68,6 +68,7 @@ Parse `[arg]` to determine the planning mode:
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command plan [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
+   - **Checkpoints**: this run's record starts in the context load (`context.md` §Post-Resolution step 5) and each `Checkpoint:` line below is one `checkpoint --step` call. A run that ends on a HALT, a refusal or a cancelled form ends with `node scripts/executor.js checkpoint --workspace={active-workspace} --clear`.
 2. **Registry Integrity**: Account for every spec registered in `INDEX.md` before planning — read the registry entries and the wiki, and open a spec body only where a step needs it. No spec may be left unaccounted for.
 3. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md` (do not prompt user).
    - **Intent Preservation**: if `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: *"Resuming: '{original intent}'."* Intent MUST NOT be silently dropped across workflow boundaries.
@@ -125,6 +126,7 @@ graph TD
    - **Skip**: specs failing any criterion remain `Draft` with a logged reason.
    - Report: `[Pre-Plan] {N} specs promoted to Stable, {M} remain Draft. Reasons: {summary}.`
    - **Field Normalization**: during iteration, if an L2 spec uses a non-standard field name for its L1 parent reference (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to canonical `Implements:`. Log: `[Normalize] {file}: 'L1 Reference' → 'Implements'.`
+   - `Checkpoint: stabilized`.
 3. **Analyze**: extract `Related Specifications` and `Implementation Notes`. Read the `provides` of finished phases (`tasks/phase-*.md` frontmatter, `archives/tasks/`) to see what earlier phases deliver; it supplements the plan's prose with machine-readable data.
 4. **Draft Plan**: group by Layer. Build the full dependency matrix *before* the phases are fixed to detect N-level cycles. For each phase record its specifications, the order and why, and the dependencies that order rests on; for each backlog item its disposition (PL-9). A phase that adds or changes user-facing behaviour also records the scenarios it writes or updates (Step 5, Scenario list).
 5. **Planning Audit**: activate `@role:planner` to review the draft `PLAN.md`. Audit for:
@@ -133,6 +135,7 @@ graph TD
    - **Cascade Risk**: if a critical spec fails to implement in Phase 1, which Phase 2 specifications are instantly blocked?
    - **Plan check (CH-5)**: compare the draft with the other phases of the plan, with the plan of every other registered workspace and with what archived phases record as delivered, for an ordering conflict, a contradiction, a duplicate definition or an interaction gap (card step 6). An ordering conflict or a contradiction is resolved before the plan is written; work duplicated across workspaces is assigned to one of them and referenced from the other. A finding whose resolution needs a specification to change is not resolved here, because this workflow writes no specification → **HALT** once with the single recommendation. Report: *"Plan check: `{file-a}` §{x} ↔ `{file-b}` §{y} — {class}; resolving it changes a specification. Run `/magicspec spec`, then re-run `/magicspec plan`."* The check prints `[Coherence] {N} artifacts compared — {k} findings` and one line per finding.
    - **Scenario list (SM-3)**: for every phase that adds or changes user-facing behaviour, `@role:simulator-tester` lists in the phase entry the scenarios to write or update — `- Scenarios: {area} — {scenario titles}` — and the phase's validation tasks (`/magicspec task`) write them. A phase with user-facing behaviour and no scenario is a planning finding, resolved by adding the list before the plan is written; a phase with none (no user-facing behaviour) lists none and records no finding.
+   - `Checkpoint: audited` — with each finding the audit resolved as a decision.
 6. **Sync (Update Mode)** — the planning decisions about a specification; applying them to tasks is `task.md`:
    - **C12 Quarantine**: if an L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → move its L2 children to `## Backlog` in `PLAN.md` with the reason *"L1 parent `{file}` is `{status}` (C12)"*. **Cross-Workspace C12**: if the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md here** — downward C12/deprecation status changes are `spec.md`'s responsibility (this workflow writes only the upward `Draft → Stable` promotion in Step 2). **C12.1 Stabilization Exception**: only a spec the plan marks `[Stabilize]` (Guided Planning Filter) may bypass quarantine, and only that spec; every other child stays quarantined.
    - **Bootstrap Plan**: a spec carrying the `[Bootstrap]` marker is exempt from the C12 Quarantine above and from Demoted Spec below while it is `Draft` — a Bootstrap plan is tentative by construction (C6 Bootstrap Exception), so a spec and its `Draft` L1 parent are planned together before either is `Stable`. Once the spec leaves `Draft`, both rules judge it like any other.
@@ -146,6 +149,7 @@ graph TD
 
 - Use `templates/plan.md`. `PLAN.md`: the strategic overview (Phases & Specifications) with its header — version, `Generated`, `Based on` (registry), `Based on RULES` (constitution) — and no atomic checklist items.
 - Write nothing else of the task layer (PL-1): `TASKS.md`, the phase workbooks and every tracking entry stay as they are. A task whose specification leaves the active plan keeps its recorded state (PL-7); `task` blocks it with the reason this plan records.
+- `Checkpoint: written` — the plan file.
 
 ### State Init/Update
 
@@ -182,8 +186,8 @@ Taken when the resolved workspace's entry in `workspace.json` carries `"format":
 1. **Pre-flight**: `node scripts/executor.js check-docs --workspace={active-workspace}`. This stage closes every finding in `plan.md` and those a missing milestone causes (a change without its milestone, a component or scope item no milestone covers, a rule without `From`); a stale unit no task builds and an asset no task creates are the task stage's. Any other finding, or a set with no stack layer, ends the run with `/magicspec spec {workspace}` as the one next step and nothing written.
 2. **First plan** (`plan.md` holds no milestone): write the milestones from the components, the scope items and their priorities, each with the fields of the template. `Needs` names only the milestones that justify it; a component is closed once; the first milestone is observed by running the product — its `Observed by` is a use of the product and its outcome — and closes every component that use needs. Every rule of `rules.md` gains its `From`. A backlog with nothing waiting holds `- none`.
 3. **Replan** (milestones exist): a done milestone (`- Done: M{n}` in `memory/state.md`) is never edited. Each `placed` change with no milestone under `Built by` gets one appended at the end, which `Closes`, `Extends` or `Revises` what the change affects, and names it under `Built by`; a new rule gains its `From`. A directive reorders or reprioritizes only milestones that are not done.
-4. **Review**: `@role:planner` reviews the draft before it is written.
-5. **Check**: run `check-docs` again; only the findings the task stage closes may remain.
+4. **Review**: `@role:planner` reviews the draft before it is written. `Checkpoint: audited`.
+5. **Check**: run `check-docs` again; only the findings the task stage closes may remain. `Checkpoint: written`, with the plan file.
 6. **Handoff**: name `/magicspec task {workspace}`.
 
 ## Finalization Protocol (Mandatory)

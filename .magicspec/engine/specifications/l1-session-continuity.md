@@ -1,6 +1,6 @@
 # Session Continuity & Status Surface
 
-**Version:** 2.8.0
+**Version:** 2.8.1
 **Status:** Stable
 **Layer:** concept
 
@@ -194,7 +194,7 @@ Every invocation of a mutating command (`spec`, `plan`, `task`, `run`, `fix`, `s
 
 - **(a) Start.** Before its first write, the invocation records the command, its argument as entered, the workspace, the session it runs in and the time.
 - **(b) Step boundaries.** At each checkpoint step its body names — a closed list per body, at most one per numbered step — it records the step it completed, the files it wrote since the previous checkpoint and the decisions that exist nowhere else yet: the answers of an intake survey (E6) before the Draft that carries them is written, an argument chosen in the argument form (E7), a `[DR]` that no artifact holds yet. A decision already written into an artifact is not copied: the artifact is its record.
-- **(c) End.** Finalization removes the record once SC-2 succeeded. A record that survives therefore means one thing: the invocation was interrupted. A refused or halted invocation finalizes or removes its record as it ends; a HALT is an ending, not an interruption. Under an opt-out of finalization (§2) no record is written at all, as there is no checkpoint and no claim (SC-6.1): a record nothing would remove would announce an interruption at every cold context.
+- **(c) End.** Finalization removes the record once SC-2 succeeded. A record that survives therefore means one thing: the invocation was interrupted. A refused or halted invocation finalizes or removes its record as it ends; a HALT is an ending, not an interruption. Under an opt-out of finalization (§2) no record is written at all, as there is no checkpoint and no claim (SC-6.1): a record nothing would remove would announce an interruption at every cold context. A command that has no finalization of its own (`goal`, `analyze`, `migrate`) removes its record as it ends, and finalization removes only the record of the command it finalizes, so a record of `goal` outlives its steps' finalizations. `[ADDED]`
 - **(d) Bounds.** One record per workspace, replaced by the next invocation's start; never a log. It holds no file content, no tool output and no conversation text — the working tree is the product of the interrupted steps (SC-9(e)), the record says only which step produced what. It is runtime state of the engine, not an SDD artifact: it is never committed, never loaded as instruction, and never enters a product file.
 - **(e) Cost.** A checkpoint is one engine call. Bodies place checkpoints where losing the step costs more than recording it — after an intake, after a batch of writes, before a review — not after every action.
 
@@ -279,6 +279,7 @@ A separate handoff file is rejected (§5): it would be a third source of truth d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.8.1 | 2026-11-27 | Agent | As built in Phase 88, Stable retained, no requirement changed: SC-10(c) states what the build settled — a command without a finalization clears its own record, and finalization removes only the record of the command it finalizes. |
 | 2.8.0 | 2026-11-27 | Agent | **Crash recovery inside an invocation** (origin `user-stated`: the owner's list of 2026-11-27, §1.6). New SC-10 Invocation Checkpoint (a record of the running invocation — command, argument, workspace, session, last checkpoint step, files written, decisions held nowhere else, intake answers included — written at the body's named step boundaries and removed by finalization, so a surviving record means an interruption) and SC-11 the `resume` command (re-enters an interrupted invocation from the step after its last checkpoint, else runs the task in flight or the recorded goal; consent never carried over; no demand of its own; the second C2 exception). SC-9 gains (h): the predicate reports an interrupted invocation first. The constraint on new commands now records two exceptions; the 2026-09-20 rule that no guarantee depends on a typed command is kept. Two premises forecast: the record is untracked runtime state, not a `STATE.md` field; one session per workspace at a time. The second item of the list (a status update after every completed task) was found already satisfied and is recorded in §1.6 with its carriers, nothing changed for it. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 2.7.0 | 2026-11-27 | Agent | New **Pending-Directive Precedence (SC-2.4 addendum)**, a specification gap closed by `/magicspec-dev fix` (Phase 87): `DESIGN_DEBT_PENDING` waits while a replan directive is pending, because the revalidation the directive names is the recorded next step and sets the Backlog dispositions. |
 | 2.6.4 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: SC-1 states who writes `memory/goal.md` of a 4.0 workspace and that the resume check reports the goal. |

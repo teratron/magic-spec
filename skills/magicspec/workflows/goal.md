@@ -67,6 +67,7 @@ Read the argument into a scope before anything is written. The tokens `phase-{N}
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command goal [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once. A bare `goal` whose resolved workspace records no unfinished goal looks at the others before any default applies: `node scripts/executor.js resume-state --all --json` lists the workspaces with a recorded goal, and exactly one with a criterion not `met` is the active workspace (`[DR] Continuing the goal of {name} — the only one recorded. (Override: /magicspec goal {other} …)`).
+   - **Checkpoints**: this run's record starts in the context load (`context.md` §Post-Resolution step 5) and each `Checkpoint:` line below is one `checkpoint --step` call. Every step this mode runs starts with `--nested`, so its checkpoints land in this record, and `goal` clears the record with its report. A run that ends on a HALT, a refusal or a cancelled form ends with `node scripts/executor.js checkpoint --workspace={active-workspace} --clear`.
 2. **Rules First**: read the constitution (`RULES.md`, global and workspace) and `STATE.md` before anything else; `Blockers` and `Blocking Constraints` are acknowledged as in `run.md`.
 3. **Auto-Init**: if `.magicspec/` or system files are missing, silently execute `references/init.md` (do not prompt the user).
 4. **Logic Guards**:
@@ -133,6 +134,7 @@ graph TD
    - **Count progress (GM-6)**: an iteration makes progress when it changes a recorded state — a criterion's state, a task's status, a specification's status, the plan's membership or order, or a finding closed. Repeating a step on unchanged input with an unchanged outcome is no progress. Compare the states read before the step with those read after; the counters are `withoutProgress` (reset to 0 on progress, else +1), `iterations` (+1), `tasksDone` (the tasks that reached `Done` in this step) and `phasesDone` (a phase that reached `Done`).
    - **Premises**: each premise the iteration accepted — one a `[DR]` rests on, written as an `Assumption (forecast)` where the work landed — is appended to `premises` with its override, oldest first; the writer drops the oldest when the block is full and counts them in `premisesDropped`, and the write is never refused for them (GM-11).
    - **Record** the new block, with the premises, through the writer (Step 3's command).
+   - `Checkpoint: {command}` — one per step run, named by the command it ran.
 6. **Stop condition** — the mode stops on exactly one of these, checked in this order after each iteration and once before the first (a goal already done, a bound already reached):
    1. **Done**: every criterion is `met`.
    2. **Consent queued**: Step 4 finds no step that does not depend on a queued consent, and consents are queued (Core Invariant 4).
@@ -145,7 +147,7 @@ graph TD
 
 ## Report
 
-When the mode stops, print one report in this layout, then the queued consents are asked (below):
+When the mode stops, print one report in this layout, then the queued consents are asked (below): Then end the record: `node scripts/executor.js checkpoint --workspace={active-workspace} --clear`.
 
 ```plaintext
 Goal: {scope}
@@ -194,7 +196,7 @@ The plan of a set is the milestones of `plan.md`, its state is `memory/state.md`
    | None of the above | no step runs, as written above |
 
    A task limit makes `run` build one task (`/magicspec run {workspace} "M{n}.T{k}"`) and end after it, without continuing to the next ready one.
-5. **Run and count**: Step 5 above applies; each step is run by its body's section for a 4.0 workspace, finalizes as itself, and the record is written as in 3. Progress is a change of a recorded state: a criterion's state, a `- Done:` line, a change's status, the milestones of `plan.md` or their order, a finding closed. `tasksDone` counts the tasks that gained a `- Done:` line and `phasesDone` the milestones. A task that waits for a queued consent is recorded `- Open: {task} — waiting for consent: {action}` in `memory/state.md`. A premise is written on the unit it concerns, as `workflows/spec.md` §On a 4.0 Workspace states, and in the goal record.
+5. **Run and count**: Step 5 above applies; each step is run by its body's section for a 4.0 workspace, finalizes as itself, and the record is written as in 3. Progress is a change of a recorded state: a criterion's state, a `- Done:` line, a change's status, the milestones of `plan.md` or their order, a finding closed. `tasksDone` counts the tasks that gained a `- Done:` line and `phasesDone` the milestones. A task that waits for a queued consent is recorded `- Open: {task} — waiting for consent: {action}` in `memory/state.md`. A premise is written on the unit it concerns, as `workflows/spec.md` §On a 4.0 Workspace states, and in the goal record. Its `Checkpoint: {command}` is recorded the same way.
 6. **Report**: the layout above, the scope spelled `M{n}` or `M{n}..M{m}` and one `Work:` line per milestone worked on.
 
 ## Goal Completion Checklist

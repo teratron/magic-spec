@@ -65,7 +65,7 @@ module.exports = () => {
                 `${row.name}: the description names the command`,
             );
         }
-        assert.strictEqual(rows.length, 14);
+        assert.strictEqual(rows.length, 15);
         assert.ok(
             !fs.existsSync(path.join(skillSrc, 'workflows', 'context.md')),
             'a shared module is not a command',
@@ -87,6 +87,7 @@ module.exports = () => {
             fix: 'deep',
             simulate: 'standard',
             goal: 'per step',
+            resume: 'per step',
             analyze: 'deep',
             rule: 'standard',
             status: 'light',

@@ -78,7 +78,7 @@ Skip Step 0 entirely on any of:
 
 ## Workspace Resolution Chain
 
-Every command that acts on one workspace's artifacts — `spec`, `task`, `run`, `rule`, `analyze`, `status`, `migrate --to 4` — chooses it through the chain below (WI-11). The engine computes the chain, so identical input routes identically. Run
+Every command that acts on one workspace's artifacts — `spec`, `task`, `run`, `rule`, `analyze`, `status`, `resume`, `migrate --to 4` — chooses it through the chain below (WI-11). The engine computes the chain, so identical input routes identically. Run
 
 `node scripts/executor.js resolve-workspace --command {command} --text "{request}"`
 
@@ -143,10 +143,15 @@ After resolution, load **in this exact order** — the sequence forms the sessio
    - Fields `Current Position`, `Blockers`, `Blocking Constraints` take precedence over inferences from TASKS.md / PLAN.md when determining next action.
    - If `Blocking Constraints` is non-empty, the agent MUST acknowledge each `[C-NNN]` entry explicitly before proceeding.
 4. **Resume Detection** — run `node scripts/executor.js resume-state --workspace={workspace}`, the one shared predicate for "work is in flight" (SC-9):
-   - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`. A missing or failing script counts as nothing in flight: never a halt.
+   - It prints nothing when no work is left unfinished — no interrupted invocation, no task whose tracking entry reads `In Progress`, no recorded goal. A missing or failing script counts as nothing in flight: never a halt.
    - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
    - **Memory Fence**: Loaded STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with the recorded `Next Action` or any `Blocking Constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
    - A cold context that does not open with a `/magicspec <command>` command runs the same check through the session-start rule in `CONSTITUTION.md`.
+5. **Invocation Record** (SC-10) — a mutating command records itself, so a session that ends in the middle of it can be resumed: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `rule` and `goal` here, `analyze` before its first dispatched write and `migrate` before the apply step of the move to 4.0, each as its body states.
+   - After the resume check and before the first write: `node scripts/executor.js checkpoint --workspace={workspace} --start --command={command} --argument="{argument as entered}"`; leave `--argument` out when there is none. A command that `goal` or `fix` runs adds `--nested`, so its steps land in the outer record. A command resumed by `/magicspec resume` starts nothing: the open record continues.
+   - At each `Checkpoint: {step}` line of the body: `checkpoint --workspace={workspace} --step="{step}" --files={files written since the last checkpoint, relative to the project}`, with `--answer="{question} => {answer}"` for each answer of a survey or an argument form and `--decision="{line}"` for a decision no artifact holds yet. Paths and short text only: never file content, tool output or conversation.
+   - Finalization removes the record of the command it finalizes. A run that ends without it — a HALT, a refusal, a cancelled form, or a command with no finalization (`goal`, `analyze`, `migrate`) — ends with `checkpoint --workspace={workspace} --clear`.
+   - A checkpoint never blocks: relay a warning in one line and go on.
 
 ## Context Budget Guard
 

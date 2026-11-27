@@ -272,6 +272,8 @@ if (fs.existsSync(workspaceJsonPath)) {
 const MOVE_SAFE = new Set([
     ...MIGRATION_SAFE,
     'resolve-workspace',
+    // The record lives in the runtime folder, never in the workspace being moved.
+    'checkpoint',
 ]);
 if (
     workspaceData &&

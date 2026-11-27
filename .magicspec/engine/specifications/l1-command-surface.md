@@ -1,6 +1,6 @@
 # Command Surface: One Command, Interactive Help and Argument Intake
 
-**Version:** 2.6.0
+**Version:** 2.6.1
 **Status:** Stable
 **Layer:** concept
 
@@ -211,6 +211,8 @@ graph TD
 12. **The move to 4.0** `[ADDED]`. CS-6 and the `migrate` row of §5.1 gain `--to 4`; the move itself is [l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5 and is built with it. Declared supersessions ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the router's `migrate` row (`SKILL.md`); the *Entry* of `workflows/migrate.md` ("No argument") and its Core Invariant 3 ("No project context"), which hold for the move from the earlier layout only — a move to 4.0 runs on a project the engine already reads, so it resolves its workspace by the routing chain; the reason the always-on rules give for exempting `migrate` from the drift line (no snapshot to compare), which does not hold for `--to 4`, while the exemption itself stays, a drift line before a one-time move answering nothing. `help` follows the row, as it is derived.
     **As built (Phase 85).** `[ADDED]` The `migrate` row has the argument and missing cells of §5.1 and its purpose cell names both moves, so `help`, the picker and the contribution guide's table follow; `workflows/migrate.md` carries the section *The Move to 4.0*, its *Entry* and Core Invariant 3 saying they hold for the move from the earlier layout; the rule of the drift exemption says why `--to 4` keeps it. The work is [l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5.
 
+13. **As built in Phase 88** `[ADDED]`. The router has the `resume` row after `goal` (group `quality & automation`, demand `per step`) and its body `workflows/resume.md`; the argument form offers the reserved forms of CS-10 item 2 as Step 4 of `workflows/help.md`.
+
 ## 7. Drawbacks & Alternatives
 
 - **An alias is a second spelling to test.** Accepted: one alias, read through the same lookup as the names; the printed form stays one.
@@ -241,6 +243,7 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.6.1 | 2026-11-27 | Agent | As built in Phase 88, Stable retained, no requirement changed: §6 item 13 records the `resume` row and body and the reserved forms in the help body. |
 | 2.6.0 | 2026-11-27 | Agent | **`resume` and the reserved forms in the argument form** (origin `user-stated`: the owner's list of 2026-11-27, §1.3). CS-1: `resume` joins the command set as a C2 exception ([l1-session-continuity.md](l1-session-continuity.md) SC-11); §5.1 its row (group `quality & automation`, which then holds four commands and still fits a four-choice form; demand `per step`). CS-10 item 2: the argument form offers a command's reserved forms after its suggestions, with one follow-up step in the same form for a form that takes an operand, so CS-11's bound holds. Forecast: reserved forms appear only where the form opens anyway; an optional argument of a typed command is still never asked for. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 2.5.1 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: §6 item 12 records the router row, the body and the argument of `migrate --to 4` as built. |
 | 2.5.0 | 2026-11-26 | Agent | **`migrate --to 4`** (origin: the plan check of `/magicspec plan engine` 1.97.0, which found this specification giving `migrate` no argument and answering a 3.x project with the finished message while [l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5 runs `migrate --to 4` on it — a contradiction that held Phase 85). CS-6 gains the move of one 3.x workspace to 4.0 by the same three steps, the routing chain choosing the workspace; the §5.1 row names the argument and its default; §5.3 says the move sweeps nothing; §2 records the forecast that a bare `migrate` never offers the move; §6 item 12 the declared supersessions. Amendment Rule round trip: RFC, Post-Update Review (coherence: 6 artifacts compared — [l2-sdd-document-set-engine.md](l2-sdd-document-set-engine.md) §5.5, [l2-skill-distribution.md](l2-skill-distribution.md) §5.6, [l1-skill-packaging.md](l1-skill-packaging.md) SP-10, [l1-workspace-intent-routing.md](l1-workspace-intent-routing.md) WI-11, `workflows/migrate.md`, the always-on rules §1 — 1 finding, superseded and declared in §6 item 12; spec-critic PASS; prompt-engineer PASS), Stable. |

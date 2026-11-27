@@ -552,6 +552,7 @@ module.exports = () => {
         const clause = 'when it is empty `--text` is left out';
         for (const body of [
             'analyze',
+            'resume',
             'rule',
             'run',
             'spec',

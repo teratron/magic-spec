@@ -247,7 +247,7 @@ call while it holds no `STATE.md` for the workspace in its current context. A
 2. If it prints a line (`▶ Resume [{workspace}]: …`), relay it **verbatim** as one
    informational line — never a prompt, never a menu — and carry on with the
    user's request. The request outranks the recorded `Next Action`; narrate any
-   divergence in one line (Memory Fence, `references/context.md`).
+   divergence in one line (Memory Fence, `references/context.md`). `/magicspec resume` continues that work.
 3. If it prints nothing, say nothing.
 
 A missing or failing script counts as silence: this rule fails open and never

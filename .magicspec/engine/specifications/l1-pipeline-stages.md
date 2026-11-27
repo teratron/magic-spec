@@ -1,6 +1,6 @@
 # Pipeline Stages: One Stage per Invocation, File-Borne Handoffs and Model Choice
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** concept
 
@@ -76,7 +76,7 @@ Live memory and the changelog are written by finalization at the end of every st
 | `standard` | `task`, `run`, `simulate`, `rule` |
 | `light` | `status`, `help`, `graph`, `migrate`, `sync` |
 
-`goal` has no demand of its own: each of its steps carries the demand of the command it runs.
+`goal` has no demand of its own: each of its steps carries the demand of the command it runs. `resume` likewise carries the demand of the command it continues (`l1-session-continuity.md` SC-11(e)). `[ADDED]`
 
 ### 5.3 Flow
 
@@ -142,6 +142,7 @@ The mapping is the project's setting; its form and the host bindings are [l2-dem
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.1 | 2026-11-27 | Agent | As built in Phase 88, Stable retained, no requirement changed: §5.2 names `resume` beside `goal` as a command without a demand of its own, as the router prints it. |
 | 1.2.0 | 2026-11-27 | Agent | **Every host** (origin `user-stated`: the owner's remark of 2026-11-27 that users work with other agents, not only Claude). New PS-10: the binding differs per host, tiers in the host's own vocabulary, a checked/unchecked record per capability with unchecked ones unused by default, identification by marker or by the agent, an unknown host unchanged. §1.1 records what was read for Codex and Qwen Code. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 1.1.0 | 2026-11-27 | Agent | **Model and effort per command** (origin `user-stated`: the owner's list of 2026-11-27, checked in the session first, §1.1). The constraint that the engine cannot switch models is narrowed to the session's own model; new PS-8 (delegable units of a `standard` or `light` stage run on the project's tier for the demand where the host allows it, the session keeping intake, consent, verification and finalization; never a `deep` stage, never above the session's tier; one retry in the session on a failed verification) and PS-9 (the handoff line names the host's switch commands when the demand changes); §5.5 the default tiers (`inherit`) and the delegable units; §5.4 the hint's place. Forecast: the hint on by default, delegation off until the setting turns it on. The old TBD is answered; a narrower one (an unforked skill's model on the session's turn) is left open. Stable retained after the Amendment Rule round trip (Post-Update Review). |
 | 1.0.1 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). **The handoff line as built:** `finalize.js` builds `Next: /magicspec {command} {argument} — {demand} reasoning` from the persisted `Next Action` — the first `/magicspec <command>` it names, the workspace and a quoted directive as the argument, an alias read as its command and printed by its own name — and the demand is read from the router's table through the one parser (`lib/hosts.js`, `readCommands`), never from a copy; it is printed once, as the last line of the `### Next step` block, after the unchanged `Next Action` text; a `Next Action` that names no command or one the router does not list gets no line, and an unreadable router costs the line and never the finalization. The five pipeline bodies say so in their finalization step. **Each body's read set** is one `**Reads**` line equal to its row of §5.1 and the sentence that a missing record of an earlier stage is reported as a finding and never guessed. **Delivered supersessions (§6 item 6):** the Zero-Prompt Handoff of `spec.md` and `analyze.md` names the next stage and starts nothing; the constitution's C9 reads that the agent executes each stage autonomously and `goal` chains them (constitution 1.19.0, the shipped template word for word); a stage found in a cold session reaches the recorded next step from the files alone (harness and the cognitive suite scenarios T283 to T290). |

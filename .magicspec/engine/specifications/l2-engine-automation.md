@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.34.1
+**Version:** 1.34.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -336,6 +336,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 | State lock | `.cache/state-{workspace}.lock` | `lib/file-lock.js`, taken by `update-state` | not kept | removed after use; a lock left by a killed process is taken over after 30 seconds |
 | Memory index | `.cache/memory.sqlite` or `.cache/memory.json` (and `.cache/memory.lock` while a command writes it) | `memory-index` ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)) | `memory-index --rebuild` | one file; rebuilt on a schema change |
 | Task packs of the document set | `.cache/packs/{workspace}/{task}.md` | `pack.js` | `pack {task}` | one file per task, overwritten by the next run |
+| Invocation record `[ADDED]` | `.cache/invocation/{workspace}.json` | `lib/invocation.js`, written by `checkpoint`, removed by `finalize` ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.9) | not rebuildable — what an interrupted command was doing | one file per workspace, replaced by the next start; 50 steps and 200 file paths |
 | Diagnostics sink | `.cache/diagnostics.jsonl` | `lib/diagnostics.js` | not rebuildable — recorded findings | drained by finalize, retention bound of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) |
 | Feedback notes | `.cache/feedback.json` | `lib/feedback.js` ([l1-agent-feedback.md](l1-agent-feedback.md)) | not rebuildable — recorded notes | the limits of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11 (EF-5) |
 | Migration backups | `magicspec-migration-backup-{date}/` (project root) | `migrate` | not rebuildable — the person's safety copy | never removed by the engine |
@@ -358,7 +359,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 | `finalize.js` | after the folder is resolved, before any write | writes the workspace's state, changelog and archives |
 | `archive-phases.js`, `generate-context.js` | before any write | write into the workspace folder |
 | `create-workspace.js`, `init.js`, the executor's provisioning | creators: they register first | the folder they make is the one they register |
-| `check-prerequisites`, `check-bloat`, `analyze-coverage`, `extract-rationale`, `resume-state`, `resolve-workspace`, `memory-query` (it reads the folder the executor forwards to filter by workspace), `lib/diagnostics`, `build-spec-graph`, `export-wiki` | none: they write only at the state folder's level (`graph/`, `.cache/`, an `--out` the caller names) | never into a workspace folder |
+| `check-prerequisites`, `checkpoint`, `check-bloat`, `analyze-coverage`, `extract-rationale`, `resume-state`, `resolve-workspace`, `memory-query` (it reads the folder the executor forwards to filter by workspace), `lib/diagnostics`, `build-spec-graph`, `export-wiki` | none: they write only at the state folder's level (`graph/`, `.cache/`, an `--out` the caller names) | never into a workspace folder |
 | `sync.js` | it iterates the registered workspaces only | the one workspace write is `STATE.md`, through `update-state`, which checks the registry itself |
 | `migrate.js` | none: moves the whole state folder | not a workspace write |
 
@@ -403,6 +404,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.34.2 | 2026-11-27 | Agent | As built in Phase 88, Stable retained, no requirement changed: the cache inventory lists the invocation record, and the registered-folder table lists `checkpoint` among the readers that write only at the state folder level (it checks the registry before writing). |
 | 1.34.1 | 2026-11-27 | Agent | As built in Phase 87, Stable retained: the design-debt predicate also waits for a pending replan directive; the requirement moved with the concept amendment that declares it. |
 | 1.34.0 | 2026-11-27 | Agent | **Ignore rules stop at the project's edge** (origin: a failing harness run on a Linux runner). §Scan Hygiene states that the shared predicate applies a project's rules to paths inside that project only. Amendment Rule round trip: RFC, Post-Update Review (coherence: the manifested-path boundary and the scanners of the same section, no conflict; spec-critic PASS), Stable. |
 | 1.33.6 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the Components list gains `lib/migrate-to-4.js` and the stop of a move in flight. |

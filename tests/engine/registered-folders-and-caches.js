@@ -359,6 +359,7 @@ module.exports = () => {
             'check-bloat.js',
             'check-docs.js',
             'check-prerequisites.js',
+            'checkpoint.js',
             'export-wiki.js',
             'extract-rationale.js',
             'resolve-workspace.js',
@@ -848,6 +849,12 @@ module.exports = () => {
             owner: 'update-state.js',
             mark: '.lock',
             rebuildable: true,
+        },
+        {
+            cache: '.cache/invocation/{workspace}.json',
+            owner: path.join('lib', 'invocation.js'),
+            mark: "'invocation'",
+            rebuildable: false,
         },
         {
             cache: '.cache/diagnostics.jsonl',

@@ -64,6 +64,7 @@ STATE.md is a live project state digest read before every execution session:
 - **Updates**: STATE.md is updated after every task transition (`Done` / `Blocked`) and phase completion.
 - **Task Start**: Before execution begins, the selected task's tracking entry is marked `In Progress`, so an interrupted session leaves a visible trace and a resuming one finds the task: Select takes a task left in flight — one no track of the current invocation is executing — before any `Todo` task.
 - **Dead ends**: An approach tried and abandoned (a failed check, a review that sent the work back, a reverted change) is recorded as one line in the task's `Attempts` field, so a fresh session does not repeat it.
+- **Interrupted command**: while a command that writes runs, it records its completed steps in an untracked file; a record left behind is reported at the next session start and continued by [`/magicspec resume`](resume.md).
 - **Checkpoint**: When a workflow reports `checkpoint saved`, ending the session loses nothing — a new one resumes from STATE.md.
 
 ## 4. Execution Modes
@@ -155,4 +156,4 @@ After every execution cycle, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-26 (v4.0.0).
+Synchronized with engine workflows on 2026-11-27 (v4.0.2).

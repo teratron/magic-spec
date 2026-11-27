@@ -133,6 +133,48 @@ const COMMANDS = {
             },
         },
     },
+    checkpoint: {
+        summary:
+            'Record where a mutating command stands, so an interrupted run can be resumed. Always exits 0.',
+        options: {
+            '--start': {
+                kind: 'bool',
+                help: 'Start the record of a command (needs --command)',
+            },
+            '--command': {
+                kind: 'value',
+                help: 'With --start: the command name',
+            },
+            '--argument': {
+                kind: 'value',
+                help: 'With --start: the argument as entered (optional)',
+            },
+            '--nested': {
+                kind: 'bool',
+                help: 'With --start: write into the open record of goal or fix instead of replacing it',
+            },
+            '--step': {
+                kind: 'value',
+                help: 'Append a completed step to the open record',
+            },
+            '--files': {
+                kind: 'value',
+                help: 'With --step: comma-separated files the step wrote',
+            },
+            '--answer': {
+                kind: 'value',
+                help: 'With --step: "<question> => <answer>", repeatable',
+            },
+            '--decision': {
+                kind: 'value',
+                help: 'With --step: a decision held nowhere else, repeatable',
+            },
+            '--clear': {
+                kind: 'bool',
+                help: 'Remove the record',
+            },
+        },
+    },
     'clean-cache': {
         summary:
             'Remove the caches the engine can rebuild (graph, wiki, state files); never findings, notes or backups.',
@@ -494,7 +536,7 @@ const COMMANDS = {
         },
     },
     'resume-state': {
-        summary: 'Print one line when a task was left In Progress (silent otherwise).',
+        summary: 'Print one line when work was left unfinished (silent otherwise).',
         options: {
             '--all': {
                 kind: 'bool',

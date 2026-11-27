@@ -24,6 +24,7 @@ describe('Magic Engine Scripts', () => {
     require('./engine/release-changelog')();
     require('./engine/analysis-scripts')();
     require('./engine/resume-and-checkpoint')();
+    require('./engine/checkpoint')();
     require('./engine/shipped-text-core')();
     require('./engine/input-pass')();
     require('./engine/feedback')();

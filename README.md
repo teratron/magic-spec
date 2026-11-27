@@ -199,6 +199,7 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | `/magicspec fix` | Triage and repair a reported defect, leaving a check that fails without the repair | the defect (asked for when missing) |
 | `/magicspec simulate` | Run the product's user scenarios, live or traced, and hand each failed step to `fix` | optional: an area, a feature or `--live-only` |
 | `/magicspec goal` | Work toward a goal without pausing between steps; consent is queued and asked when the mode stops | optional: a goal in words, `phase-N`, `phase-N..M`, `plan` or `N tasks` (with none, a recorded unfinished goal continues, otherwise the active phase runs) |
+| `/magicspec resume` | Continue what a session left unfinished: an interrupted command from its last checkpoint, a task in flight or a recorded goal ([Resume](docs/resume.md)) | optional: a workspace |
 | `/magicspec rule` | Add or amend project conventions | the rule text (asked for when missing) |
 | `/magicspec analyze` (alias `audit`) | Audit project health and detect drift | optional: a workspace or a focus |
 | `/magicspec graph` | Build and analyze the specification knowledge graph | optional: `visualize` |
@@ -207,7 +208,7 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | `/magicspec sync` | Bring derived state up to date: registry counts, rule copies, graph, version anchors, registered doc blocks | optional: an area, a workspace or `--dry-run` |
 | `/magicspec help` | List the commands, explain one, offer to run it | optional: a command, a language |
 
-A command whose argument is required asks for it when you leave it out; a command whose argument is optional runs its default and says which. There is nothing to configure: no command is written into your project.
+A command whose argument is required asks for it when you leave it out, offering suggestions and the keyword forms the command takes (such as `stabilize` or `amend {file}`); a command whose argument is optional runs its default and says which. There is nothing to configure: no command is written into your project.
 
 The pipeline `spec` → `plan` → `task` → `run` runs one stage per command: each stage ends by writing what the next one needs into your project's files and naming the next command with how much reasoning it takes (`deep`, `standard` or `light`). You can type the next command at once, in a new session, or after switching to a different model; `/magicspec help {command}` shows the demand of a command.
 

@@ -81,6 +81,7 @@ Parse `[arg]` to determine execution mode:
      Inform: *"⚠ Phase blocked. Run `/magicspec plan {workspace}` to revalidate the plan."* **Hard rule**: never name `/magicspec spec` or `/magicspec analyze` as the next step — they surface only inside a `/magicspec plan` HALT (or the Stalled Plan report of `/magicspec task`).
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Integrity (C14)**: If this skill folder is modified → `node scripts/executor.js update-engine-meta`.
+7. **Invocation record**: it starts in the context load (`context.md` §Post-Resolution step 5) and has no checkpoint lines of its own — the task events (Task Start, `Attempts`, `Done`; on a 4.0 workspace the `Now` and `Done` lines) are its checkpoints. A run that ends on a HALT ends with `node scripts/executor.js checkpoint --workspace={active-workspace} --clear`.
 
 ## Execution Setup
 
