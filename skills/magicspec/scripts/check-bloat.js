@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { resolveProjectRoot, runMain, statePath, STATE_DIR_NAME } = require('./utils');
 const { PHASE_FILE_RE } = require('./lib/phase-files');
+const { isDocSetWorkspace } = require('./lib/doc-set-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECK BLOAT (Context-Economy Advisory)
@@ -226,6 +227,20 @@ function scanDir(dir, pattern, kind, relPrefix, issues, limits, recursive = fals
 }
 
 /**
+ * The working documents to measure for a workspace. A 4.0 workspace holds none of the
+ * workspace documents of the list, and a case-insensitive file system answers two of their
+ * names with files of the set.
+ *
+ * @param {string} wsDir - Absolute path of the active workspace folder.
+ * @returns {typeof WORKING_DOCS}
+ */
+function workingDocsOf(wsDir) {
+    return isDocSetWorkspace(wsDir)
+        ? WORKING_DOCS.filter((d) => d.scope === 'global')
+        : WORKING_DOCS;
+}
+
+/**
  * Records the working documents whose size passes the doc thresholds (kilobytes).
  * A threshold of 0 turns its signal off. A document that does not exist is skipped,
  * and the global folder is not scanned twice when the workspace is the state folder.
@@ -237,7 +252,7 @@ function scanDir(dir, pattern, kind, relPrefix, issues, limits, recursive = fals
  * @param {{ soft: number, hard: number }} limits - Thresholds in kilobytes.
  */
 function scanDocuments(wsDir, globalDir, designDir, issues, limits) {
-    for (const doc of WORKING_DOCS) {
+    for (const doc of workingDocsOf(wsDir)) {
         if (doc.scope === 'global' && path.resolve(wsDir) === path.resolve(globalDir)) continue;
         const dir = doc.scope === 'global' ? globalDir : wsDir;
         const filePath = path.join(dir, doc.name);

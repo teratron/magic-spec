@@ -6,7 +6,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { TESTS_DIR, scriptsDir, createTempWorkspace, cleanup } = require('./lib/base');
+const { TESTS_DIR, scriptsDir, createTempWorkspace, cleanup, removeLink } = require('./lib/base');
 const { trackingEntry, writeResumeFixture, runScript, makeRootFixture } = require('./lib/sim');
 
 module.exports = () => {
@@ -459,11 +459,7 @@ module.exports = () => {
                 'nothing is written into the tree the link leads to',
             );
         } finally {
-            try {
-                fs.rmdirSync(path.join(project, 'skills', 'magicspec'));
-            } catch {
-                /* not a link, or already gone */
-            }
+            removeLink(path.join(project, 'skills', 'magicspec'));
             cleanup(project);
             cleanup(engineHost);
         }

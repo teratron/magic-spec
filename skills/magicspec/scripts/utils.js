@@ -900,6 +900,7 @@ function globToRegexSource(pattern) {
  *   - an ignored **directory** cannot be rescued by a negation inside it, matching
  *     git's own rule; ancestors are therefore evaluated before the leaf
  *   - `#` comments and blank lines are skipped
+ *   - no rule applies to a path outside `rootDir`
  *
  * Trailing-slash (directory-only) patterns are applied to the leaf as well,
  * since callers invoke this predicate on directory entries to prune the walk.
@@ -948,6 +949,9 @@ function loadGitignore(rootDir = '.') {
     return function isIgnored(relPath) {
         const normalized = normalizePath(relPath);
         if (!normalized || normalized === '.') return false;
+        // A repository's rules never apply outside it: not to a path that leaves the root, and
+        // not to one given as absolute, as a path on another drive comes out.
+        if (path.isAbsolute(relPath) || normalized.split('/')[0] === '..') return false;
 
         const parts = normalized.split('/');
         let prefix = '';

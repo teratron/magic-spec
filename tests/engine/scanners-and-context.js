@@ -249,6 +249,25 @@ module.exports = () => {
         }
     });
 
+    test('utils.loadGitignore applies no rule to a path outside the folder it was loaded for', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { loadGitignore } = requireFromFixture(tempDir, 'utils.js');
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), '*tmp/\n*.log\n');
+            const isIgnored = loadGitignore(tempDir);
+            assert.strictEqual(isIgnored('tmp/engine/SKILL.md'), true, 'inside, the rule holds');
+            for (const outside of [
+                '../tmp/engine/SKILL.md',
+                '../../tmp/engine/run.log',
+                '..',
+                path.resolve(tempDir, '..', 'tmp', 'run.log'),
+            ])
+                assert.strictEqual(isIgnored(outside), false, outside);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 13. analyze-coverage.js — gitignore parity via the shared helper
     // ───────────────────────────────────────────────────────────────────────────

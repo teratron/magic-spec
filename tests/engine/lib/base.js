@@ -138,6 +138,22 @@ const cleanup = (dir) => {
     }
 };
 
+/**
+ * Removes a directory link, leaving what it leads to. Unlinking works for a junction and for a
+ * symbolic link; `rmdir` alone refuses the second.
+ */
+const removeLink = (link) => {
+    try {
+        fs.unlinkSync(link);
+    } catch {
+        try {
+            fs.rmdirSync(link);
+        } catch {
+            /* already gone, or a folder that still holds files */
+        }
+    }
+};
+
 // STATE.md "Blocking Constraints" body: `count` numbered anti-pattern bullets.
 const antiPatternLines = (count) =>
     Array.from(
@@ -535,6 +551,7 @@ module.exports = {
     createTempWorkspace,
     requireFromFixture,
     cleanup,
+    removeLink,
     antiPatternLines,
     generateContext,
     loadChangelogWriter,

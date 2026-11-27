@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawnSync } = require('child_process');
-const { scriptsDir, devScriptsDir, cleanup } = require('./lib/base');
+const { scriptsDir, devScriptsDir, cleanup, removeLink } = require('./lib/base');
 const {
     skillSrc,
     makeConsumer,
@@ -685,8 +685,11 @@ module.exports = () => {
                     .join(shared, 'magicspec', 'scripts', 'executor.js')
                     .split(path.sep)
                     .join('/');
+                // A path holding a character the shell reads, as the `~` of a short Windows
+                // name does, is quoted.
+                const word = /^[\w./:@-]+$/.test(executor) ? executor : `'${executor}'`;
                 assert.ok(
-                    outside.includes(`node ${executor} update-engine-meta --check`),
+                    outside.includes(`node ${word} update-engine-meta --check`),
                     'the hook names the shared folder by its absolute path',
                 );
             } finally {
@@ -694,11 +697,7 @@ module.exports = () => {
                 cleanup(other);
             }
         } finally {
-            try {
-                fs.rmdirSync(path.join(dir, '.claude', 'skills', 'magicspec'));
-            } catch {
-                /* not a link */
-            }
+            removeLink(path.join(dir, '.claude', 'skills', 'magicspec'));
             cleanup(dir);
         }
     });
@@ -773,11 +772,7 @@ module.exports = () => {
                     `${path.relative(dir, f)} unchanged by a second run`,
                 );
         } finally {
-            try {
-                fs.rmdirSync(path.join(dir, '.claude', 'skills', 'magicspec'));
-            } catch {
-                /* not a link */
-            }
+            removeLink(path.join(dir, '.claude', 'skills', 'magicspec'));
             cleanup(dir);
         }
     });
@@ -973,18 +968,41 @@ module.exports = () => {
                 fs.readFileSync(path.join(skill, 'CONSTITUTION.md'), 'utf8'),
                 'the copy equals its source again',
             );
-            fs.rmdirSync(path.join(dir, '.qwen', 'commands'));
+            removeLink(path.join(dir, '.qwen', 'commands'));
             fs.rmSync(path.join(folder, 'run.md'));
             fs.writeFileSync(path.join(folder, 'task.md'), entry('task'));
             assert.strictEqual(refresh().length, 1, 'a lone entry is removed');
             assert.ok(!fs.existsSync(folder), 'and the emptied folder goes with it');
             assert.deepStrictEqual(refresh(), [], 'after a refresh nothing is left behind');
         } finally {
-            try {
-                fs.rmdirSync(path.join(dir, '.claude', 'skills', 'magicspec'));
-            } catch {
-                /* not a link */
-            }
+            removeLink(path.join(dir, '.claude', 'skills', 'magicspec'));
+            cleanup(dir);
+        }
+    });
+
+    test('remove deletes an engine that lies in the project when the project is reached by another spelling of its path (skill folder)', () => {
+        const dir = makeConsumer();
+        const link = `${dir}-link`;
+        try {
+            const skill = installSkill(dir);
+            assert.strictEqual(
+                skillExec(skill, dir, 'init', [
+                    '--host=claude',
+                ]).status,
+                0,
+            );
+            fs.symlinkSync(dir, link, 'junction');
+            const run = skillExec(skill, dir, 'remove', [
+                '--root',
+                link,
+            ]);
+            assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+            assert.match(run.stdout, /Removed: \.agents\/skills\/magicspec\//);
+            assert.ok(!fs.existsSync(skill), 'the engine folder is gone');
+            assert.ok(fs.existsSync(path.join(dir, '.magicspec')), 'the state folder stays');
+        } finally {
+            removeLink(link);
+            removeLink(path.join(dir, '.claude', 'skills', 'magicspec'));
             cleanup(dir);
         }
     });
@@ -1058,11 +1076,7 @@ module.exports = () => {
                 'the skill link is gone',
             );
         } finally {
-            try {
-                fs.rmdirSync(path.join(dir, '.claude', 'skills', 'magicspec'));
-            } catch {
-                /* already gone */
-            }
+            removeLink(path.join(dir, '.claude', 'skills', 'magicspec'));
             cleanup(dir);
         }
     });

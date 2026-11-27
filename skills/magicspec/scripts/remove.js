@@ -36,9 +36,13 @@ const dryRun = Boolean(flags['--dry-run']);
 const projectRoot = resolveProjectRoot();
 const rel = (p) => normalizePath(path.relative(projectRoot, p));
 
-/** Whether a path lies inside the project folder. */
+// The folder by its real name: one folder has several spellings (through a link, as a short
+// Windows name), and the engine folder is read by its real one.
+const realRoot = fs.realpathSync.native(projectRoot);
+
+/** Whether a real path lies inside the project folder. */
 function insideProject(target) {
-    const r = path.relative(projectRoot, target);
+    const r = path.relative(realRoot, target);
     return r !== '' && !r.startsWith('..') && !path.isAbsolute(r);
 }
 
@@ -68,27 +72,28 @@ try {
 
 // 3. The engine folder, last.
 const engineDir = fs.realpathSync.native(engineRoot());
+const engineShown = normalizePath(path.relative(realRoot, engineDir));
 if (hasEngineWriteTooling()) {
-    console.log(`   Kept: ${rel(engineDir)}/ is the engine's own repository.`);
+    console.log(`   Kept: ${engineShown}/ is the engine's own repository.`);
 } else if (!insideProject(engineDir)) {
     console.log(
         `   Kept: ${normalizePath(engineDir)}/ lies outside this project (shared by others).`,
     );
 } else if (dryRun) {
-    console.log(`   Would remove: ${rel(engineDir)}/`);
+    console.log(`   Would remove: ${engineShown}/`);
 } else {
     try {
         fs.rmSync(engineDir, {
             recursive: true,
             force: true,
         });
-        console.log(`   Removed: ${rel(engineDir)}/`);
+        console.log(`   Removed: ${engineShown}/`);
     } catch (err) {
         // The running executor can keep its own files open on some platforms.
         console.log(
-            `   Could not remove ${rel(engineDir)}/ while it runs (${err.code || err.message}).`,
+            `   Could not remove ${engineShown}/ while it runs (${err.code || err.message}).`,
         );
-        console.log(`   Delete it once this command has ended: ${rel(engineDir)}`);
+        console.log(`   Delete it once this command has ended: ${engineShown}`);
     }
 }
 console.log('The state folder and your files were not touched.');

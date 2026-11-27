@@ -12,6 +12,7 @@ const {
     createTempWorkspace,
     requireFromFixture,
     cleanup,
+    removeLink,
     writeCanonicalCoreSpec,
     registryTable,
     requireFinalizePlan,
@@ -578,14 +579,14 @@ module.exports = () => {
             assert.match(intact.output, /2\/2 linked/);
 
             // A link that leads elsewhere is drift.
-            fs.rmdirSync(link);
+            removeLink(link);
             fs.symlinkSync(other, link, 'junction');
             const elsewhere = run();
             assert.strictEqual(elsewhere.failed, true, 'a link to another folder must fail');
             assert.match(elsewhere.output, /Drift:.*magicspec does not lead to/);
 
             // A copy where the link belongs is drift: editing the host's folder would not edit the engine.
-            fs.rmdirSync(link);
+            removeLink(link);
             fs.mkdirSync(link, {
                 recursive: true,
             });
@@ -609,11 +610,7 @@ module.exports = () => {
                 'magicspec',
                 'magicspec-dev',
             ]) {
-                try {
-                    fs.rmdirSync(path.join(tempDir, '.agents', 'skills', name));
-                } catch {
-                    /* a copy or already gone */
-                }
+                removeLink(path.join(tempDir, '.agents', 'skills', name));
             }
             cleanup(tempDir);
             cleanup(other);

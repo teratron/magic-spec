@@ -8,6 +8,7 @@ const path = require('path');
 const { createTempWorkspace, requireFromFixture, cleanup } = require('./lib/base');
 const {
     readShipped,
+    shippedRoot,
     SIM_SCRIPTS,
     SIM_ENGINE_REL,
     makeSimConsumer,
@@ -732,11 +733,14 @@ module.exports = () => {
             assert.ok(kernel.includes(word), `the caution keeps: ${word}`);
         }
         assert.ok(Buffer.byteLength(kernel) < 16384, 'the kernel stays under the budget');
-        assert.strictEqual(
-            readShipped('.agents/rules/magicspec.md'),
-            kernel,
-            'the always-on rule copy of this repository equals the kernel',
-        );
+        // Generated and ignored by version control: absent on a fresh clone, identical where present.
+        if (fs.existsSync(path.join(shippedRoot, '.agents', 'rules', 'magicspec.md'))) {
+            assert.strictEqual(
+                readShipped('.agents/rules/magicspec.md'),
+                kernel,
+                'the always-on rule copy of this repository equals the kernel',
+            );
+        }
     });
 
     // ───────────────────────────────────────────────────────────────────────────

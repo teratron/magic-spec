@@ -1224,6 +1224,7 @@ module.exports = () => {
         ]) {
             const dir = makeSetProject(fixture);
             try {
+                writeIn(dir, '.magicspec/RULES.md', '# Constitution\n');
                 // A registry left beside the set is not read: its Draft row would be a SPEC_STATUS finding.
                 writeIn(
                     dir,
@@ -1258,6 +1259,70 @@ module.exports = () => {
             } finally {
                 cleanup(dir);
             }
+        }
+    });
+
+    test("document set: the 3.x plan and constitution are not looked for in the folder of a set, where a case-insensitive file system gives their names to the set's own files", () => {
+        const dir = makeSetProject('good');
+        try {
+            writeIn(
+                dir,
+                '.magicspec/workspace.json',
+                JSON.stringify({
+                    default: 'docs',
+                    bloat: {
+                        doc: {
+                            soft: 0.001,
+                            hard: 0,
+                        },
+                    },
+                    workspaces: {
+                        docs: {
+                            format: '4',
+                        },
+                    },
+                }),
+            );
+            const preflight = () =>
+                JSON.parse(
+                    simExec(dir, [
+                        'check-prerequisites',
+                        '--json',
+                        '--require-plan',
+                    ]).stdout,
+                );
+            const without = preflight();
+            assert.deepStrictEqual(
+                without.missing_required,
+                [
+                    'RULES.md',
+                ],
+                "the set's rules are not the constitution",
+            );
+            assert.strictEqual(
+                without.artifacts['PLAN.md'].exists,
+                false,
+                'nor its plan the 3.x one',
+            );
+            writeIn(dir, '.magicspec/RULES.md', '# Constitution\n');
+            const held = preflight();
+            assert.deepStrictEqual(held.missing_required, []);
+            assert.strictEqual(held.artifacts['RULES.md'].path, '.magicspec/RULES.md');
+            const bloat = JSON.parse(
+                simExec(dir, [
+                    'check-bloat',
+                    '--json',
+                ]).stdout,
+            );
+            assert.deepStrictEqual(
+                bloat.issues.filter((i) => i.type.startsWith('DOC_')).map((i) => i.file),
+                [
+                    '.magicspec/RULES.md',
+                ],
+                'only the global working document is measured',
+            );
+        } finally {
+            cleanup(dir);
         }
     });
 

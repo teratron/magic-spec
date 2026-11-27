@@ -20,6 +20,7 @@ const {
 const { execSync, execFileSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
+const { isDocSetWorkspace } = require('./lib/doc-set-state');
 
 // Every path below is relative to the project root: run from there whatever directory the caller is in.
 process.chdir(resolveProjectRoot());
@@ -226,7 +227,11 @@ const planPath = path.join(designDir, 'PLAN.md');
 const tasksPath = path.join(designDir, 'TASKS.md');
 
 const indexExists = fs.existsSync(indexPath);
-let rulesPath = path.join(designDir, 'RULES.md');
+// A 4.0 workspace has no 3.x plan, ledger or constitution of its own, and a case-insensitive
+// file system answers those names with the set's `plan.md` and `rules.md`: they are not looked
+// for in its folder, and its constitution is the global one.
+const inSet = isDocSetWorkspace(designDir);
+let rulesPath = path.join(inSet ? STATE_DIR_NAME : designDir, 'RULES.md');
 let rulesExists = fs.existsSync(rulesPath);
 
 // Multi-workspace fallback: If RULES.md is not in workspace, check the state folder root
@@ -238,8 +243,8 @@ if (!rulesExists && designDir !== STATE_DIR_NAME) {
     }
 }
 
-const planExists = fs.existsSync(planPath);
-const tasksExists = fs.existsSync(tasksPath);
+const planExists = !inSet && fs.existsSync(planPath);
+const tasksExists = !inSet && fs.existsSync(tasksPath);
 
 if (!indexExists) missing.push('INDEX.md');
 if (!rulesExists) missing.push('RULES.md');
@@ -702,7 +707,7 @@ function checkConfigDrift() {
         path.join(STATE_DIR_NAME, 'RULES.md'),
     ];
 
-    if (designDir !== STATE_DIR_NAME) {
+    if (designDir !== STATE_DIR_NAME && !inSet) {
         const wsRulesPath = path.join(designDir, 'RULES.md');
         if (fs.existsSync(wsRulesPath)) rulesToCheck.push(wsRulesPath);
     }

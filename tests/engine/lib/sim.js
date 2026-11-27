@@ -17,6 +17,7 @@ const {
     commitAllInFixture,
     createTempWorkspace,
     cleanup,
+    removeLink,
     commitFixture,
     requireUpdateState,
     warnedBy,
@@ -771,11 +772,7 @@ const cleanLink = (dir) => {
     for (const rel of [
         '.claude/skills/magicspec',
     ]) {
-        try {
-            fs.rmdirSync(path.join(dir, rel));
-        } catch {
-            /* not a link */
-        }
+        removeLink(path.join(dir, rel));
     }
 };
 

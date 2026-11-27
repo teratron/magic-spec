@@ -1,5 +1,11 @@
 # Engine Workspace Changelog
 
+## Phase 86 — 2026-11-27 (Maintenance: The Engine and Its Harness Hold on Every Runner)
+
+- **The engine answers the same on Linux and Windows.** A project's ignore rules no longer reach outside it, no 3.x file is read in a 4.0 workspace, and `remove` deletes its engine however the project path is spelled.
+- **The harness holds on every runner**: links, a fresh clone, a quoted hook path.
+- **Records:** harness 543; engine 4.0.0. **Specifications:** `l2-engine-automation` 1.34.0, `l2-sdd-document-set-engine` 1.8.0, `l2-skill-distribution` 2.2.0, `l2-test-suite` 1.48.20; registry 1.108.0.
+
 ## Phase 83 — 2026-11-26 (4.0.0)
 
 - **A half-moved workspace is read by nothing.** The graph, the wiki and the search over the design documents leave it out, and the global registry stops linking a registry a moved workspace no longer has.

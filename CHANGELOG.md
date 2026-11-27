@@ -17,6 +17,9 @@ The engine is one skill folder, `skills/magicspec/`, driven by one command, `/ma
 - **The global registry's row of a 4.0 workspace links no registry it has not got.** The apply step of `migrate --to 4` writes the row without the link, and `sync` repairs a row that still has one.
 - **The way back from a move to 4.0 was incomplete.** After `git restore` the untracked copies under `archives/3x/` left the workspace reading as a move in flight, so every command stopped. The report now restores the global registry too and says to delete that folder.
 - **A reference to a component at the end of a sentence was not read** (`see hello.9.`): `check-docs` did not report it when it named nothing, and `pack` left the unit it named out of the task's pack.
+- **A project's ignore rules reached outside it.** For an engine folder outside the project they could hide its files from the integrity check.
+- **On a 4.0 workspace the answer depended on the file system.** On Windows and macOS the pre-flight and the size report read the set's `rules.md` and `plan.md` as the 3.x constitution and plan; no script reads those names there now, and the constitution required is the global one.
+- **`remove` kept the engine of a project reached through a link or a short Windows name**, reporting it as lying outside the project.
 
 An improvised `/magicspec-dev:test` crisis (a fresh project walked from `status` through `spec`, `plan`, `task` and `run`) found six places where shipped text named the wrong owner or the wrong next step. A harness case under mutation control now pins each one:
 

@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.33.6
+**Version:** 1.34.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -131,6 +131,8 @@ A directory is skipped when its basename matches a basename matcher, or its work
 **Manifested-path boundary (engine v2.1.93).** The gitignore union above is authored against the *source* repo's `.gitignore` (where `skills/magicspec/` itself is git-tracked, never ignored — only stray cruft matches). `update-engine-meta.js --check` instead runs inside a **consumer's** installed repo, where `.gitignore` carries the opposite, equally legitimate meaning: the L1 contract requires every consumer to gitignore `skills/magicspec/` wholesale, since it is "installed from a release archive, not committed" (`l1-engine-core.md` §Distribution). Applying the same unconditional exclusion there matched *every* file the manifest listed, emptied the on-disk set, and reported all shipped engine files as missing — failing `--check` on every commit for any project following the documented convention (reproduced against a real consumer project). `update-engine-meta.js`'s gitignore exclusion now applies **only to a path absent from `.checksums`** — a manifested path is always checked against disk regardless of the consumer's own `.gitignore`, while an unmanifested, gitignored stray file (the original `.fallow/`-shaped case) is still excluded from triggering a false "new engine file" detection. `generate-checksums.js` needs no equivalent change: it always builds the manifest from scratch in the source repo, where this asymmetry does not arise.
 
 **Root-only floor names (engine 3.0.1).** The hardcoded floor of `utils.BUILD_NOISE_DIRS` skipped `dist`, `build`, `target`, `temp`, `sandbox`, `env` and `ENV` by name at any depth, so a tracked, unignored source folder such as `internal/build` or `src/env` was invisible to every scanner and nothing reported it (reproduced: six files in, one scanned). Those names (`ROOT_ONLY_NOISE_DIRS`) are now skipped only directly under the project root, where they are build output; the dependency and cache names (`node_modules`, `.git`, `.venv`, `venv`, `__pycache__`, `.pytest_cache`, `.ruff_cache`, `.hatch`) stay skipped at any depth. The scanners decide through one function, `utils.isSkippedDir(skipSet, name, relPath)`. `Assumption (forecast)`: build output that is nested and not gitignored is now scanned and shows as an uncovered file — visible noise, where the blind spot it replaces was silent; override: `/magicspec spec amend l2-engine-automation "the floor applies at any depth"`.
+
+**Ignore rules stop at the project's edge** `[ADDED]`. `utils.loadGitignore` applies a project's rules to paths inside that project only: a path that leaves the root, or one given as absolute because it lies on another drive, is never ignored, as git applies no rule of a repository outside it. Found on a Linux runner: the repository's `*tmp/` matched a folder under `/tmp`, so a manifest built for it came out empty and the integrity check then reported every file as drift; the same predicate would have hidden a new file of an engine folder shared from outside a project.
 
 ### Path Matching Contract (Scope & Canonical References)
 
@@ -399,6 +401,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.34.0 | 2026-11-27 | Agent | **Ignore rules stop at the project's edge** (origin: a failing harness run on a Linux runner). §Scan Hygiene states that the shared predicate applies a project's rules to paths inside that project only. Amendment Rule round trip: RFC, Post-Update Review (coherence: the manifested-path boundary and the scanners of the same section, no conflict; spec-critic PASS), Stable. |
 | 1.33.6 | 2026-11-26 | Agent | As built in Phase 85, Stable retained, no requirement changed: the Components list gains `lib/migrate-to-4.js` and the stop of a move in flight. |
 | 1.33.5 | 2026-11-26 | Agent | As built in Phase 82, Stable retained, no requirement changed: on a 4.0 workspace `lib/doc-set-coverage.js` compares the map with the files `analyze-coverage` walks, reading the map rows through the checker's loader. |
 | 1.33.4 | 2026-11-26 | Agent | As built in Phase 81, Stable retained, no requirement changed: the Components list gains `lib/goal-block.js`, and the table of writers states that on a 4.0 workspace `update-state` writes the goal file alone. |

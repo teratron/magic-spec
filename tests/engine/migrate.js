@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const _os = require('os');
-const { cleanup } = require('./lib/base');
+const { cleanup, removeLink } = require('./lib/base');
 const {
     skillSrc,
     makeConsumer,
@@ -197,18 +197,6 @@ module.exports = () => {
             !fs.existsSync(path.join(dir, OLD_ENGINE, 'scripts', 'a.js')),
             'the honest entries are still removed',
         );
-    };
-
-    const removeLink = (link) => {
-        try {
-            fs.unlinkSync(link);
-        } catch {
-            try {
-                fs.rmdirSync(link);
-            } catch {
-                /* already gone */
-            }
-        }
     };
 
     test('migrate never reads or removes a path an old manifest names outside the old engine folder (migration)', () => {

@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.100.0
-**Generated:** 2026-11-26
-**Based on:** .magicspec/engine/INDEX.md v1.107.2
+**Version:** 1.101.0
+**Generated:** 2026-11-27
+**Based on:** .magicspec/engine/INDEX.md v1.108.0
 **Based on RULES:** .magicspec/RULES.md v2.0.0
 **Status:** Active
 
@@ -965,6 +965,13 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Opened by `/magicspec-dev fix` for feedback note n7, with no phase active in the ledger (Phases 82 and 83 are outlined and not decomposed); one task, `T-84F01`, recorded in the workbook. Classified a specification gap: no specification said what a probe does with git's own diagnostics.
   - **Execution outcome**: the one task Done; harness 519 → 520, engine 3.0.213 → 3.0.217, registry 1.105.1 → 1.106.0; repaired on v2.1 as well (2.1.150, local commit, no push; its harness 214 of 214).
   - Tasks: [archives/tasks/phase-84.md](archives/tasks/phase-84.md)
+
+### Phase 86 — Maintenance: The Engine and Its Harness Hold on Every Runner
+
+- [x] **Ignore rules, a set's folder, `remove` and the runners** ([l2-engine-automation.md](specifications/l2-engine-automation.md) 1.34.0; [l2-sdd-document-set-engine.md](specifications/l2-sdd-document-set-engine.md) 1.8.0 §5.2; [l2-skill-distribution.md](specifications/l2-skill-distribution.md) 2.2.0 §5.6; [l2-test-suite.md](specifications/l2-test-suite.md) 1.48.20) [L2] — The harness passes on Linux and Windows runners on Node 18 and 24, and the engine answers the same on a case-sensitive file system, a case-insensitive one and a project reached by another spelling of its path.
+  - Opened by `/magicspec-dev fix` on the failing `Tests` run of `develop` (commit `f30dd8d`), with no phase active in the ledger: the planning write added this entry and the plan header, nothing else of the planning workflow ran. The replan directive of the ledger stays pending and now names this plan version.
+  - **Execution outcome**: four tasks Done (one agent); harness 540 → 543, engine 4.0.0, registry 1.107.4 → 1.108.0. Eight failing cases came from six causes: three engine defects and three assumptions of the harness. Proved on Linux containers (Node 24 and 18) and on Windows; the runners themselves confirm it on the next push.
+  - Tasks: [archives/tasks/phase-86.md](archives/tasks/phase-86.md)
 
 ## Backlog
 
