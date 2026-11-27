@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.9",
-    "@types/node": "^26.6.8",
-    "fallow": "^3.48.0",
+    "@types/node": "^26.6.11",
+    "fallow": "^3.49.0",
     "typescript": "^7.0.2"
   }
 }
